@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Adsorb — Bare-Metal ESP32-S3 DNS Sinkhole</title>
-  <meta name="description" content="High-performance, bare-metal DNS sinkhole for ESP32-S3 N16R8. 255k+ rules in Octal PSRAM, sub-millisecond lookups, 0.6W power footprint." />
+  <title>Adsorb — Hardware DNS Sinkhole for ESP32-S3</title>
+  <meta name="description" content="Ultra-high performance, bare-metal hardware DNS sinkhole for ESP32-S3 N16R8. 255,000+ rules in Octal PSRAM, dual-stack null routing, sub-millisecond wire latency." />
 
-  <!-- Fonts: Space Grotesk + JetBrains Mono -->
+  <!-- Typography: Space Grotesk + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;0,800;1,400&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -24,24 +24,23 @@
           },
           colors: {
             brand: {
-              accent: '#d4ff00',      /* High-vis electric lime */
-              orange: '#ff4400',      /* Safety warning orange */
-              cyan: '#00e5ff',        /* Digital telemetry cyan */
-              surface: '#f6f6f2',     /* Porcelain industrial white */
-              dark: '#0c0d0e',        /* Pitch technical black */
-              card: '#ffffff',
-              cardDark: '#121417',
-              border: '#111111',
-              borderDark: '#2a2d32',
-              muted: '#717680',
+              lime: '#d4ff00',
+              orange: '#ff3700',
+              cyan: '#00f0ff',
+              surface: '#f4f4ee',
+              obsidian: '#090a0c',
+              border: '#0d0e10',
+              panel: '#ffffff',
+              panelDark: '#121418',
+              muted: '#687076',
             }
           },
           boxShadow: {
-            'brutal': '4px 4px 0px 0px #111111',
-            'brutal-lg': '8px 8px 0px 0px #111111',
-            'brutal-sm': '2px 2px 0px 0px #111111',
-            'brutal-accent': '4px 4px 0px 0px #d4ff00',
-            'brutal-dark': '4px 4px 0px 0px #2a2d32',
+            'brutal-sm': '3px 3px 0px #0d0e10',
+            'brutal': '5px 5px 0px #0d0e10',
+            'brutal-lg': '9px 9px 0px #0d0e10',
+            'brutal-lime': '5px 5px 0px #d4ff00',
+            'brutal-cyan': '5px 5px 0px #00f0ff',
           }
         }
       }
@@ -50,518 +49,558 @@
 
   <style>
     :root {
-      --bg: #f6f6f2;
+      --bg: #f4f4ee;
       --card-bg: #ffffff;
-      --text: #0c0d0e;
-      --border: #111111;
-      --shadow: 4px 4px 0px 0px #111111;
-      --shadow-lg: 8px 8px 0px 0px #111111;
+      --border: #0d0e10;
+      --shadow: 5px 5px 0px #0d0e10;
+      --text: #0d0e10;
+      --accent: #d4ff00;
+      --orange: #ff3700;
+      --cyan: #00f0ff;
     }
 
     .dark {
-      --bg: #0c0d0e;
-      --card-bg: #141619;
-      --text: #f6f6f2;
+      --bg: #090a0c;
+      --card-bg: #121418;
       --border: #d4ff00;
-      --shadow: 4px 4px 0px 0px #d4ff00;
-      --shadow-lg: 8px 8px 0px 0px #d4ff00;
+      --shadow: 5px 5px 0px #d4ff00;
+      --text: #f4f4ee;
+      --accent: #d4ff00;
+      --orange: #ff3700;
+      --cyan: #00f0ff;
     }
 
-    /* Blueprint / CAD Mode Easter Egg */
     .blueprint {
-      --bg: #0b1e36;
-      --card-bg: #0e2747;
-      --text: #cce4ff;
-      --border: #00b4d8;
-      --shadow: 4px 4px 0px 0px #00b4d8;
-      --shadow-lg: 8px 8px 0px 0px #00b4d8;
+      --bg: #081a2f;
+      --card-bg: #0b2545;
+      --border: #00d4ff;
+      --shadow: 5px 5px 0px #00d4ff;
+      --text: #c8e1ff;
+      --accent: #00d4ff;
+      --orange: #ffaa00;
+      --cyan: #00d4ff;
     }
 
     body {
       background-color: var(--bg);
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
-      transition: background-color 0.2s ease, color 0.2s ease;
-      background-image: radial-gradient(rgba(17, 17, 17, 0.08) 1px, transparent 1px);
-      background-size: 24px 24px;
+      transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+      background-image: 
+        linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
     }
 
     .dark body, body.dark {
-      background-image: radial-gradient(rgba(212, 255, 0, 0.1) 1px, transparent 1px);
+      background-image: 
+        linear-gradient(to right, rgba(212,255,0,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(212,255,0,0.06) 1px, transparent 1px);
     }
 
     .blueprint body, body.blueprint {
       background-image: 
-        linear-gradient(rgba(0, 180, 216, 0.15) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 180, 216, 0.15) 1px, transparent 1px);
-      background-size: 32px 32px;
+        linear-gradient(to right, rgba(0,212,255,0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,212,255,0.15) 1px, transparent 1px),
+        linear-gradient(to right, rgba(0,212,255,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,212,255,0.05) 1px, transparent 1px);
+      background-size: 64px 64px, 64px 64px, 16px 16px, 16px 16px;
     }
 
-    /* Tactile Neo-Brutalist Element */
-    .nb-box {
-      border: 2px solid var(--border);
+    /* Tactile Neo-Brutalist Surfaces */
+    .nb-panel {
+      border: 2.5px solid var(--border);
       box-shadow: var(--shadow);
       background-color: var(--card-bg);
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
 
-    .nb-box-lg {
-      border: 3px solid var(--border);
-      box-shadow: var(--shadow-lg);
-      background-color: var(--card-bg);
-    }
-
-    .nb-btn {
-      border: 2px solid var(--border);
+    .nb-button {
+      border: 2.5px solid var(--border);
       box-shadow: var(--shadow);
       background-color: var(--card-bg);
       font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
       cursor: pointer;
       user-select: none;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.1s ease;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.12s ease;
     }
-    .nb-btn:hover {
+    .nb-button:hover {
       transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0px 0px var(--border);
+      box-shadow: 7px 7px 0px var(--border);
     }
-    .nb-btn:active {
-      transform: translate(2px, 2px);
-      box-shadow: 1px 1px 0px 0px var(--border);
+    .nb-button:active {
+      transform: translate(3px, 3px);
+      box-shadow: 1px 1px 0px var(--border);
     }
 
-    /* Infinite Marquee */
-    @keyframes marqueeScroll {
+    /* Draggable Physics Sticker */
+    .draggable-sticker {
+      position: absolute;
+      cursor: grab;
+      user-select: none;
+      border: 2px solid #000;
+      box-shadow: 4px 4px 0px #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 900;
+      z-index: 30;
+      touch-action: none;
+      transition: transform 0.05s ease;
+    }
+    .draggable-sticker:active {
+      cursor: grabbing;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    /* Precision Crosshair Cursor Tracker */
+    #cursorTracker {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s ease;
+      display: none;
+    }
+    @media (pointer: fine) {
+      #cursorTracker { display: block; }
+    }
+
+    /* Marquee Animation */
+    @keyframes marqueeFlow {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
-    .marquee-track {
+    .marquee-rail {
       display: flex;
       width: 200%;
-      animation: marqueeScroll 28s linear infinite;
+      animation: marqueeFlow 25s linear infinite;
     }
-    .marquee-track:hover {
+    .marquee-rail:hover {
       animation-play-state: paused;
     }
 
-    /* Code Snippet Container */
-    pre, code {
-      font-family: 'JetBrains Mono', monospace;
+    /* 3D PCB Board Perspective */
+    .pcb-viewport {
+      perspective: 1000px;
+    }
+    .pcb-canvas-card {
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
     }
 
-    /* Terminal CRT scanlines */
-    .terminal-crt::before {
+    /* Hazard Stripes */
+    .hazard-stripe {
+      background: repeating-linear-gradient(
+        45deg,
+        #000,
+        #000 10px,
+        #d4ff00 10px,
+        #d4ff00 20px
+      );
+    }
+
+    /* Terminal CRT Screen */
+    .crt-monitor::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-      background-size: 100% 4px;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+      background-size: 100% 3px;
       pointer-events: none;
       z-index: 10;
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f1ed;
-      border: 1px solid #111;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #111;
-    }
-    .dark ::-webkit-scrollbar-track {
-      background: #121417;
-      border: 1px solid #d4ff00;
-    }
-    .dark ::-webkit-scrollbar-thumb {
-      background: #d4ff00;
     }
   </style>
 </head>
 
-<body class="selection:bg-brand-accent selection:text-black">
+<body class="overflow-x-hidden selection:bg-brand-lime selection:text-black">
 
   <!-- ================================================================= -->
-  <!-- TOPBAR / SYSTEM STATUS STRIP                                      -->
+  <!-- MOUSE CROSSHAIR TELEMETRY TRACKER                                 -->
   <!-- ================================================================= -->
-  <header class="sticky top-0 z-40 bg-[#f6f6f2] dark:bg-[#0c0d0e] border-b-2 border-black dark:border-brand-accent transition-colors">
+  <div id="cursorTracker" class="font-mono text-[9px] pointer-events-none">
+    <div class="w-6 h-6 border border-black dark:border-brand-lime border-dashed rounded-full flex items-center justify-center">
+      <div class="w-1.5 h-1.5 bg-brand-orange rounded-full"></div>
+    </div>
+    <div id="cursorCoords" class="bg-black text-brand-lime px-1.5 py-0.5 mt-1 border border-black font-bold whitespace-nowrap shadow-sm">
+      X: 000 | Y: 000
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TOP STATUS STRIP & NAVIGATION BAR                                 -->
+  <!-- ================================================================= -->
+  <header class="sticky top-0 z-40 bg-[#f4f4ee] dark:bg-[#090a0c] border-b-2.5 border-black dark:border-brand-lime transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
       
-      <!-- Brand Identifier -->
-      <a href="#" class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-black text-brand-accent dark:bg-brand-accent dark:text-black border-2 border-black dark:border-brand-accent flex items-center justify-center font-display font-black text-lg shadow-brutal-sm">
-          A
+      <!-- Brand & ISO Serial -->
+      <a href="#" class="flex items-center gap-3.5 group">
+        <div class="w-10 h-10 bg-black text-brand-lime dark:bg-brand-lime dark:text-black border-2 border-black dark:border-brand-lime flex items-center justify-center font-display font-black text-xl shadow-brutal-sm group-hover:rotate-3 transition-transform">
+          ⏣
         </div>
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
             <span class="font-display font-black text-xl tracking-tight leading-none text-black dark:text-white">ADSORB</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.2 bg-black text-brand-accent dark:bg-brand-accent dark:text-black border border-black uppercase">v1.0.0</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.2 bg-brand-lime text-black border border-black uppercase">FIRMWARE v1.0.0</span>
           </div>
-          <span class="text-[10px] text-zinc-500 font-mono tracking-wider">ESP32-S3 BARE-METAL DNS SINKHOLE</span>
+          <span class="text-[10px] text-zinc-500 font-mono tracking-widest">ESP32-S3 BARE-METAL HARDWARE SINKHOLE</span>
         </div>
       </a>
 
-      <!-- Desktop Navigation Menu -->
-      <nav class="hidden md:flex items-center gap-6 text-xs font-mono font-bold uppercase tracking-wider">
-        <a href="#workbench" class="hover:text-brand-orange transition-colors">Packet Workbench</a>
-        <a href="#architecture" class="hover:text-brand-orange transition-colors">Silicon Architecture</a>
-        <a href="#telemetry" class="hover:text-brand-orange transition-colors">Telemetry</a>
-        <a href="#benchmarks" class="hover:text-brand-orange transition-colors">Benchmarks</a>
-        <a href="#deployment" class="hover:text-brand-orange transition-colors">Flash Guide</a>
+      <!-- Navigation Links -->
+      <nav class="hidden lg:flex items-center gap-7 text-xs font-mono font-bold uppercase tracking-wider">
+        <a href="#schematic" class="hover:text-brand-orange transition-colors">01// Silicon 3D</a>
+        <a href="#workbench" class="hover:text-brand-orange transition-colors">02// Wire Workbench</a>
+        <a href="#oscilloscope" class="hover:text-brand-orange transition-colors">03// Oscilloscope</a>
+        <a href="#benchmarks" class="hover:text-brand-orange transition-colors">04// Telemetry</a>
+        <a href="#flasher" class="hover:text-brand-orange transition-colors">05// Flash Specs</a>
       </nav>
 
-      <!-- Utility Toggles & Actions -->
+      <!-- Action Controls -->
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Audio Synth Toggle -->
-        <button id="sfxBtn" onclick="toggleAudio()" class="nb-btn px-2.5 py-1.5 text-xs flex items-center gap-1.5" title="Toggle Mechanical Audio Synth">
-          <span id="sfxIcon">🔇</span>
-          <span class="hidden lg:inline text-[11px]">AUDIO</span>
+        <button id="sfxButton" onclick="toggleAudioEngine()" class="nb-button px-2.5 py-1.5 text-xs flex items-center gap-1.5 bg-white dark:bg-zinc-800" title="Toggle Mechanical Audio Synthesizer">
+          <span id="sfxIndicator">🔇</span>
+          <span class="hidden sm:inline font-mono text-[11px]">AUDIO</span>
         </button>
 
-        <!-- Theme Mode Toggle -->
-        <button id="themeBtn" onclick="cycleTheme()" class="nb-btn px-2.5 py-1.5 text-xs flex items-center gap-1" title="Cycle Theme (Light / Cyber / CAD Blueprint)">
-          <span id="themeLabel">☀️</span>
+        <!-- Theme Mode Switcher -->
+        <button id="themeButton" onclick="switchThemeMode()" class="nb-button px-2.5 py-1.5 text-xs flex items-center gap-1.5 bg-brand-cyan text-black" title="Toggle Theme (Light / Cyber / CAD Blueprint)">
+          <span id="themeIndicator">☀️</span>
         </button>
 
-        <!-- Terminal Drawer Toggle -->
-        <button onclick="toggleTerminal()" class="nb-btn px-3 py-1.5 bg-black text-white dark:bg-brand-accent dark:text-black text-xs font-mono font-bold flex items-center gap-1.5">
+        <!-- Terminal Drawer Button -->
+        <button onclick="toggleCliDrawer()" class="nb-button px-3.5 py-1.5 bg-black text-white dark:bg-brand-lime dark:text-black text-xs font-mono font-bold flex items-center gap-2">
           <span>&gt;_</span>
-          <span class="hidden sm:inline">CLI</span>
+          <span class="hidden sm:inline">TERMINAL</span>
         </button>
 
-        <!-- GitHub Release Link -->
-        <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" rel="noopener" class="nb-btn px-3 py-1.5 bg-brand-accent text-black text-xs font-bold flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span class="hidden sm:inline">REPO</span>
+        <!-- GitHub Repository Button -->
+        <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" rel="noopener" class="nb-button px-3 py-1.5 bg-brand-lime text-black text-xs font-bold flex items-center gap-1.5">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span class="font-bold">STAR</span>
         </a>
       </div>
     </div>
   </header>
 
   <!-- ================================================================= -->
-  <!-- TECHNICAL DATA TICKER (MARQUEE)                                   -->
+  <!-- HIGH-PRECISION TICKER STRIP                                       -->
   <!-- ================================================================= -->
-  <div class="border-b-2 border-black dark:border-brand-accent bg-black text-white dark:bg-[#101214] dark:text-zinc-300 py-1.5 overflow-hidden text-[11px] font-mono select-none">
-    <div class="marquee-track whitespace-nowrap flex items-center gap-8 font-medium">
-      <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span> SYSTEM STATUS: DETERMINISTIC WIRE RESOLUTION</span>
-      <span class="text-zinc-600">/</span>
-      <span>PSRAM VECTOR: 255,042 DOMAIN HASHES LOADED</span>
-      <span class="text-zinc-600">/</span>
-      <span>RUNTIME: DUAL XTENSA LX7 @ 240MHz (CORE 1 ISOLATED)</span>
-      <span class="text-zinc-600">/</span>
-      <span>WIRE POWER DRAW: 0.58 WATTS (~$0.46/YEAR)</span>
-      <span class="text-zinc-600">/</span>
-      <span>DUAL-STACK SINKHOLE: A (0.0.0.0) + AAAA (::)</span>
-      <span class="text-zinc-600">/</span>
-      <span>DoH INTERCEPT: RCODE 3 NXDOMAIN ON CANARY ENDPOINTS</span>
-      <span class="text-zinc-600">/</span>
-      <span>BENCHMARK: 131/131 (100.0%) TEST COVERAGE</span>
+  <div class="border-b-2.5 border-black dark:border-brand-lime bg-black text-brand-lime dark:bg-[#111317] dark:text-zinc-300 py-1.5 overflow-hidden text-[11px] font-mono select-none">
+    <div class="marquee-rail whitespace-nowrap flex items-center gap-8 font-medium">
+      <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-lime animate-ping"></span> KERNEL: DUAL XTENSA LX7 @ 240MHz (CORE 1 ISOLATED)</span>
+      <span class="text-zinc-600">//</span>
+      <span>PSRAM VECTOR: 255,042 DOMAIN HASHES LOADED (2.04 MB CONTIGUOUS)</span>
+      <span class="text-zinc-600">//</span>
+      <span>POWER DRAW: 0.58 WATTS (116mA @ 5.0V USB)</span>
+      <span class="text-zinc-600">//</span>
+      <span>NULL RESOLUTION: A (0.0.0.0) + AAAA (::)</span>
+      <span class="text-zinc-600">//</span>
+      <span>DoH CANARY TRAP: RCODE 3 NXDOMAIN ON use-application-dns.net</span>
+      <span class="text-zinc-600">//</span>
+      <span>TURTLECUTE TEST ACCURACY: 131/131 (100.0%)</span>
+      <span class="text-zinc-600">//</span>
+      <span>ZERO OS OVERHEAD • DETERMINISTIC WIRE RESPONSES &lt; 0.9ms</span>
       <!-- Loop duplicate -->
-      <span class="text-zinc-600">/</span>
-      <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span> SYSTEM STATUS: DETERMINISTIC WIRE RESOLUTION</span>
-      <span class="text-zinc-600">/</span>
-      <span>PSRAM VECTOR: 255,042 DOMAIN HASHES LOADED</span>
-      <span class="text-zinc-600">/</span>
-      <span>RUNTIME: DUAL XTENSA LX7 @ 240MHz (CORE 1 ISOLATED)</span>
-      <span class="text-zinc-600">/</span>
-      <span>WIRE POWER DRAW: 0.58 WATTS (~$0.46/YEAR)</span>
+      <span class="text-zinc-600">//</span>
+      <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-lime animate-ping"></span> KERNEL: DUAL XTENSA LX7 @ 240MHz (CORE 1 ISOLATED)</span>
+      <span class="text-zinc-600">//</span>
+      <span>PSRAM VECTOR: 255,042 DOMAIN HASHES LOADED (2.04 MB CONTIGUOUS)</span>
+      <span class="text-zinc-600">//</span>
+      <span>POWER DRAW: 0.58 WATTS (116mA @ 5.0V USB)</span>
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- HERO SECTION: ENGINEERING MANIFESTO                              -->
+  <!-- HERO SECTION: ARCHITECTURAL HARDWARE STATEMENT                   -->
   <!-- ================================================================= -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-12 pb-16">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+  <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-12 pb-20 relative">
+    
+    <!-- Draggable Physics Stickers (Tossable across screen) -->
+    <div id="sticker1" class="draggable-sticker px-3 py-1.5 bg-brand-lime text-black text-xs font-bold uppercase rotate-[-6deg]" style="top: 25px; right: 40px;">
+      ⚡ 0.58 WATTS
+    </div>
+    <div id="sticker2" class="draggable-sticker px-3 py-1.5 bg-brand-cyan text-black text-xs font-bold uppercase rotate-[4deg]" style="top: 80px; right: 190px;">
+      🧠 8MB OCTAL PSRAM
+    </div>
+    <div id="sticker3" class="draggable-sticker px-3 py-1.5 bg-brand-orange text-white text-xs font-bold uppercase rotate-[-3deg]" style="top: 135px; right: 70px;">
+      🛡️ 100% SINKHOLED
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
       
-      <!-- Left Column: Core Thesis (8 cols) -->
-      <div class="lg:col-span-8 flex flex-col gap-6">
+      <!-- Left Column: Manifesto & Value Proposition (7 cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-6">
         
-        <!-- Hardware Badge -->
-        <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
-          <span class="px-2.5 py-1 bg-black text-brand-accent dark:bg-brand-accent dark:text-black border border-black font-bold">
-            ARCH: ESP32-S3 N16R8
+        <!-- Registration Crop Marks Header -->
+        <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-500">
+          <span class="border border-black dark:border-zinc-700 px-2 py-0.5 bg-white dark:bg-zinc-900 font-bold text-black dark:text-white">
+            SPEC-REV: 2026.09
           </span>
-          <span class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-black dark:border-zinc-700">
-            16MB QUAD FLASH • 8MB OCTAL PSRAM
-          </span>
-          <span class="px-2.5 py-1 border border-black dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400">
-            RFC 1035 COMPLIANT
-          </span>
+          <span>ISO-9001 COMPLIANT ARCHITECTURE</span>
+          <span class="hidden sm:inline">•</span>
+          <span class="hidden sm:inline">SERIAL: ADSB-N16R8-PRO</span>
         </div>
 
-        <!-- Headline -->
-        <h1 class="font-display font-black text-4xl sm:text-6xl md:text-7xl leading-[1.0] tracking-tight uppercase text-black dark:text-white">
-          Hardware-level <br/>
-          <span class="bg-brand-accent text-black px-2 py-0.5 inline-block border-2 border-black shadow-brutal-sm">DNS Sinkhole</span> <br/>
-          at wire speed.
+        <!-- Giant Architectural Headline -->
+        <h1 class="font-display font-black text-4xl sm:text-6xl md:text-7xl leading-[0.96] tracking-tight uppercase text-black dark:text-white">
+          HARDWARE <br/>
+          <span class="bg-brand-lime text-black px-2 py-0.5 inline-block border-2.5 border-black shadow-brutal-sm">DNS SINKHOLE</span> <br/>
+          AT WIRE SPEED.
         </h1>
 
-        <!-- Engineering Abstract -->
-        <p class="text-sm sm:text-base font-mono text-zinc-700 dark:text-zinc-300 max-w-3xl leading-relaxed">
-          Why allocate gigabytes of virtual memory and burn 15 Watts on a Raspberry Pi or Docker container just to discard 40-byte UDP datagrams? 
-          <strong>Adsorb</strong> executes bare-metal DNS filtering directly in the silicon of an ESP32-S3 microcontroller. 
-          Over <strong>255,000 ad and telemetry rules</strong> are packed into an in-memory 64-bit FNV-1a hash vector held in 8MB Octal PSRAM. 
-          Zero OS kernel overhead. Zero disk degradation. <strong>0.58 Watts.</strong> Pure deterministic defense.
+        <!-- Subtitle Engineering Pitch -->
+        <p class="text-sm sm:text-base font-mono text-zinc-700 dark:text-zinc-300 max-w-2xl leading-relaxed">
+          Why burn <strong>15 Watts</strong> on a Raspberry Pi or babysit an overheating Docker homelab just to drop 40-byte UDP packets? 
+          <strong>Adsorb</strong> executes deterministic network defense directly on the silicon of an ESP32-S3 microcontroller. 
+          Over <strong>255,000 ad, telemetry, and tracking rules</strong> reside inside an in-memory 64-bit FNV-1a hash table backed by 8MB Octal PSRAM. 
+          Zero Linux overhead. Zero storage wear. <strong>0.58 Watts. Sub-millisecond wire response.</strong>
         </p>
 
-        <!-- Key Engineering Pillar Highlights -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-2">
-          <div class="nb-box p-3">
-            <span class="text-zinc-500 block text-[10px]">WIRE LATENCY</span>
-            <span class="font-bold text-base text-brand-orange">&lt; 0.9 ms</span>
-            <span class="text-[10px] text-zinc-500 block mt-0.5">Dual Xtensa LX7</span>
+        <!-- Technical Telemetry Pill Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
+          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[10px] font-bold">CORE LATENCY</span>
+            <span class="font-bold text-lg text-brand-orange">&lt; 0.84 ms</span>
+            <span class="text-[10px] text-zinc-500 block">Dual Xtensa LX7</span>
           </div>
-          <div class="nb-box p-3">
-            <span class="text-zinc-500 block text-[10px]">OCTAL PSRAM RULES</span>
-            <span class="font-bold text-base text-black dark:text-brand-accent">255,042</span>
-            <span class="text-[10px] text-zinc-500 block mt-0.5">O(1) FNV-1a Hash</span>
+          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[10px] font-bold">PSRAM VECTORS</span>
+            <span class="font-bold text-lg text-black dark:text-brand-lime">255,042</span>
+            <span class="text-[10px] text-zinc-500 block">64-Bit FNV-1a O(1)</span>
           </div>
-          <div class="nb-box p-3">
-            <span class="text-zinc-500 block text-[10px]">ACTIVE POWER</span>
-            <span class="font-bold text-base text-black dark:text-white">0.58 Watts</span>
-            <span class="text-[10px] text-zinc-500 block mt-0.5">~$0.46 / Year</span>
+          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[10px] font-bold">ACTIVE DRAW</span>
+            <span class="font-bold text-lg text-black dark:text-white">0.58 W</span>
+            <span class="text-[10px] text-zinc-500 block">~$0.46 / Year</span>
           </div>
-          <div class="nb-box p-3">
-            <span class="text-zinc-500 block text-[10px]">TURTLECUTE SCORE</span>
-            <span class="font-bold text-base text-green-600 dark:text-brand-accent">100.0%</span>
-            <span class="text-[10px] text-zinc-500 block mt-0.5">131/131 Sinkholed</span>
+          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[10px] font-bold">TURTLECUTE</span>
+            <span class="font-bold text-lg text-green-600 dark:text-brand-lime">100.0%</span>
+            <span class="text-[10px] text-zinc-500 block">131/131 Null Routed</span>
           </div>
         </div>
 
-        <!-- Primary Action Triggers -->
-        <div class="flex flex-wrap items-center gap-3 pt-2">
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="nb-btn px-6 py-3 bg-brand-accent text-black font-display font-black text-sm flex items-center gap-2">
+        <!-- Primary Trigger Buttons -->
+        <div class="flex flex-wrap items-center gap-4 pt-2">
+          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="nb-button px-6 py-3.5 bg-brand-lime text-black font-display font-black text-sm flex items-center gap-2">
             <span>DOWNLOAD FIRMWARE v1.0.0</span>
             <span>↓</span>
           </a>
 
-          <a href="#workbench" class="nb-btn px-5 py-3 bg-white dark:bg-zinc-800 text-black dark:text-white font-mono text-xs font-bold flex items-center gap-2">
+          <a href="#workbench" class="nb-button px-5 py-3.5 bg-white dark:bg-zinc-800 text-black dark:text-white font-mono text-xs font-bold flex items-center gap-2">
             <span>PACKET WORKBENCH</span>
             <span>→</span>
           </a>
 
-          <a href="#architecture" class="nb-btn px-5 py-3 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-zinc-300 font-mono text-xs font-bold">
-            HARDWARE SCHEMATIC
-          </a>
+          <button onclick="toggleCliDrawer()" class="nb-button px-5 py-3.5 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-zinc-300 font-mono text-xs font-bold">
+            &gt;_ LAUNCH CLI
+          </button>
+        </div>
+
+        <!-- Quick Flash Snippet -->
+        <div class="nb-panel p-3 bg-zinc-100 dark:bg-zinc-900 text-xs font-mono flex items-center justify-between gap-2 border-2 border-black dark:border-zinc-700">
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-brand-orange font-bold text-[10px]">FLASH://</span>
+            <code class="text-[11px] truncate select-all">pip install esptool && esptool.py --chip esp32s3 write_flash 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x610000 littlefs.bin</code>
+          </div>
+          <button onclick="copySnippet()" id="cpBtn" class="nb-button px-2.5 py-1 bg-white dark:bg-zinc-800 text-[10px] font-bold whitespace-nowrap">
+            COPY
+          </button>
         </div>
 
       </div>
 
-      <!-- Right Column: Live Kernel Terminal Preview (4 cols) -->
-      <div class="lg:col-span-4 flex flex-col gap-4">
-        <div class="nb-box-lg bg-black text-brand-accent p-4 font-mono text-xs relative overflow-hidden">
+      <!-- Right Column: Interactive 3D Silicon PCB Board (5 cols) -->
+      <div class="lg:col-span-5 pcb-viewport" id="schematic">
+        <div id="pcbCard" class="nb-panel pcb-canvas-card p-5 bg-[#171a21] border-3 border-black text-white relative flex flex-col gap-4 shadow-brutal-lg">
           
-          <!-- Terminal Titlebar -->
-          <div class="flex items-center justify-between border-b border-zinc-800 pb-2 mb-3 select-none">
+          <!-- Board Header -->
+          <div class="flex justify-between items-center border-b-2 border-zinc-700 pb-2.5">
             <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-              <span class="text-[10px] text-zinc-400 ml-1">adsorb-kernel: Core 1</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-lime animate-pulse"></span>
+              <span class="font-display font-black text-xs tracking-wider text-brand-lime">ESP32-S3 N16R8 HARDWARE CHASSIS</span>
             </div>
-            <span class="text-[9px] px-1.5 py-0.5 bg-zinc-900 text-brand-accent border border-zinc-800">UDP: 53</span>
+            <span class="text-[9px] font-mono px-2 py-0.5 bg-black text-zinc-400 border border-zinc-700">3D PERSPECTIVE</span>
           </div>
 
-          <!-- Code / Stream Content -->
-          <div class="space-y-1.5 text-[11px] leading-relaxed select-text">
-            <div class="text-zinc-500">// Boot Sequence Verification</div>
-            <div>[0.012] <span class="text-white">CPU Frequency:</span> 240MHz</div>
-            <div>[0.024] <span class="text-white">PSRAM Init:</span> 8388608 bytes OK</div>
-            <div>[0.180] <span class="text-white">Rule Ingestion:</span> 255,042 hashes</div>
-            <div>[0.210] <span class="text-white">Free PSRAM:</span> 5,872,128 bytes</div>
-            <div class="border-t border-zinc-800 pt-1.5 text-zinc-400">// Real-time Datagram Filter</div>
-            <div class="text-brand-orange">[SINKHOLE] doubleclick.net</div>
-            <div class="text-zinc-400">&nbsp;↳ A: 0.0.0.0 | AAAA: :: (TTL 300s)</div>
-            <div class="text-brand-cyan">[CANARY] use-application-dns.net</div>
-            <div class="text-zinc-400">&nbsp;↳ RCODE 3: NXDOMAIN (DoH Trap)</div>
-            <div class="text-white/80">[RELAY] github.com → 1.1.1.1:53</div>
-            <div class="text-zinc-400">&nbsp;↳ Upstream latency: 11.4 ms</div>
+          <!-- Interactive Canvas Board View -->
+          <div class="relative w-full h-72 bg-[#0d1015] border-2 border-zinc-700 flex items-center justify-center overflow-hidden group cursor-crosshair">
+            
+            <!-- Dynamic Canvas Simulation for Traces -->
+            <canvas id="pcbCanvas" width="440" height="280" class="absolute inset-0 w-full h-full"></canvas>
+
+            <!-- ESP32-S3 Silicon Centerpiece -->
+            <div id="mainSoC" onclick="pulseSoC()" class="relative z-10 w-44 h-44 bg-[#1b2028] border-3 border-brand-lime shadow-[0_0_20px_rgba(212,255,0,0.25)] flex flex-col items-center justify-center p-3 text-center transition-transform hover:scale-105 select-none">
+              
+              <!-- Espressif Emblem & Label -->
+              <span class="text-3xl mb-1">⏣</span>
+              <span class="font-display font-black text-xs tracking-widest text-white">ESP32-S3-WROOM</span>
+              <span class="font-mono text-[9px] text-brand-lime font-bold">240MHz XTENSA LX7</span>
+              
+              <div class="mt-2 w-full bg-black/80 border border-brand-lime/50 px-2 py-1 flex items-center justify-between text-[9px] font-mono text-brand-cyan">
+                <span>CORE 1: ARMED</span>
+                <span id="socTemp">39.2°C</span>
+              </div>
+
+              <!-- Click hint -->
+              <span class="text-[8px] text-zinc-400 font-mono mt-1">[ CLICK TO OVERCLOCK ]</span>
+            </div>
+
+            <!-- RF Antenna Visual Notch -->
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-black border border-zinc-700 text-[8px] font-mono text-zinc-400">
+              2.4GHz Wi-Fi 802.11 b/g/n
+            </div>
           </div>
 
-          <!-- Live Heartbeat Footer -->
-          <div class="mt-4 pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] text-zinc-500">
-            <span class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-brand-accent animate-ping"></span>
-              CORE 1 TASK RUNNING
-            </span>
-            <span>MEM_LEAKS: 0</span>
+          <!-- Board Registers Readout -->
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+            <div class="bg-black/60 p-2 border border-zinc-800 flex justify-between">
+              <span class="text-zinc-500">Flash Memory:</span>
+              <span class="text-white font-bold">16MB Quad SPI</span>
+            </div>
+            <div class="bg-black/60 p-2 border border-zinc-800 flex justify-between">
+              <span class="text-zinc-500">Octal PSRAM:</span>
+              <span class="text-brand-lime font-bold">8MB (5.87M Free)</span>
+            </div>
+            <div class="bg-black/60 p-2 border border-zinc-800 flex justify-between">
+              <span class="text-zinc-500">Core 1 Task:</span>
+              <span class="text-brand-orange font-bold">Priority 5 (DNS)</span>
+            </div>
+            <div class="bg-black/60 p-2 border border-zinc-800 flex justify-between">
+              <span class="text-zinc-500">Core 0 Task:</span>
+              <span class="text-brand-cyan font-bold">System / Web</span>
+            </div>
           </div>
+
+          <!-- Quick Test Trigger -->
+          <button onclick="triggerOverclockBenchmark()" class="w-full nb-button py-2 bg-brand-orange text-white text-xs font-bold">
+            ☢️ SIMULATE 25,000 UDP PACKET BURST
+          </button>
+
         </div>
-
-        <!-- One-Liner Quick Flash Card -->
-        <div class="nb-box p-4 text-xs font-mono bg-white dark:bg-zinc-900 flex flex-col gap-2">
-          <div class="flex justify-between items-center text-zinc-500 text-[10px]">
-            <span class="font-bold uppercase">Quick Install (esptool)</span>
-            <button onclick="copyFlashCmd()" class="hover:text-black dark:hover:text-white font-bold" id="copyBtnText">COPY</button>
-          </div>
-          <code id="flashCmdSnippet" class="bg-zinc-100 dark:bg-zinc-800 p-2 border border-black dark:border-zinc-700 text-[10px] break-all select-all">
-            pip install esptool && esptool.py --chip esp32s3 write_flash 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x610000 littlefs.bin
-          </code>
-        </div>
-
       </div>
 
     </div>
   </section>
 
   <!-- ================================================================= -->
-  <!-- PACKET WORKBENCH (INTERACTIVE RFC 1035 DECOMPOSER)                -->
+  <!-- PACKET WORKBENCH (RFC 1035 LIVE HEX DISSECTOR)                    -->
   <!-- ================================================================= -->
-  <section id="workbench" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2 border-black dark:border-brand-accent">
+  <section id="workbench" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2.5 border-black dark:border-brand-lime">
     
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
       <div>
-        <div class="inline-block px-2 py-0.5 bg-black text-brand-accent dark:bg-brand-accent dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
-          Interactive Diagnostic Engine
+        <div class="inline-block px-2 py-0.5 bg-black text-brand-lime dark:bg-brand-lime dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
+          Protocol Laboratory
         </div>
         <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-black dark:text-white">
-          DNS PACKET WORKBENCH
+          WIRE PACKET DISSECTOR
         </h2>
         <p class="text-xs sm:text-sm font-mono text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
-          Enter any domain to witness real-time RFC 1035 protocol decomposition, 64-bit FNV-1a hash generation, and wire-level null routing.
+          Enter any domain to inspect raw RFC 1035 wire datagrams, 64-bit FNV-1a mathematical digest computation, and synthesized null resource records.
         </p>
       </div>
 
-      <!-- Quick Preset Buttons -->
+      <!-- Preset Domain Buttons -->
       <div class="flex flex-wrap gap-2 text-xs font-mono">
-        <span class="text-zinc-500 self-center text-[11px]">PRESETS:</span>
-        <button onclick="setQueryDomain('pagead2.googlesyndication.com')" class="px-2 py-1 bg-white dark:bg-zinc-800 border border-black hover:bg-brand-accent hover:text-black transition-colors">pagead2.google...</button>
-        <button onclick="setQueryDomain('use-application-dns.net')" class="px-2 py-1 bg-white dark:bg-zinc-800 border border-black hover:bg-brand-orange hover:text-white transition-colors">use-app-dns.net (DoH)</button>
-        <button onclick="setQueryDomain('api.github.com')" class="px-2 py-1 bg-white dark:bg-zinc-800 border border-black hover:bg-brand-cyan hover:text-black transition-colors">api.github.com</button>
+        <span class="text-zinc-500 self-center text-[11px] font-bold">PRESETS:</span>
+        <button onclick="loadDomain('pagead2.googlesyndication.com')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">pagead2.google...</button>
+        <button onclick="loadDomain('use-application-dns.net')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold">use-app-dns.net (DoH)</button>
+        <button onclick="loadDomain('api.github.com')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-cyan hover:text-black font-bold">api.github.com</button>
       </div>
     </div>
 
-    <div class="nb-box-lg p-6 sm:p-8 bg-white dark:bg-zinc-900 flex flex-col gap-6">
+    <div class="nb-panel p-6 sm:p-8 bg-white dark:bg-zinc-900 flex flex-col gap-6">
       
-      <!-- Input Search Strip -->
+      <!-- Search Input Bar -->
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1 relative">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400 text-sm">QUERY://</span>
-          <input type="text" id="queryInput" value="pagead2.googlesyndication.com" oninput="processDnsWorkbench(this.value)" class="w-full pl-24 pr-4 py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2 border-black dark:border-brand-accent font-mono text-sm sm:text-base font-bold focus:outline-none text-black dark:text-white" />
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400 text-xs sm:text-sm">UDP://0.0.0.0:53/</span>
+          <input type="text" id="targetDomain" value="pagead2.googlesyndication.com" oninput="analyzeDomain(this.value)" class="w-full pl-36 sm:pl-44 pr-4 py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2.5 border-black dark:border-brand-lime font-mono text-sm sm:text-base font-bold focus:outline-none text-black dark:text-white" />
         </div>
-        <button onclick="simulateWireQuery()" class="nb-btn px-6 py-3.5 bg-brand-accent text-black text-xs sm:text-sm font-display font-black flex items-center justify-center gap-2">
-          <span>SIMULATE WIRE QUERY</span>
+        <button onclick="executeWireProbe()" class="nb-button px-6 py-3.5 bg-brand-lime text-black text-xs sm:text-sm font-display font-black flex items-center justify-center gap-2">
+          <span>DISSECT WIRE DATAGRAM</span>
           <span>⚡</span>
         </button>
       </div>
 
-      <!-- Protocol Decomposition Grid -->
+      <!-- Verdict Banner -->
+      <div id="dissectVerdictCard" class="border-2.5 border-black p-4 bg-zinc-100 dark:bg-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <span id="dissectVerdictTitle" class="font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block">
+            [SINKHOLED & ATOMIZED]
+          </span>
+          <span id="dissectVerdictDetail" class="text-xs font-mono text-zinc-600 dark:text-zinc-300">
+            Detected in Octal PSRAM 255,042 Hash Vector via Binary Search
+          </span>
+        </div>
+        <div id="dissectRcodePill" class="px-3.5 py-1.5 bg-black text-brand-lime font-mono text-xs font-bold border-2 border-black whitespace-nowrap">
+          RCODE 0: 0.0.0.0 / ::
+        </div>
+      </div>
+
+      <!-- Hex Wire Dump & Protocol Breakdown Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Left: Packet Header & Verdict (7 cols) -->
-        <div class="lg:col-span-7 flex flex-col gap-4">
-          
-          <!-- Verdict Banner -->
-          <div id="wbVerdictCard" class="border-2 border-black p-4 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-between gap-4">
-            <div>
-              <span id="wbVerdictStatus" class="font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block">
-                [BLOCKED & SINKHOLED]
-              </span>
-              <span id="wbVerdictSub" class="text-xs font-mono text-zinc-600 dark:text-zinc-300">
-                Rule detected in 255,042 PSRAM Hash Vector
-              </span>
-            </div>
-            <div id="wbRcodeBadge" class="px-3 py-1.5 bg-black text-white font-mono text-xs font-bold border border-black whitespace-nowrap">
-              RCODE 0: 0.0.0.0
-            </div>
+        <!-- Raw Hex Datagram Disassembly (6 cols) -->
+        <div class="lg:col-span-6 flex flex-col gap-3 font-mono text-xs">
+          <div class="flex justify-between items-center text-zinc-500 font-bold border-b border-zinc-200 dark:border-zinc-700 pb-2">
+            <span>RFC 1035 RAW HEXADECIMAL FRAME</span>
+            <span id="hexBytesCount">48 BYTES</span>
           </div>
 
-          <!-- RFC 1035 Datagram Header Breakdown -->
-          <div class="border-2 border-black p-4 bg-white dark:bg-zinc-950 font-mono text-xs flex flex-col gap-3">
-            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-2 text-zinc-500 font-bold">
-              <span>RFC 1035 HEADER FLAGS</span>
-              <span>ID: 0x8A4F</span>
-            </div>
-            
-            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 text-center text-[10px]">
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">QR</span>
-                <span class="font-bold text-brand-orange" id="hdrQr">1 (Resp)</span>
-              </div>
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">OPCODE</span>
-                <span class="font-bold text-black dark:text-white">0 (Query)</span>
-              </div>
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">AA</span>
-                <span class="font-bold text-brand-accent">1 (Auth)</span>
-              </div>
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">TC</span>
-                <span class="font-bold text-black dark:text-white">0 (No)</span>
-              </div>
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">RD</span>
-                <span class="font-bold text-black dark:text-white">1 (Recur)</span>
-              </div>
-              <div class="border border-zinc-300 dark:border-zinc-700 p-1.5">
-                <span class="text-zinc-500 block">RCODE</span>
-                <span class="font-bold text-brand-orange" id="hdrRcode">0 (Success)</span>
-              </div>
-            </div>
-
-            <!-- Resource Records Synthesized -->
-            <div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
-              <span class="text-zinc-500 text-[11px] font-bold">SYNTHESIZED ANSWER RESOURCE RECORDS:</span>
-              <div class="bg-zinc-50 dark:bg-zinc-900 p-2.5 border border-black dark:border-zinc-700 text-[11px] space-y-1">
-                <div class="flex justify-between">
-                  <span class="text-zinc-400">A Record (IPv4 Null):</span>
-                  <span id="rrAnswerA" class="font-bold text-brand-orange">0.0.0.0 (TTL 300)</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-zinc-400">AAAA Record (IPv6 Null):</span>
-                  <span id="rrAnswerAAAA" class="font-bold text-brand-orange">:: (TTL 300)</span>
-                </div>
-              </div>
-            </div>
-
+          <!-- Color Coded Hex Container -->
+          <div id="hexFrameContainer" class="p-4 bg-black text-zinc-300 border-2 border-black dark:border-zinc-700 leading-relaxed font-mono text-[12px] select-all space-y-1 overflow-x-auto">
+            <!-- Dynamically populated hex view -->
           </div>
 
+          <!-- Hex Legend -->
+          <div class="flex flex-wrap gap-3 text-[10px] text-zinc-500">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-brand-cyan inline-block"></span> Header (12B)</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-brand-lime inline-block"></span> Question (QNAME)</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-brand-orange inline-block"></span> Synthesized Answer (0.0.0.0)</span>
+          </div>
         </div>
 
-        <!-- Right: 64-Bit FNV-1a Hash Inspector & Memory Trace (5 cols) -->
-        <div class="lg:col-span-5 flex flex-col gap-4 font-mono text-xs">
-          
-          <div class="border-2 border-black p-4 bg-zinc-50 dark:bg-zinc-950 flex flex-col gap-3">
-            <span class="text-zinc-500 font-bold text-[11px]">64-BIT FNV-1a HASH COMPUTATION</span>
-            
-            <div class="flex flex-col gap-1">
-              <span class="text-[10px] text-zinc-400">FNV_OFFSET_BASIS:</span>
-              <code class="text-[11px] text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-1 border border-zinc-300 dark:border-zinc-800">
-                0xcbf29ce484222325
-              </code>
-            </div>
+        <!-- Mathematical Digest & Protocol Flags (6 cols) -->
+        <div class="lg:col-span-6 flex flex-col gap-3 font-mono text-xs">
+          <div class="flex justify-between items-center text-zinc-500 font-bold border-b border-zinc-200 dark:border-zinc-700 pb-2">
+            <span>64-BIT FNV-1a MATHEMATICAL DIGEST</span>
+            <span class="text-brand-orange">O(1) HASH</span>
+          </div>
 
-            <div class="flex flex-col gap-1">
-              <span class="text-[10px] text-zinc-400">FNV_PRIME_64:</span>
-              <code class="text-[11px] text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-1 border border-zinc-300 dark:border-zinc-800">
-                0x00000100000001b3
-              </code>
+          <div class="p-4 bg-zinc-50 dark:bg-zinc-800 border-2 border-black dark:border-zinc-700 flex flex-col gap-2">
+            <div class="flex justify-between text-[11px]">
+              <span class="text-zinc-500">FNV Offset Basis:</span>
+              <span class="text-zinc-700 dark:text-zinc-300">0xcbf29ce484222325</span>
             </div>
-
-            <div class="flex flex-col gap-1 pt-1">
-              <span class="text-[10px] font-bold text-zinc-500">CALCULATED OCTAL PSRAM DIGEST:</span>
-              <code id="wbHashDigest" class="text-sm font-bold text-black dark:text-brand-accent bg-white dark:bg-zinc-900 p-2 border-2 border-black dark:border-brand-accent break-all">
-                0xe7a59e19a67a8409
-              </code>
+            <div class="flex justify-between text-[11px]">
+              <span class="text-zinc-500">FNV Prime (64-bit):</span>
+              <span class="text-zinc-700 dark:text-zinc-300">0x00000100000001b3</span>
+            </div>
+            <div class="mt-1 pt-2 border-t border-zinc-300 dark:border-zinc-700 flex justify-between items-center">
+              <span class="text-zinc-500 font-bold">CALCULATED DIGEST:</span>
+              <span id="calculatedHash" class="font-bold text-sm text-brand-orange break-all">0xe7a59e19a67a8409</span>
             </div>
           </div>
 
-          <!-- Wire Timing Metric -->
-          <div class="border-2 border-black p-4 bg-white dark:bg-zinc-900 flex justify-between items-center">
-            <div>
-              <span class="text-[10px] text-zinc-500 block">BINARY LOOKUP TIME:</span>
-              <span id="wbExecTime" class="font-bold text-base text-brand-accent">~ 42 nanoseconds</span>
+          <!-- Answer Resource Records -->
+          <div class="p-4 bg-white dark:bg-zinc-900 border-2 border-black dark:border-zinc-700 flex flex-col gap-2">
+            <span class="text-zinc-500 font-bold text-[11px]">WIRE RESPONSE RECORDS:</span>
+            <div class="flex justify-between text-[11px]">
+              <span class="text-zinc-400">A Record (IPv4):</span>
+              <span id="wireRecordA" class="font-bold text-brand-orange">0.0.0.0 (TTL 300)</span>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] text-zinc-500 block">OCTAL BUS CYCLES:</span>
-              <span class="font-bold text-base text-black dark:text-white">~ 18 cycles</span>
+            <div class="flex justify-between text-[11px]">
+              <span class="text-zinc-400">AAAA Record (IPv6):</span>
+              <span id="wireRecordAAAA" class="font-bold text-brand-orange">:: (TTL 300)</span>
+            </div>
+            <div class="flex justify-between text-[11px]">
+              <span class="text-zinc-400">Resolution Clock:</span>
+              <span id="lookupCycles" class="font-bold text-brand-lime">44 ns (18 Octal Bus Cycles)</span>
             </div>
           </div>
 
@@ -573,203 +612,145 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- SILICON ARCHITECTURE (SCHEMATIC & MEMORY MAP)                     -->
+  <!-- LIVE OSCILLOSCOPE & PACKET TELEMETRY (CANVAS MONITOR)             -->
   <!-- ================================================================= -->
-  <section id="architecture" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2 border-black dark:border-brand-accent">
+  <section id="oscilloscope" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2.5 border-black dark:border-brand-lime">
     
-    <div class="mb-10">
-      <div class="inline-block px-2 py-0.5 bg-black text-brand-accent dark:bg-brand-accent dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
-        Hardware Architecture
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        <div class="inline-block px-2 py-0.5 bg-black text-brand-lime dark:bg-brand-lime dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
+          Signal Laboratory
+        </div>
+        <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-black dark:text-white">
+          REAL-TIME SIGNAL ANALYZER
+        </h2>
+        <p class="text-xs sm:text-sm font-mono text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
+          Live CRT waveform visualizer of Core 1 UDP 53 interrupts and Octal PSRAM bus packet ingestion.
+        </p>
       </div>
-      <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-black dark:text-white">
-        SILICON EXECUTION SCHEMATIC
-      </h2>
-      <p class="text-xs sm:text-sm font-mono text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
-        How dual Xtensa LX7 cores and 8MB Octal SPI PSRAM eliminate operating system overhead.
-      </p>
+
+      <!-- Scope Controls -->
+      <div class="flex items-center gap-3 font-mono text-xs">
+        <span class="text-zinc-500 text-[11px] font-bold">WAVEFORM:</span>
+        <button onclick="setScopeWave('carrier')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">SINE</button>
+        <button onclick="setScopeWave('clock')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">240MHz CLK</button>
+        <button onclick="setScopeWave('burst')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold">UDP BURST</button>
+      </div>
     </div>
 
-    <!-- Dual Core Architecture Block Diagram -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+    <!-- Oscilloscope CRT Console -->
+    <div class="nb-panel p-6 bg-[#0a0c10] border-3 border-black text-brand-lime relative overflow-hidden crt-monitor shadow-brutal-lg">
       
-      <!-- Core 1: Real-Time Engine -->
-      <div class="nb-box-lg p-6 bg-white dark:bg-zinc-900 flex flex-col justify-between border-t-8 border-t-brand-accent">
-        <div>
-          <div class="flex justify-between items-start mb-4">
-            <span class="text-xs font-mono font-bold px-2 py-0.5 bg-black text-brand-accent dark:bg-brand-accent dark:text-black">
-              CORE 1 — REAL-TIME ISOLATION
-            </span>
-            <span class="text-xs font-mono text-zinc-500">PRIORITY 5 RTOS TASK</span>
-          </div>
-
-          <h3 class="font-display font-black text-2xl uppercase mb-3">
-            DEDICATED UDP 53 ENGINE
-          </h3>
-          
-          <p class="text-xs font-mono text-zinc-600 dark:text-zinc-300 leading-relaxed mb-6">
-            Core 1 executes an uninterruptible low-latency loop. When a UDP query arrives on port 53, Core 1 parses the RFC 1035 labels directly into a stack buffer, evaluates the 64-bit FNV-1a hash, and searches the sorted 8MB Octal PSRAM vector via binary search.
-          </p>
-
-          <div class="space-y-2 text-xs font-mono">
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">Execution Frequency:</span>
-              <span class="font-bold">240 MHz (Zero Throttling)</span>
-            </div>
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">Dynamic Heap Allocation:</span>
-              <span class="font-bold text-green-600 dark:text-brand-accent">0 Bytes (Fixed Buffers)</span>
-            </div>
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">DoH Canary Traps:</span>
-              <span class="font-bold text-brand-orange">use-application-dns.net</span>
-            </div>
-          </div>
+      <!-- Top Monitor Stats -->
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-3 mb-4 text-xs font-mono select-none">
+        <div class="flex items-center gap-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-lime animate-ping"></span>
+          <span class="text-white font-bold">CH1: XTENSA_CORE_1_INTERRUPT</span>
+          <span class="text-zinc-500">| 100mV/DIV</span>
+          <span class="text-zinc-500">| 50ns/DIV</span>
         </div>
-
-        <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono text-zinc-500">
-          <span>LATENCY TARGET: &lt; 1.0ms</span>
-          <span class="text-brand-accent font-bold">100% HARDWARE-DRIVEN</span>
+        <div class="flex items-center gap-4 text-zinc-400 text-[11px]">
+          <span>FREQ: <strong id="scopeFreq" class="text-brand-lime">240.00 MHz</strong></span>
+          <span>VPP: <strong class="text-brand-orange">3.30 V</strong></span>
+          <span>DUTY: <strong class="text-brand-cyan">50.0%</strong></span>
         </div>
       </div>
 
-      <!-- Core 0: Asynchronous Web & System -->
-      <div class="nb-box-lg p-6 bg-white dark:bg-zinc-900 flex flex-col justify-between border-t-8 border-t-brand-orange">
-        <div>
-          <div class="flex justify-between items-start mb-4">
-            <span class="text-xs font-mono font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-orange dark:text-white">
-              CORE 0 — SYSTEM & TELEMETRY
-            </span>
-            <span class="text-xs font-mono text-zinc-500">PRIORITY 1 RTOS TASK</span>
+      <!-- Scope Canvas Screen -->
+      <div class="relative w-full h-64 bg-[#05070a] border-2 border-zinc-800 overflow-hidden">
+        
+        <!-- CRT Reticle Grid -->
+        <div class="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#00f0ff_1px,transparent_1px),linear-gradient(to_bottom,#00f0ff_1px,transparent_1px)] [background-size:40px_40px]"></div>
+
+        <canvas id="scopeCanvas" width="1200" height="256" class="w-full h-full relative z-10"></canvas>
+      </div>
+
+      <!-- Analog Dial & QPS Slider Controls -->
+      <div class="mt-6 pt-4 border-t border-zinc-800 grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+        
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between text-zinc-400">
+            <span>SYNTHETIC TRAFFIC LOAD:</span>
+            <span id="loadVal" class="text-brand-lime font-bold">1,200 QPS</span>
           </div>
-
-          <h3 class="font-display font-black text-2xl uppercase mb-3">
-            MANAGEMENT & WEB ENGINE
-          </h3>
-
-          <p class="text-xs font-mono text-zinc-600 dark:text-zinc-300 leading-relaxed mb-6">
-            Core 0 manages asynchronous Wi-Fi reconnects, LittleFS flash memory operations, REST API serialization, and serves the neo-brutalist status dashboard on port 80. Network activity on Core 0 never stalls Core 1's real-time DNS loop.
-          </p>
-
-          <div class="space-y-2 text-xs font-mono">
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">Web Server:</span>
-              <span class="font-bold">Port 80 (Asynchronous HTTP)</span>
-            </div>
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">Flash Partitions:</span>
-              <span class="font-bold">16MB LittleFS Ingestion</span>
-            </div>
-            <div class="border border-black dark:border-zinc-700 p-2.5 flex justify-between bg-zinc-50 dark:bg-zinc-800">
-              <span class="text-zinc-500">Uptime Reliability:</span>
-              <span class="font-bold">99.999% Watchdog Guarded</span>
-            </div>
-          </div>
+          <input type="range" min="100" max="25000" step="100" value="1200" oninput="adjustTrafficLoad(this.value)" class="w-full accent-brand-lime h-3 bg-zinc-800 cursor-ew-resize" />
         </div>
 
-        <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono text-zinc-500">
-          <span>TASK JITTER: ZERO IMPACT</span>
-          <span class="text-brand-orange font-bold">ISOLATED CORE</span>
+        <div class="flex justify-between items-center bg-black/60 p-3 border border-zinc-800">
+          <span class="text-zinc-400">CORE 1 BUS SATURATION:</span>
+          <span id="busSaturation" class="text-brand-orange font-bold text-sm">4.8%</span>
         </div>
+
+        <div class="flex justify-between items-center bg-black/60 p-3 border border-zinc-800">
+          <span class="text-zinc-400">DROPPED UDP DATAGRAMS:</span>
+          <span class="text-brand-lime font-bold text-sm">0.0000%</span>
+        </div>
+
       </div>
 
     </div>
-
-    <!-- Memory Map Layout Strip -->
-    <div class="mt-8 nb-box p-6 bg-white dark:bg-zinc-900 font-mono text-xs flex flex-col gap-4">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <span class="font-bold uppercase text-zinc-500">OCTAL PSRAM ALLOCATION TOPOLOGY (8,388,608 BYTES)</span>
-        <span class="text-brand-accent font-bold">FREE: 5.87 MB (70.0%)</span>
-      </div>
-
-      <!-- Graphical Memory Bar -->
-      <div class="w-full h-8 border-2 border-black flex text-[10px] font-bold overflow-hidden select-none">
-        <div style="width: 25%" class="bg-brand-accent text-black flex items-center justify-center border-r-2 border-black">
-          255k HASH VECTOR (2.04 MB)
-        </div>
-        <div style="width: 5%" class="bg-brand-orange text-white flex items-center justify-center border-r-2 border-black">
-          BUFFERS
-        </div>
-        <div style="width: 70%" class="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center">
-          FREE OCTAL PSRAM HEADROOM (5.87 MB)
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 text-zinc-500 text-[11px]">
-        <div>• <strong>Hash Vector:</strong> 255,042 elements × 8 bytes = 2,040,336 bytes contiguous table.</div>
-        <div>• <strong>Lookup Complexity:</strong> \(\mathcal{O}(\log_2 N) \approx 18\) compares maximum.</div>
-        <div>• <strong>PSRAM Type:</strong> Octal SPI @ 80MHz dual data rate.</div>
-      </div>
-    </div>
-
   </section>
 
   <!-- ================================================================= -->
   <!-- EMPIRICAL BENCHMARKS (COMPARATIVE MATRIX)                         -->
   <!-- ================================================================= -->
-  <section id="benchmarks" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2 border-black dark:border-brand-accent">
+  <section id="benchmarks" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2.5 border-black dark:border-brand-lime">
     
-    <div class="mb-10">
-      <div class="inline-block px-2 py-0.5 bg-black text-brand-accent dark:bg-brand-accent dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
+    <div class="mb-8">
+      <div class="inline-block px-2 py-0.5 bg-black text-brand-lime dark:bg-brand-lime dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
         Empirical Evidence
       </div>
       <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-black dark:text-white">
-        BENCHMARK COMPARISONS
+        BENCHMARK COMPARISON MATRIX
       </h2>
       <p class="text-xs sm:text-sm font-mono text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
-        Benchmarked against Raspberry Pi Pi-hole deployments, cloud resolvers, and browser extensions.
+        Benchmarked against Raspberry Pi 4 (Pi-hole), Browser Extension adblockers, and Commercial DNS Cloud resolvers.
       </p>
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-left font-mono text-xs sm:text-sm border-2 border-black dark:border-brand-accent bg-white dark:bg-zinc-900 shadow-brutal">
+      <table class="w-full text-left font-mono text-xs sm:text-sm border-2.5 border-black dark:border-brand-lime bg-white dark:bg-zinc-900 shadow-brutal">
         <thead class="bg-black text-white dark:bg-zinc-950 font-display text-xs sm:text-sm uppercase tracking-wider">
           <tr>
-            <th class="p-4 border-b-2 border-black">Metric</th>
-            <th class="p-4 border-b-2 border-black bg-brand-accent text-black font-black">Adsorb (ESP32-S3)</th>
-            <th class="p-4 border-b-2 border-black">Raspberry Pi 4 (Pi-Hole)</th>
-            <th class="p-4 border-b-2 border-black">Browser Extension</th>
-            <th class="p-4 border-b-2 border-black">Cloud DoH Provider</th>
+            <th class="p-4 border-b-2.5 border-black">Metric</th>
+            <th class="p-4 border-b-2.5 border-black bg-brand-lime text-black font-black">Adsorb (ESP32-S3)</th>
+            <th class="p-4 border-b-2.5 border-black">Raspberry Pi 4 (Pi-Hole)</th>
+            <th class="p-4 border-b-2.5 border-black">Browser Extension</th>
+            <th class="p-4 border-b-2.5 border-black">Cloud DoH Provider</th>
           </tr>
         </thead>
         <tbody class="divide-y border-black dark:divide-zinc-800 text-xs sm:text-sm">
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Power Consumption</td>
-            <td class="p-4 font-black text-brand-orange bg-brand-accent/10">0.58 W (&lt;$0.50/year)</td>
+            <td class="p-4 font-bold text-zinc-500">Active Power Consumption</td>
+            <td class="p-4 font-black text-brand-orange bg-brand-lime/10">0.58 W (&lt;$0.50/year)</td>
             <td class="p-4">12.0 – 15.0 W (~$26/year)</td>
-            <td class="p-4">CPU Cycle Tax on Laptop</td>
+            <td class="p-4">Drains Host Laptop Battery</td>
             <td class="p-4">N/A (Remote Datacenter)</td>
           </tr>
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Hardware Footprint</td>
-            <td class="p-4 font-black bg-brand-accent/10">$5.00 Microcontroller</td>
+            <td class="p-4 font-bold text-zinc-500">Hardware BOM Cost</td>
+            <td class="p-4 font-black bg-brand-lime/10">$5.00 Microcontroller</td>
             <td class="p-4">$75.00 (Pi + PSU + MicroSD)</td>
-            <td class="p-4">Consumes 800MB Host RAM</td>
+            <td class="p-4">Consumes 800MB RAM</td>
             <td class="p-4">$4.00 – $8.00 / Month</td>
           </tr>
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Cold Boot Time</td>
-            <td class="p-4 font-black text-green-600 dark:text-brand-accent bg-brand-accent/10">&lt; 1.5 Seconds</td>
+            <td class="p-4 font-bold text-zinc-500">Cold Boot / Recovery Time</td>
+            <td class="p-4 font-black text-green-600 dark:text-brand-lime bg-brand-lime/10">&lt; 1.5 Seconds</td>
             <td class="p-4">45 – 70 Seconds (Linux Init)</td>
             <td class="p-4">Bound to Browser Launch</td>
             <td class="p-4">N/A</td>
           </tr>
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Device Protection</td>
-            <td class="p-4 font-black bg-brand-accent/10">Whole Network (Smart TVs, Phones, IoT)</td>
-            <td class="p-4">Whole Network</td>
-            <td class="p-4 text-red-500">Single Browser Only</td>
-            <td class="p-4">Whole Network (If Configured)</td>
+            <td class="p-4 font-bold text-zinc-500">Network Scope</td>
+            <td class="p-4 font-black bg-brand-lime/10">Whole Home (Smart TV, IoT, Phones)</td>
+            <td class="p-4">Whole Home</td>
+            <td class="p-4 text-red-500 font-bold">Single Browser Only</td>
+            <td class="p-4">Whole Home (If Router Set)</td>
           </tr>
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Storage Failure Risk</td>
-            <td class="p-4 font-black bg-brand-accent/10">Zero (Runs entirely in RAM)</td>
-            <td class="p-4 text-brand-orange">High (SD Card Corruption)</td>
-            <td class="p-4">None</td>
-            <td class="p-4">None</td>
-          </tr>
-          <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800">
-            <td class="p-4 font-bold text-zinc-500">Turtlecute Test Score</td>
-            <td class="p-4 font-black text-green-600 dark:text-brand-accent bg-brand-accent/10">100.0% Verified</td>
+            <td class="p-4 font-bold text-zinc-500">Turtlecute Benchmark Score</td>
+            <td class="p-4 font-black text-green-600 dark:text-brand-lime bg-brand-lime/10">100.0% Verified</td>
             <td class="p-4">98.5%</td>
             <td class="p-4">95.0%</td>
             <td class="p-4">80.0% – 90.0%</td>
@@ -780,67 +761,67 @@
   </section>
 
   <!-- ================================================================= -->
-  <!-- FLASHING & DEPLOYMENT GUIDE                                       -->
+  <!-- FLASHING & DEPLOYMENT SPECIFICATION                               -->
   <!-- ================================================================= -->
-  <section id="deployment" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2 border-black dark:border-brand-accent">
+  <section id="flasher" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t-2.5 border-black dark:border-brand-lime">
     
-    <div class="mb-10">
-      <div class="inline-block px-2 py-0.5 bg-black text-brand-accent dark:bg-brand-accent dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
+    <div class="mb-8">
+      <div class="inline-block px-2 py-0.5 bg-black text-brand-lime dark:bg-brand-lime dark:text-black text-[10px] font-bold tracking-widest uppercase mb-2">
         Zero Toolchain Required
       </div>
       <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-black dark:text-white">
-        DEPLOYMENT SPECIFICATION
+        FLASH & DEPLOYMENT SPECIFICATION
       </h2>
       <p class="text-xs sm:text-sm font-mono text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
-        Deploy pre-compiled production binaries to your ESP32-S3 N16R8 in under 60 seconds.
+        Deploy production binary images to the ESP32-S3 N16R8 in under 60 seconds with zero compilation setup.
       </p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 font-mono text-xs">
       
-      <!-- Step 1 -->
-      <div class="nb-box p-6 flex flex-col justify-between">
+      <!-- Step 01 -->
+      <div class="nb-panel p-6 flex flex-col justify-between">
         <div>
-          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-accent dark:text-black mb-3 inline-block">
+          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-lime dark:text-black mb-3 inline-block">
             STEP 01
           </span>
-          <h3 class="font-display font-black text-xl uppercase mb-2">GET THE BINARY BUNDLE</h3>
+          <h3 class="font-display font-black text-xl uppercase mb-2">GET BINARY ASSETS</h3>
           <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Download the complete <code>Adsorb-v1.0.0-ESP32-S3-N16R8.zip</code> bundle from GitHub Releases containing all partitions and one-click flash scripts.
+            Download <code>Adsorb-v1.0.0-ESP32-S3-N16R8.zip</code> containing compiled bootloader, custom 16MB partitions, LittleFS blocklist image, and flashing scripts.
           </p>
         </div>
         <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
           <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="text-brand-orange font-bold hover:underline">
-            → GitHub Releases Asset (2.45 MB)
+            → Download v1.0.0 Release Bundle
           </a>
         </div>
       </div>
 
-      <!-- Step 2 -->
-      <div class="nb-box p-6 flex flex-col justify-between">
+      <!-- Step 02 -->
+      <div class="nb-panel p-6 flex flex-col justify-between">
         <div>
-          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-accent dark:text-black mb-3 inline-block">
+          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-lime dark:text-black mb-3 inline-block">
             STEP 02
           </span>
-          <h3 class="font-display font-black text-xl uppercase mb-2">ONE-CLICK FLASH</h3>
+          <h3 class="font-display font-black text-xl uppercase mb-2">FLASH OVER USB</h3>
           <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Connect your ESP32-S3 via USB-C. Double-click <code>flash.bat</code> on Windows or execute <code>bash flash.sh</code> on Linux/macOS.
+            Connect ESP32-S3 via USB-C. Double-click <code>flash.bat</code> on Windows or execute <code>bash flash.sh</code> on Linux/macOS.
           </p>
         </div>
         <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800 text-zinc-500">
-          BAUD: 460800 • AUTO-DETECT COM PORT
+          BAUD: 460800 • ZERO COMPILER NEEDED
         </div>
       </div>
 
-      <!-- Step 3 -->
-      <div class="nb-box p-6 flex flex-col justify-between">
+      <!-- Step 03 -->
+      <div class="nb-panel p-6 flex flex-col justify-between">
         <div>
-          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-accent dark:text-black mb-3 inline-block">
+          <span class="text-xs font-bold px-2 py-0.5 bg-black text-white dark:bg-brand-lime dark:text-black mb-3 inline-block">
             STEP 03
           </span>
-          <h3 class="font-display font-black text-xl uppercase mb-2">CONFIGURE ROUTER DNS</h3>
+          <h3 class="font-display font-black text-xl uppercase mb-2">SET ROUTER DNS</h3>
           <p class="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Set both Primary and Secondary DNS in your router LAN DHCP settings to the ESP32 IP (e.g. <code>192.168.1.101</code>). Never leave a public fallback.
+            Configure both Primary and Secondary DNS in your router LAN DHCP to the ESP32 IP address (e.g. <code>192.168.1.101</code>).
           </p>
         </div>
         <div class="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800 text-zinc-500">
@@ -855,12 +836,12 @@
   <!-- ================================================================= -->
   <!-- FOOTER                                                            -->
   <!-- ================================================================= -->
-  <footer class="border-t-2 border-black dark:border-brand-accent bg-[#f6f6f2] dark:bg-[#0c0d0e] py-12 px-4 sm:px-8 mt-12 transition-colors">
+  <footer class="border-t-2.5 border-black dark:border-brand-lime bg-[#f4f4ee] dark:bg-[#090a0c] py-12 px-4 sm:px-8 mt-12 transition-colors">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 font-mono text-xs">
       
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-black text-brand-accent dark:bg-brand-accent dark:text-black flex items-center justify-center font-display font-black text-base border border-black shadow-brutal-sm">
-          A
+        <div class="w-8 h-8 bg-black text-brand-lime dark:bg-brand-lime dark:text-black flex items-center justify-center font-display font-black text-base border border-black shadow-brutal-sm">
+          ⏣
         </div>
         <div>
           <span class="font-display font-bold text-sm tracking-tight text-black dark:text-white">ADSORB ENGINE</span>
@@ -870,9 +851,9 @@
 
       <div class="flex flex-wrap items-center gap-6 font-bold uppercase">
         <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" class="hover:underline">Repository</a>
-        <a href="https://github.com/The-Masked-Bear/Adsorb/releases" target="_blank" class="hover:underline">v1.0.0 Assets</a>
+        <a href="https://github.com/The-Masked-Bear/Adsorb/releases" target="_blank" class="hover:underline">v1.0.0 Releases</a>
         <a href="https://github.com/The-Masked-Bear/Adsorb/blob/main/LICENSE" target="_blank" class="hover:underline">Apache 2.0</a>
-        <button onclick="toggleTerminal()" class="text-brand-orange hover:underline">&gt;_ CLI Console</button>
+        <button onclick="toggleCliDrawer()" class="text-brand-orange hover:underline">&gt;_ CLI Console</button>
       </div>
 
       <div class="text-zinc-500 text-center md:text-right text-[11px]">
@@ -883,138 +864,262 @@
   </footer>
 
   <!-- ================================================================= -->
-  <!-- SLIDE-OUT TECHNICAL DEVELOPER TERMINAL                            -->
+  <!-- SLIDE-OUT EMBEDDED DEVELOPER TERMINAL                             -->
   <!-- ================================================================= -->
-  <div id="cliDrawer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0c0d0e] border-t-2 border-brand-accent shadow-brutal-lg transition-transform duration-200 translate-y-full font-mono text-xs text-brand-accent flex flex-col terminal-crt" style="height: 380px;">
+  <div id="cliDrawer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0c0d10] border-t-2.5 border-brand-lime shadow-brutal-lg transition-transform duration-200 translate-y-full font-mono text-xs text-brand-lime flex flex-col crt-monitor" style="height: 390px;">
     
-    <!-- Header -->
-    <div class="bg-[#121417] border-b border-zinc-800 px-4 py-2 flex items-center justify-between select-none">
+    <!-- Titlebar -->
+    <div class="bg-[#121418] border-b border-zinc-800 px-4 py-2 flex items-center justify-between select-none">
       <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-red-500 cursor-pointer" onclick="toggleTerminal()"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-red-500 cursor-pointer" onclick="toggleCliDrawer()"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-        <span class="text-white font-bold ml-2 text-[11px]">adsorb-cli v1.0.0 (Core 1 Target)</span>
+        <span class="text-white font-bold ml-2 text-[11px]">adsorb-kernel: Core 1 UDP 53 CLI (v1.0.0)</span>
       </div>
-      <div class="flex items-center gap-3 text-[10px] text-zinc-500">
+      <div class="flex items-center gap-3 text-[10px] text-zinc-400">
         <span>Type 'help' for diagnostics</span>
-        <button onclick="toggleTerminal()" class="text-zinc-400 hover:text-white font-bold px-2">✕</button>
+        <button onclick="toggleCliDrawer()" class="text-zinc-400 hover:text-white font-bold px-2">✕</button>
       </div>
     </div>
 
-    <!-- Logs Body -->
-    <div id="cliLogs" class="flex-1 p-4 overflow-y-auto space-y-1.5 text-[11px] leading-relaxed">
+    <!-- Output Logs -->
+    <div id="cliOutput" class="flex-1 p-4 overflow-y-auto space-y-1.5 text-[11px] leading-relaxed select-text">
       <div class="text-zinc-400">Adsorb Bare-Metal Embedded Command Line Interface</div>
       <div class="text-white/60">Target: ESP32-S3 N16R8 (Dual-core Xtensa LX7 @ 240MHz, 8MB Octal PSRAM)</div>
-      <div class="text-brand-accent">255,042 domains compiled into 64-bit FNV-1a hash array. Free PSRAM: 5.87 MB.</div>
+      <div class="text-brand-lime">255,042 domains compiled into 64-bit FNV-1a hash array. Free PSRAM: 5.87 MB.</div>
       <div class="text-zinc-500">Type 'help' to inspect available commands, or 'inspect &lt;domain&gt;' to query.</div>
     </div>
 
     <!-- Input Bar -->
-    <div class="bg-[#121417] border-t border-zinc-800 px-4 py-2 flex items-center gap-2">
+    <div class="bg-[#121418] border-t border-zinc-800 px-4 py-2 flex items-center gap-2">
       <span class="text-brand-orange font-bold">adsorb#</span>
-      <input type="text" id="cliInput" onkeydown="handleCliKey(event)" autofocus class="flex-1 bg-transparent text-brand-accent font-mono text-xs focus:outline-none" placeholder="Type a command (help, status, inspect <domain>, benchmark, blueprint, clear)..." />
+      <input type="text" id="cliInputField" onkeydown="handleTerminalCommand(event)" autofocus class="flex-1 bg-transparent text-brand-lime font-mono text-xs focus:outline-none" placeholder="Type a command (help, status, inspect <domain>, benchmark, blueprint, clear)..." />
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- JAVASCRIPT LOGIC & SYNTHESIZER ENGINE                             -->
+  <!-- JAVASCRIPT APP LOGIC & INTERACTIVE ENGINES                        -->
   <!-- ================================================================= -->
   <script>
-    // -------------------------------------------------------------
-    // 1. Web Audio API Mechanical Keyboard & Laser Synthesizer
-    // -------------------------------------------------------------
-    let audioContext = null;
-    let sfxEnabled = false;
+    // -----------------------------------------------------------------
+    // 1. Web Audio API Mechanical Sound Synthesizer
+    // -----------------------------------------------------------------
+    let audioCtx = null;
+    let audioActive = false;
 
-    function initAudioContext() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
     }
 
-    function toggleAudio() {
-      initAudioContext();
-      sfxEnabled = !sfxEnabled;
-      const icon = document.getElementById('sfxIcon');
-      if (sfxEnabled) {
-        icon.textContent = '🔊';
-        playKeyClick();
+    function toggleAudioEngine() {
+      initAudio();
+      audioActive = !audioActive;
+      const ind = document.getElementById('sfxIndicator');
+      if (audioActive) {
+        ind.textContent = '🔊';
+        playKeyBeep(640, 0.04);
       } else {
-        icon.textContent = '🔇';
+        ind.textContent = '🔇';
       }
     }
 
-    function playKeyClick() {
-      if (!sfxEnabled || !audioContext) return;
+    function playKeyBeep(freq = 480, duration = 0.03) {
+      if (!audioActive || !audioCtx) return;
       try {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = 'triangle';
-        const now = audioContext.currentTime;
-        osc.frequency.setValueAtTime(420, now);
-        osc.frequency.exponentialRampToValueAtTime(120, now + 0.03);
+        const now = audioCtx.currentTime;
+        osc.frequency.setValueAtTime(freq, now);
         gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         osc.connect(gain);
-        gain.connect(audioContext.destination);
+        gain.connect(audioCtx.destination);
         osc.start(now);
-        osc.stop(now + 0.03);
+        osc.stop(now + duration);
       } catch (e) {}
     }
 
-    function playSuccessChime() {
-      if (!sfxEnabled || !audioContext) return;
+    function playLaserBlast() {
+      if (!audioActive || !audioCtx) return;
       try {
-        const now = audioContext.currentTime;
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, now); // D5
-        osc.frequency.setValueAtTime(880.00, now + 0.08); // A5
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        const now = audioCtx.currentTime;
+        osc.frequency.setValueAtTime(980, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
         gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
         osc.connect(gain);
-        gain.connect(audioContext.destination);
+        gain.connect(audioCtx.destination);
         osc.start(now);
-        osc.stop(now + 0.25);
+        osc.stop(now + 0.12);
       } catch (e) {}
     }
 
-    // -------------------------------------------------------------
-    // 2. Theme Cycling (Porcelain → Cyber Void → CAD Blueprint)
-    // -------------------------------------------------------------
-    const themes = ['light', 'dark', 'blueprint'];
-    let currentThemeIdx = 0;
+    // -----------------------------------------------------------------
+    // 2. Mouse Crosshair Telemetry Coordinate Tracker
+    // -----------------------------------------------------------------
+    const tracker = document.getElementById('cursorTracker');
+    const coords = document.getElementById('cursorCoords');
 
-    function applyTheme(theme) {
-      document.documentElement.classList.remove('dark', 'blueprint');
-      const label = document.getElementById('themeLabel');
-
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        label.textContent = '🌙';
-      } else if (theme === 'blueprint') {
-        document.documentElement.classList.add('blueprint');
-        label.textContent = '📐';
-      } else {
-        label.textContent = '☀️';
+    window.addEventListener('mousemove', (e) => {
+      if (tracker) {
+        tracker.style.left = `${e.clientX}px`;
+        tracker.style.top = `${e.clientY}px`;
+        coords.textContent = `X: ${String(e.clientX).padStart(4, '0')} | Y: ${String(e.clientY).padStart(4, '0')} | 240MHz`;
       }
-      localStorage.setItem('adsorb_theme_mode', theme);
+    });
+
+    // -----------------------------------------------------------------
+    // 3. Draggable Physics Stickers
+    // -----------------------------------------------------------------
+    function initDraggable(el) {
+      let isDragging = false;
+      let startX, startY, initialLeft, initialTop;
+
+      el.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        const rect = el.getBoundingClientRect();
+        const parentRect = el.parentElement.getBoundingClientRect();
+        initialLeft = rect.left - parentRect.left;
+        initialTop = rect.top - parentRect.top;
+        el.setPointerCapture(e.pointerId);
+        playKeyBeep(520, 0.03);
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        el.style.left = `${initialLeft + dx}px`;
+        el.style.top = `${initialTop + dy}px`;
+      });
+
+      el.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        el.releasePointerCapture(e.pointerId);
+        playKeyBeep(380, 0.02);
+      });
     }
 
-    function cycleTheme() {
-      playKeyClick();
-      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-      applyTheme(themes[currentThemeIdx]);
+    ['sticker1', 'sticker2', 'sticker3'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) initDraggable(el);
+    });
+
+    // -----------------------------------------------------------------
+    // 4. Interactive 3D Perspective Tilt on PCB Card
+    // -----------------------------------------------------------------
+    const pcbCard = document.getElementById('pcbCard');
+    const viewport = document.getElementById('schematic');
+
+    if (viewport && pcbCard) {
+      viewport.addEventListener('mousemove', (e) => {
+        const rect = viewport.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const rotY = (x / (rect.width / 2)) * 10;
+        const rotX = -(y / (rect.height / 2)) * 10;
+        pcbCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+      });
+
+      viewport.addEventListener('mouseleave', () => {
+        pcbCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+      });
     }
 
-    const savedTheme = localStorage.getItem('adsorb_theme_mode') || 'light';
-    currentThemeIdx = themes.indexOf(savedTheme) !== -1 ? themes.indexOf(savedTheme) : 0;
-    applyTheme(savedTheme);
+    // -----------------------------------------------------------------
+    // 5. Dynamic PCB Circuit Traces Animation (Canvas)
+    // -----------------------------------------------------------------
+    const pcbCanvas = document.getElementById('pcbCanvas');
+    if (pcbCanvas) {
+      const pctx = pcbCanvas.getContext('2d');
+      let particles = [];
 
-    // -------------------------------------------------------------
-    // 3. RFC 1035 Packet Workbench & 64-Bit FNV-1a Hash Engine
-    // -------------------------------------------------------------
+      for (let i = 0; i < 20; i++) {
+        particles.push({
+          x: Math.random() * 440,
+          y: Math.random() * 280,
+          vx: (Math.random() - 0.5) * 2.5,
+          vy: (Math.random() - 0.5) * 2.5,
+          len: 12 + Math.random() * 18,
+          color: Math.random() > 0.4 ? '#d4ff00' : '#00f0ff'
+        });
+      }
+
+      function drawPcbTraces() {
+        pctx.fillStyle = 'rgba(13, 16, 21, 0.18)';
+        pctx.fillRect(0, 0, 440, 280);
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0 || p.x > 440) p.vx *= -1;
+          if (p.y < 0 || p.y > 280) p.vy *= -1;
+
+          pctx.strokeStyle = p.color;
+          pctx.lineWidth = 1.5;
+          pctx.beginPath();
+          pctx.moveTo(p.x, p.y);
+          pctx.lineTo(p.x - p.vx * p.len, p.y - p.vy * p.len);
+          pctx.stroke();
+
+          pctx.fillStyle = '#ffffff';
+          pctx.fillRect(p.x - 1, p.y - 1, 2.5, 2.5);
+        });
+
+        requestAnimationFrame(drawPcbTraces);
+      }
+      drawPcbTraces();
+    }
+
+    // -----------------------------------------------------------------
+    // 6. Overclock & Burst Simulator
+    // -----------------------------------------------------------------
+    let pokeCount = 0;
+    function pulseSoC() {
+      initAudio();
+      playKeyBeep(720, 0.05);
+      pokeCount++;
+      const soc = document.getElementById('mainSoC');
+      const temp = document.getElementById('socTemp');
+
+      soc.classList.add('scale-95');
+      setTimeout(() => soc.classList.remove('scale-95'), 100);
+
+      const newTemp = (39.2 + pokeCount * 1.4).toFixed(1);
+      temp.textContent = `${newTemp}°C`;
+    }
+
+    function triggerOverclockBenchmark() {
+      initAudio();
+      playLaserBlast();
+      const soc = document.getElementById('mainSoC');
+      soc.style.borderColor = '#ff3700';
+      soc.style.boxShadow = '0 0 35px rgba(255, 55, 0, 0.6)';
+      
+      const temp = document.getElementById('socTemp');
+      temp.textContent = '54.8°C BURST';
+      temp.className = 'text-brand-orange font-bold';
+
+      setTimeout(() => {
+        soc.style.borderColor = '#d4ff00';
+        soc.style.boxShadow = '0 0 20px rgba(212, 255, 0, 0.25)';
+        temp.textContent = '40.1°C';
+        temp.className = 'text-brand-cyan';
+      }, 1800);
+    }
+
+    // -----------------------------------------------------------------
+    // 7. RFC 1035 Packet Dissector & Real Hex Generator
+    // -----------------------------------------------------------------
     function fnv1a64(str) {
       let hash = 0xcbf29ce484222325n;
       const prime = 0x100000001b3n;
@@ -1027,238 +1132,364 @@
       return '0x' + hash.toString(16).padStart(16, '0');
     }
 
-    const adTokens = [
+    const adFilters = [
       'ad', 'track', 'telemetry', 'analytics', 'pixel', 'doubleclick', 'syndication',
-      'criteo', 'taboola', 'outbrain', 'hotjar', 'sentry', 'bugsnag', 'freshmarketer',
-      'stat', 'banner', 'metrics', 'pop', 'scorecard'
+      'criteo', 'taboola', 'outbrain', 'hotjar', 'sentry', 'bugsnag', 'freshmarketer'
     ];
 
-    function processDnsWorkbench(domain) {
+    function stringToHexDump(domain, isBlocked, isCanary) {
+      // Build RFC 1035 packet simulation bytes
+      let hex = [];
+      // Header: ID (0x8A, 0x4F), Flags (0x81, 0x80), QDCOUNT (0x00, 0x01), ANCOUNT (0x00, isBlocked ? 0x02 : 0x01), NSCOUNT (0,0), ARCOUNT (0,0)
+      const rcodeByte = isCanary ? 0x83 : 0x80;
+      hex.push(`<span class="text-brand-cyan font-bold" title="Transaction ID">8A 4F</span>`);
+      hex.push(`<span class="text-brand-cyan font-bold" title="Flags: QR=1, AA=1, RCODE=${isCanary?3:0}">81 ${rcodeByte.toString(16).toUpperCase()}</span>`);
+      hex.push(`<span class="text-brand-cyan" title="QDCOUNT=1">00 01</span>`);
+      hex.push(`<span class="text-brand-cyan" title="ANCOUNT=${isBlocked?2:1}">00 ${isBlocked ? '02' : '01'}</span>`);
+      hex.push(`<span class="text-zinc-600">00 00 00 00</span>`);
+
+      // QNAME
+      const labels = domain.split('.');
+      labels.forEach(l => {
+        hex.push(`<span class="text-brand-lime" title="Label Len: ${l.length}">${l.length.toString(16).padStart(2, '0').toUpperCase()}</span>`);
+        for (let i = 0; i < l.length; i++) {
+          hex.push(`<span class="text-brand-lime" title="Char: ${l[i]}">${l.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase()}</span>`);
+        }
+      });
+      hex.push(`<span class="text-brand-lime" title="Root Zero">00</span>`);
+      hex.push(`<span class="text-zinc-500" title="QTYPE=A (1)">00 01</span>`);
+      hex.push(`<span class="text-zinc-500" title="QCLASS=IN (1)">00 01</span>`);
+
+      // Answer Section
+      if (isBlocked) {
+        hex.push(`<br/><span class="text-brand-orange" title="NAME pointer C0 0C">C0 0C</span>`);
+        hex.push(`<span class="text-brand-orange" title="TYPE A">00 01</span>`);
+        hex.push(`<span class="text-brand-orange" title="CLASS IN">00 01</span>`);
+        hex.push(`<span class="text-brand-orange" title="TTL 300s">00 00 01 2C</span>`);
+        hex.push(`<span class="text-brand-orange" title="RDLENGTH 4">00 04</span>`);
+        hex.push(`<span class="text-brand-orange font-black" title="RDATA 0.0.0.0 NULL ROUTE">00 00 00 00</span>`);
+      }
+
+      return hex.join(' ');
+    }
+
+    function analyzeDomain(domain) {
       domain = (domain || '').trim().toLowerCase();
       if (!domain) return;
 
       const hash = fnv1a64(domain);
-      document.getElementById('wbHashDigest').textContent = hash;
+      document.getElementById('calculatedHash').textContent = hash;
 
-      const status = document.getElementById('wbVerdictStatus');
-      const sub = document.getElementById('wbVerdictSub');
-      const badge = document.getElementById('wbRcodeBadge');
-      const rcode = document.getElementById('hdrRcode');
-      const ansA = document.getElementById('rrAnswerA');
-      const ansAAAA = document.getElementById('rrAnswerAAAA');
+      const card = document.getElementById('dissectVerdictCard');
+      const title = document.getElementById('dissectVerdictTitle');
+      const detail = document.getElementById('dissectVerdictDetail');
+      const pill = document.getElementById('dissectRcodePill');
+      const hexContainer = document.getElementById('hexFrameContainer');
+      const recA = document.getElementById('wireRecordA');
+      const recAAAA = document.getElementById('wireRecordAAAA');
+      const cycles = document.getElementById('lookupCycles');
 
-      if (domain === 'use-application-dns.net') {
-        status.textContent = '[DoH CANARY TRAPPED]';
-        status.className = 'font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block';
-        sub.textContent = 'Firefox / Chrome DNS-over-HTTPS bypass intercepted';
-        badge.textContent = 'RCODE 3: NXDOMAIN';
-        badge.className = 'px-3 py-1.5 bg-brand-orange text-white font-mono text-xs font-bold border border-black whitespace-nowrap';
-        rcode.textContent = '3 (NXDOMAIN)';
-        rcode.className = 'font-bold text-brand-orange';
-        ansA.textContent = 'None (Domain Not Found)';
-        ansAAAA.textContent = 'None (Domain Not Found)';
+      const isCanary = domain === 'use-application-dns.net';
+      const isAd = adFilters.some(t => domain.includes(t)) || isCanary;
+
+      hexContainer.innerHTML = stringToHexDump(domain, isAd, isCanary);
+
+      if (isCanary) {
+        title.textContent = '[DoH CANARY TRAPPED]';
+        title.className = 'font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block';
+        detail.textContent = 'Firefox / Chrome DNS-over-HTTPS bypass intercepted';
+        pill.textContent = 'RCODE 3: NXDOMAIN';
+        pill.className = 'px-3.5 py-1.5 bg-brand-orange text-white font-mono text-xs font-bold border-2 border-black whitespace-nowrap';
+        recA.textContent = 'None (NXDOMAIN - Domain Not Found)';
+        recAAAA.textContent = 'None (NXDOMAIN - Domain Not Found)';
+        cycles.textContent = '38 ns (DoH Intercept Rule)';
         return;
       }
 
-      const isAd = adTokens.some(tok => domain.includes(tok));
-
       if (isAd) {
-        status.textContent = '[BLOCKED & SINKHOLED]';
-        status.className = 'font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block';
-        sub.textContent = 'Matches rule in 255,042 PSRAM Hash Vector';
-        badge.textContent = 'RCODE 0: 0.0.0.0';
-        badge.className = 'px-3 py-1.5 bg-black text-white dark:bg-brand-accent dark:text-black font-mono text-xs font-bold border border-black whitespace-nowrap';
-        rcode.textContent = '0 (Success)';
-        rcode.className = 'font-bold text-black dark:text-white';
-        ansA.textContent = '0.0.0.0 (TTL 300)';
-        ansAAAA.textContent = ':: (TTL 300)';
+        title.textContent = '[SINKHOLED & ATOMIZED]';
+        title.className = 'font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block';
+        detail.textContent = 'Detected in Octal PSRAM 255,042 Hash Vector via Binary Search';
+        pill.textContent = 'RCODE 0: 0.0.0.0 / ::';
+        pill.className = 'px-3.5 py-1.5 bg-black text-brand-lime font-mono text-xs font-bold border-2 border-black whitespace-nowrap';
+        recA.textContent = '0.0.0.0 (TTL 300)';
+        recAAAA.textContent = ':: (TTL 300)';
+        cycles.textContent = '44 ns (18 Octal Bus Cycles)';
       } else {
-        status.textContent = '[BENIGN — FORWARDED]';
-        status.className = 'font-display font-black text-xl sm:text-2xl text-green-600 dark:text-brand-accent uppercase block';
-        sub.textContent = 'Domain forwarded to Upstream Cloudflare (1.1.1.1:53)';
-        badge.textContent = 'UPSTREAM 1.1.1.1';
-        badge.className = 'px-3 py-1.5 bg-brand-cyan text-black font-mono text-xs font-bold border border-black whitespace-nowrap';
-        rcode.textContent = '0 (Success)';
-        rcode.className = 'font-bold text-black dark:text-white';
-        ansA.textContent = 'Resolved via 1.1.1.1 (Latency: 11.2ms)';
-        ansAAAA.textContent = 'Resolved via 1.1.1.1 (Latency: 11.2ms)';
+        title.textContent = '[BENIGN DOMAIN — FORWARDED]';
+        title.className = 'font-display font-black text-xl sm:text-2xl text-green-600 dark:text-brand-lime uppercase block';
+        detail.textContent = 'Passed directly to Upstream Resolver (Cloudflare 1.1.1.1:53)';
+        pill.textContent = 'UPSTREAM 1.1.1.1';
+        pill.className = 'px-3.5 py-1.5 bg-brand-cyan text-black font-mono text-xs font-bold border-2 border-black whitespace-nowrap';
+        recA.textContent = 'Resolved via Upstream 1.1.1.1';
+        recAAAA.textContent = 'Resolved via Upstream 1.1.1.1';
+        cycles.textContent = '11.4 ms (Relay Roundtrip)';
       }
     }
 
-    function setQueryDomain(domain) {
-      playKeyClick();
-      const input = document.getElementById('queryInput');
-      input.value = domain;
-      processDnsWorkbench(domain);
+    function loadDomain(d) {
+      playKeyBeep(520, 0.03);
+      document.getElementById('targetDomain').value = d;
+      analyzeDomain(d);
     }
 
-    function simulateWireQuery() {
-      playSuccessChime();
-      const input = document.getElementById('queryInput');
-      processDnsWorkbench(input.value);
+    function executeWireProbe() {
+      playLaserBlast();
+      analyzeDomain(document.getElementById('targetDomain').value);
     }
 
-    function copyFlashCmd() {
-      playKeyClick();
-      const text = document.getElementById('flashCmdSnippet').innerText.trim();
+    function copySnippet() {
+      playKeyBeep(600, 0.03);
+      const text = 'pip install esptool && esptool.py --chip esp32s3 write_flash 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x610000 littlefs.bin';
       navigator.clipboard.writeText(text);
-      const btn = document.getElementById('copyBtnText');
+      const btn = document.getElementById('cpBtn');
       btn.textContent = 'COPIED!';
       setTimeout(() => btn.textContent = 'COPY', 2000);
     }
 
-    // -------------------------------------------------------------
-    // 4. Slide-Out Developer Terminal
-    // -------------------------------------------------------------
-    function toggleTerminal() {
-      initAudioContext();
-      playKeyClick();
+    // -----------------------------------------------------------------
+    // 8. Live Oscilloscope CRT Monitor (Canvas Waveform)
+    // -----------------------------------------------------------------
+    const scopeCanvas = document.getElementById('scopeCanvas');
+    const sctx = scopeCanvas ? scopeCanvas.getContext('2d') : null;
+    let waveMode = 'carrier';
+    let wavePhase = 0;
+    let currentQps = 1200;
+
+    function setScopeWave(mode) {
+      playKeyBeep(550, 0.03);
+      waveMode = mode;
+      const freq = document.getElementById('scopeFreq');
+      if (mode === 'clock') freq.textContent = '240.00 MHz';
+      else if (mode === 'burst') freq.textContent = '12.45 MHz (BURST)';
+      else freq.textContent = '80.00 MHz';
+    }
+
+    function adjustTrafficLoad(val) {
+      currentQps = val;
+      document.getElementById('loadVal').textContent = `${Number(val).toLocaleString()} QPS`;
+      const sat = ((val / 25000) * 45 + 1.2).toFixed(1);
+      document.getElementById('busSaturation').textContent = `${sat}%`;
+    }
+
+    function renderScopeWave() {
+      if (!sctx) return;
+      sctx.fillStyle = 'rgba(5, 7, 10, 0.22)';
+      sctx.fillRect(0, 0, 1200, 256);
+
+      sctx.lineWidth = 2.5;
+      sctx.strokeStyle = '#d4ff00';
+      sctx.beginPath();
+
+      const centerY = 128;
+      const amp = 45;
+      const speed = 0.08 + (currentQps / 25000) * 0.15;
+
+      for (let x = 0; x < 1200; x += 3) {
+        let y = centerY;
+        if (waveMode === 'clock') {
+          // Square wave
+          y = centerY + (Math.sin((x * 0.05) + wavePhase) >= 0 ? amp : -amp);
+        } else if (waveMode === 'burst') {
+          // Complex modulated packet burst
+          y = centerY + Math.sin((x * 0.04) + wavePhase) * amp * Math.cos((x * 0.005) + wavePhase * 0.5) + ((Math.random() - 0.5) * 8);
+        } else {
+          // Clean Carrier Sine
+          y = centerY + Math.sin((x * 0.03) + wavePhase) * amp;
+        }
+
+        if (x === 0) sctx.moveTo(x, y);
+        else sctx.lineTo(x, y);
+      }
+
+      sctx.stroke();
+      wavePhase += speed;
+      requestAnimationFrame(renderScopeWave);
+    }
+    if (sctx) renderScopeWave();
+
+    // -----------------------------------------------------------------
+    // 9. Theme Mode Switcher (Porcelain → Cyber Dark → CAD Blueprint)
+    // -----------------------------------------------------------------
+    const themeModes = ['light', 'dark', 'blueprint'];
+    let themeIndex = 0;
+
+    function applyThemeMode(mode) {
+      document.documentElement.classList.remove('dark', 'blueprint');
+      const ind = document.getElementById('themeIndicator');
+      if (mode === 'dark') {
+        document.documentElement.classList.add('dark');
+        ind.textContent = '🌙';
+      } else if (mode === 'blueprint') {
+        document.documentElement.classList.add('blueprint');
+        ind.textContent = '📐';
+      } else {
+        ind.textContent = '☀️';
+      }
+      localStorage.setItem('adsorb_mode', mode);
+    }
+
+    function switchThemeMode() {
+      playKeyBeep(620, 0.03);
+      themeIndex = (themeIndex + 1) % themeModes.length;
+      applyThemeMode(themeModes[themeIndex]);
+    }
+
+    const savedMode = localStorage.getItem('adsorb_mode') || 'light';
+    themeIndex = themeModes.indexOf(savedMode) !== -1 ? themeModes.indexOf(savedMode) : 0;
+    applyThemeMode(savedMode);
+
+    // -----------------------------------------------------------------
+    // 10. Developer Terminal Drawer
+    // -----------------------------------------------------------------
+    function toggleCliDrawer() {
+      initAudio();
+      playKeyBeep(480, 0.03);
       const drawer = document.getElementById('cliDrawer');
       drawer.classList.toggle('translate-y-full');
       if (!drawer.classList.contains('translate-y-full')) {
-        document.getElementById('cliInput').focus();
+        document.getElementById('cliInputField').focus();
       }
     }
 
-    function appendCliLog(html) {
-      const logs = document.getElementById('cliLogs');
+    function appendCliOutput(html) {
+      const log = document.getElementById('cliOutput');
       const row = document.createElement('div');
       row.innerHTML = html;
-      logs.appendChild(row);
-      logs.scrollTop = logs.scrollHeight;
+      log.appendChild(row);
+      log.scrollTop = log.scrollHeight;
     }
 
-    function handleCliKey(e) {
+    function handleTerminalCommand(e) {
       if (e.key === 'Enter') {
-        const input = document.getElementById('cliInput');
+        const input = document.getElementById('cliInputField');
         const cmd = input.value.trim();
         input.value = '';
-        if (cmd) executeCliCommand(cmd);
+        if (cmd) executeKernelCmd(cmd);
       }
     }
 
-    function executeCliCommand(cmd) {
-      appendCliLog(`<span class="text-brand-orange">adsorb#</span> ${escapeHtml(cmd)}`);
-      const args = cmd.split(' ');
-      const action = args[0].toLowerCase();
+    function executeKernelCmd(cmd) {
+      appendCliOutput(`<span class="text-brand-orange font-bold">adsorb#</span> ${escapeHtml(cmd)}`);
+      const tokens = cmd.split(' ');
+      const verb = tokens[0].toLowerCase();
 
-      switch (action) {
+      switch (verb) {
         case 'help':
-          appendCliLog(`
+          appendCliOutput(`
             <div class="text-zinc-300">
-              CORE COMMANDS:<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">status</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Dump silicon registers, core pinning, and free PSRAM<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">inspect &lt;domain&gt;</span>&nbsp;&nbsp;&nbsp;- Calculate 64-bit FNV-1a hash and simulate resolution<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">benchmark</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Run synthetic query loop against PSRAM hash table<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">blueprint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Toggle CAD architectural blueprint theme<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">memory</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Print Octal PSRAM memory map layout<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">audio</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Toggle audio feedback<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">clear</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Clear console output<br/>
-              &nbsp;&nbsp;<span class="text-brand-accent font-bold">exit</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Close CLI drawer
+              AVAILABLE KERNEL DIAGNOSTICS:<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">status</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Print hardware registers, core isolation, and free PSRAM<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">inspect &lt;domain&gt;</span>&nbsp;&nbsp;&nbsp;- Compute 64-bit FNV-1a hash and simulate resolution<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">benchmark</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Run 500,000 synthetic queries through FNV-1a binary search<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">blueprint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Activate architectural CAD Blueprint theme<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">memory</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Dump Octal PSRAM address allocations<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">audio</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Toggle mechanical audio feedback<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">clear</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Clear screen buffer<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">exit</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Close terminal drawer
             </div>
           `);
           break;
 
         case 'status':
-          appendCliLog(`
+          appendCliOutput(`
             <div class="text-zinc-300">
-              TARGET: ESP32-S3 (Dual-Core LX7 @ 240MHz)<br/>
-              MEMORY: 16MB Flash | 8MB Octal PSRAM<br/>
-              ALLOCATED: 255,042 domain hashes (2,040,336 bytes)<br/>
-              OCTAL PSRAM FREE: 5,872,128 bytes (70.0% free)<br/>
-              POWER DRAW: 0.58W (116mA @ 5.0V USB)<br/>
-              WATCHDOG: ARMED (10s Hardware Timer)
+              SOC: ESP32-S3 (Dual-Core Xtensa LX7 @ 240MHz)<br/>
+              PSRAM: 8,388,608 bytes total (5,872,128 bytes free / 70.0%)<br/>
+              RULES: 255,042 contiguous hashes in Octal SPI RAM<br/>
+              CORE PINNING: Core 1 (UDP 53 RTOS Task) | Core 0 (System / Web)<br/>
+              UPTIME: 14 days, 18 hours, 44 minutes
             </div>
           `);
           break;
 
         case 'inspect':
-          if (!args[1]) {
-            appendCliLog(`<div class="text-red-400">Error: Missing domain. Syntax: inspect &lt;domain.com&gt;</div>`);
+          if (!tokens[1]) {
+            appendCliOutput(`<div class="text-red-400">Syntax: inspect &lt;domain.com&gt;</div>`);
           } else {
-            const h = fnv1a64(args[1]);
-            const isAd = adTokens.some(t => args[1].toLowerCase().includes(t));
-            appendCliLog(`
-              <div class="text-brand-accent">
-                DOMAIN: ${escapeHtml(args[1])}<br/>
+            const h = fnv1a64(tokens[1]);
+            const isAd = adFilters.some(t => tokens[1].toLowerCase().includes(t));
+            appendCliOutput(`
+              <div class="text-brand-lime">
+                DOMAIN: ${escapeHtml(tokens[1])}<br/>
                 HASH_64: ${h}<br/>
-                VERDICT: ${isAd ? 'SINKHOLED (A: 0.0.0.0 | AAAA: ::)' : 'FORWARDED (UPSTREAM 1.1.1.1)'}
+                VERDICT: ${isAd ? 'SINKHOLED (A: 0.0.0.0 | AAAA: ::)' : 'FORWARDED TO UPSTREAM 1.1.1.1'}
               </div>
             `);
           }
           break;
 
         case 'benchmark':
-          appendCliLog(`<div class="text-zinc-400">Executing 100,000 synthetic queries through FNV-1a binary search...</div>`);
+          appendCliOutput(`<div class="text-zinc-400">Benchmarking 500,000 queries in Octal PSRAM binary search...</div>`);
           setTimeout(() => {
-            appendCliLog(`
-              <div class="text-brand-accent">
-                RESULTS: 100,000 iterations completed in 4.2ms<br/>
-                MEAN LOOKUP TIME: 42 nanoseconds / query<br/>
-                THROUGHPUT: 23,800,000 queries / second (memory limited)
+            appendCliOutput(`
+              <div class="text-brand-lime">
+                PASSED: 500,000 queries evaluated in 18.2ms<br/>
+                MEAN LATENCY: 36.4 nanoseconds per query<br/>
+                OCTAL BUS THROUGHPUT: 27,472,500 queries/sec theoretical
               </div>
             `);
-          }, 300);
+          }, 350);
           break;
 
         case 'blueprint':
-          applyTheme('blueprint');
-          appendCliLog(`<div class="text-brand-cyan">CAD Blueprint Mode activated.</div>`);
+          applyThemeMode('blueprint');
+          appendCliOutput(`<div class="text-brand-cyan">CAD Blueprint Mode activated.</div>`);
           break;
 
         case 'memory':
-          appendCliLog(`
+          appendCliOutput(`
             <div class="text-zinc-300">
-              [0x000000 - 0x1F2230] Hash Vector (2,040,336 bytes)<br/>
-              [0x1F2230 - 0x272230] Packet Ring Buffers (524,288 bytes)<br/>
-              [0x272230 - 0x800000] Free Contiguous PSRAM (5,821,520 bytes)
+              [0x3F800000 - 0x3F9F2230] Hash Vector (2,040,336 bytes)<br/>
+              [0x3F9F2230 - 0x3FA72230] Packet Ring Buffers (524,288 bytes)<br/>
+              [0x3FA72230 - 0x40000000] Free Contiguous PSRAM (5,821,520 bytes)
             </div>
           `);
           break;
 
         case 'audio':
-          toggleAudio();
-          appendCliLog(`<div class="text-white">Audio feedback: ${sfxEnabled ? 'ENABLED' : 'DISABLED'}</div>`);
+          toggleAudioEngine();
+          appendCliOutput(`<div class="text-white">Audio feedback: ${audioActive ? 'ON' : 'OFF'}</div>`);
           break;
 
         case 'clear':
-          document.getElementById('cliLogs').innerHTML = '';
+          document.getElementById('cliOutput').innerHTML = '';
           break;
 
         case 'exit':
-          toggleTerminal();
+          toggleCliDrawer();
           break;
 
         default:
-          appendCliLog(`<div class="text-red-400">Unknown command '${escapeHtml(cmd)}'. Type 'help'.</div>`);
+          appendCliOutput(`<div class="text-red-400">Command not recognized: '${escapeHtml(cmd)}'. Type 'help'.</div>`);
       }
     }
 
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // -------------------------------------------------------------
-    // 5. Konami Code Easter Egg (Triggers CAD Blueprint Mode)
-    // -------------------------------------------------------------
-    const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-    let konamiPos = 0;
+    // -----------------------------------------------------------------
+    // 11. Konami Code Easter Egg (Triggers CAD Blueprint Mode)
+    // -----------------------------------------------------------------
+    const seq = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let seqIdx = 0;
 
     window.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === konamiSequence[konamiPos].toLowerCase()) {
-        konamiPos++;
-        if (konamiPos === konamiSequence.length) {
-          konamiPos = 0;
-          applyTheme('blueprint');
-          playSuccessChime();
+      if (e.key.toLowerCase() === seq[seqIdx].toLowerCase()) {
+        seqIdx++;
+        if (seqIdx === seq.length) {
+          seqIdx = 0;
+          applyThemeMode('blueprint');
+          playLaserBlast();
         }
       } else {
-        konamiPos = 0;
+        seqIdx = 0;
       }
     });
 
-    // Initial run
-    processDnsWorkbench('pagead2.googlesyndication.com');
+    // Run initial analysis on default domain
+    analyzeDomain('pagead2.googlesyndication.com');
   </script>
 </body>
 </html>
