@@ -13,6 +13,8 @@ __pycache__/
 # Build & binary artifacts
 *.bin
 *.elf
+*.zip
+release_artifacts/
 
 # Environment & credentials (if any)
 .env
