@@ -154,17 +154,165 @@
       box-shadow: 2px 2px 0px #000;
     }
 
-    /* Precision Crosshair Cursor Tracker */
-    #cursorTracker {
-      position: fixed;
+    /* Precision Hardware Custom Cursor System */
+    @media (pointer: fine) {
+      body.custom-cursor-enabled,
+      body.custom-cursor-enabled a,
+      body.custom-cursor-enabled button,
+      body.custom-cursor-enabled .nb-button {
+        cursor: none !important;
+      }
+      body.custom-cursor-enabled input,
+      body.custom-cursor-enabled textarea {
+        cursor: text !important;
+      }
+      body.custom-cursor-enabled .draggable-sticker {
+        cursor: grab !important;
+      }
+      body.custom-cursor-enabled .draggable-sticker:active {
+        cursor: grabbing !important;
+      }
+    }
+
+    #customCursorRoot {
       pointer-events: none;
-      z-index: 100;
-      transform: translate(-50%, -50%);
-      transition: opacity 0.2s ease;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      overflow: hidden;
       display: none;
     }
     @media (pointer: fine) {
-      #cursorTracker { display: block; }
+      body.custom-cursor-enabled #customCursorRoot {
+        display: block;
+      }
+    }
+
+    #cursorDot {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 6px;
+      margin-left: -3px;
+      margin-top: -3px;
+      border-radius: 9999px;
+      background-color: #ff5500;
+      pointer-events: none;
+      z-index: 10000;
+      opacity: 0;
+      transform: translate3d(-100px, -100px, 0);
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+      will-change: transform;
+    }
+    .dark #cursorDot {
+      background-color: #ccff00;
+    }
+    .blueprint-mode #cursorDot {
+      background-color: #00f0ff;
+    }
+
+    #cursorRing {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 32px;
+      height: 32px;
+      margin-left: -16px;
+      margin-top: -16px;
+      border-radius: 9999px;
+      border: 1.5px solid rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+      transform: translate3d(-100px, -100px, 0);
+      transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                  margin 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.2s ease,
+                  border-radius 0.2s ease,
+                  border-width 0.15s ease,
+                  background-color 0.2s ease,
+                  opacity 0.25s ease;
+      will-change: transform;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dark #cursorRing {
+      border-color: rgba(204, 255, 0, 0.8);
+    }
+    .blueprint-mode #cursorRing {
+      border-color: rgba(0, 240, 255, 0.85);
+    }
+
+    /* Reticle Precision Corner Ticks */
+    .reticle-tick {
+      position: absolute;
+      background-color: currentColor;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .reticle-t { top: -4px; left: 50%; width: 1.5px; height: 3.5px; transform: translateX(-50%); }
+    .reticle-b { bottom: -4px; left: 50%; width: 1.5px; height: 3.5px; transform: translateX(-50%); }
+    .reticle-l { left: -4px; top: 50%; width: 3.5px; height: 1.5px; transform: translateY(-50%); }
+    .reticle-r { right: -4px; top: 50%; width: 3.5px; height: 1.5px; transform: translateY(-50%); }
+
+    /* Cursor Hover on Buttons, Links, Clickables */
+    .cursor-hover #cursorRing {
+      width: 48px;
+      height: 48px;
+      margin-left: -24px;
+      margin-top: -24px;
+      border-color: #ff5500;
+      background-color: rgba(255, 85, 0, 0.1);
+      backdrop-filter: blur(0.5px);
+    }
+    .dark .cursor-hover #cursorRing {
+      border-color: #ccff00;
+      background-color: rgba(204, 255, 0, 0.12);
+    }
+    .blueprint-mode .cursor-hover #cursorRing {
+      border-color: #00f0ff;
+      background-color: rgba(0, 240, 255, 0.12);
+    }
+    .cursor-hover #cursorDot {
+      transform: scale(0.6);
+    }
+
+    /* Cursor Click / Active Recoil */
+    .cursor-active #cursorRing {
+      width: 22px !important;
+      height: 22px !important;
+      margin-left: -11px !important;
+      margin-top: -11px !important;
+      border-width: 2.5px !important;
+    }
+
+    /* Precision Hardware Reticle (Canvas / PCB / Oscilloscope) */
+    .cursor-reticle #cursorRing {
+      border-radius: 4px;
+      border-style: solid;
+      width: 36px;
+      height: 36px;
+      margin-left: -18px;
+      margin-top: -18px;
+      border-color: #00f0ff;
+      background-color: rgba(0, 240, 255, 0.08);
+      color: #00f0ff;
+    }
+    .cursor-reticle .reticle-tick {
+      opacity: 1;
+    }
+
+    /* Draggable Sticker Hover */
+    .cursor-grab #cursorRing {
+      border-style: dashed;
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      margin-top: -22px;
+      border-color: #ff5500;
     }
 
     /* Marquee Animation */
@@ -217,14 +365,17 @@
 <body class="overflow-x-hidden selection:bg-brand-lime selection:text-black">
 
   <!-- ================================================================= -->
-  <!-- MOUSE CROSSHAIR TELEMETRY TRACKER                                 -->
+  <!-- PRECISION HARDWARE CURSOR ENGINE                                  -->
   <!-- ================================================================= -->
-  <div id="cursorTracker" class="font-mono text-[9px] pointer-events-none">
-    <div class="w-6 h-6 border border-black dark:border-brand-lime border-dashed rounded-full flex items-center justify-center">
-      <div class="w-1.5 h-1.5 bg-brand-orange rounded-full"></div>
-    </div>
-    <div id="cursorCoords" class="bg-black text-brand-lime px-1.5 py-0.5 mt-1 border border-black font-bold whitespace-nowrap shadow-sm">
-      X: 000 | Y: 000
+  <div id="customCursorRoot" class="pointer-events-none select-none fixed inset-0 z-[9999] overflow-hidden" aria-hidden="true">
+    <!-- Pinpoint Dot (Zero-Latency Direct Mouse Position) -->
+    <div id="cursorDot"></div>
+    <!-- Fluid Reticle Ring (Spring-Lerp with Contextual States) -->
+    <div id="cursorRing">
+      <span class="reticle-tick reticle-t"></span>
+      <span class="reticle-tick reticle-b"></span>
+      <span class="reticle-tick reticle-l"></span>
+      <span class="reticle-tick reticle-r"></span>
     </div>
   </div>
 
@@ -864,6 +1015,32 @@
   </footer>
 
   <!-- ================================================================= -->
+  <!-- FLOATING HARDWARE TELEMETRY DOCK & CURSOR CONTROLLER              -->
+  <!-- ================================================================= -->
+  <aside id="telemetryHUD" aria-label="Hardware Telemetry" class="fixed bottom-3 right-4 z-40 hidden sm:flex items-center gap-3 bg-[#0d0f12]/90 text-white px-3.5 py-1.5 border-2 border-black dark:border-brand-lime font-mono text-[10px] shadow-brutal-sm backdrop-blur-md transition-all select-none">
+    <div class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-brand-lime animate-pulse"></span>
+      <span class="text-zinc-400 font-semibold">BUS:</span>
+      <span class="text-brand-lime font-bold">ONLINE</span>
+    </div>
+    <span class="text-zinc-600">|</span>
+    <div class="flex items-center gap-1.5">
+      <span class="text-zinc-400 font-semibold">COORDS:</span>
+      <span id="hudCoords" class="font-bold text-white w-20 text-left">X:0000 Y:0000</span>
+    </div>
+    <span class="text-zinc-600">|</span>
+    <div class="flex items-center gap-1.5">
+      <span class="text-zinc-400 font-semibold">CLK:</span>
+      <span class="text-brand-orange font-bold">240MHz</span>
+    </div>
+    <span class="text-zinc-600">|</span>
+    <button id="cursorToggleBtn" onclick="toggleCustomCursor()" title="Switch between custom precision reticle and standard OS mouse cursor" class="flex items-center gap-1 text-zinc-300 hover:text-white transition-colors">
+      <span class="text-zinc-400">PTR:</span>
+      <span id="cursorModeLabel" class="text-brand-lime font-bold underline decoration-dotted">PRECISION</span>
+    </button>
+  </aside>
+
+  <!-- ================================================================= -->
   <!-- SLIDE-OUT EMBEDDED DEVELOPER TERMINAL                             -->
   <!-- ================================================================= -->
   <div id="cliDrawer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0c0d10] border-t-2.5 border-brand-lime shadow-brutal-lg transition-transform duration-200 translate-y-full font-mono text-xs text-brand-lime flex flex-col crt-monitor" style="height: 390px;">
@@ -961,18 +1138,128 @@
     }
 
     // -----------------------------------------------------------------
-    // 2. Mouse Crosshair Telemetry Coordinate Tracker
+    // 2. Precision Hardware Cursor Engine (rAF Lerp + Contextual Reticle)
     // -----------------------------------------------------------------
-    const tracker = document.getElementById('cursorTracker');
-    const coords = document.getElementById('cursorCoords');
+    const cursorRoot = document.getElementById('customCursorRoot');
+    const cursorDot = document.getElementById('cursorDot');
+    const cursorRing = document.getElementById('cursorRing');
+    const hudCoords = document.getElementById('hudCoords');
+    const cursorModeLabel = document.getElementById('cursorModeLabel');
+
+    let mouseX = -100, mouseY = -100;
+    let ringX = -100, ringY = -100;
+    let isCustomCursor = localStorage.getItem('adsorb_cursor_mode') !== 'system';
+    let cursorVisible = false;
+
+    function applyCursorMode() {
+      if (isCustomCursor) {
+        document.body.classList.add('custom-cursor-enabled');
+        if (cursorRoot) cursorRoot.style.display = '';
+        if (cursorModeLabel) cursorModeLabel.textContent = 'PRECISION';
+      } else {
+        document.body.classList.remove('custom-cursor-enabled');
+        if (cursorRoot) cursorRoot.style.display = 'none';
+        if (cursorModeLabel) cursorModeLabel.textContent = 'SYSTEM';
+      }
+    }
+
+    function toggleCustomCursor() {
+      isCustomCursor = !isCustomCursor;
+      localStorage.setItem('adsorb_cursor_mode', isCustomCursor ? 'precision' : 'system');
+      applyCursorMode();
+      playTone(isCustomCursor ? 880 : 440, 'triangle', 0.05);
+    }
+
+    applyCursorMode();
 
     window.addEventListener('mousemove', (e) => {
-      if (tracker) {
-        tracker.style.left = `${e.clientX}px`;
-        tracker.style.top = `${e.clientY}px`;
-        coords.textContent = `X: ${String(e.clientX).padStart(4, '0')} | Y: ${String(e.clientY).padStart(4, '0')} | 240MHz`;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      if (!cursorVisible && isCustomCursor) {
+        cursorVisible = true;
+        if (cursorDot) cursorDot.style.opacity = '1';
+        if (cursorRing) cursorRing.style.opacity = '1';
+      }
+
+      // Zero-lag dot positioning
+      if (cursorDot && isCustomCursor) {
+        cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+      }
+
+      // Live coordinates in fixed corner HUD
+      if (hudCoords) {
+        hudCoords.textContent = `X:${String(mouseX).padStart(4, '0')} Y:${String(mouseY).padStart(4, '0')}`;
       }
     });
+
+    // Spring/Lerp Loop for outer precision ring (smooth 60/120fps interpolation)
+    function renderCursor() {
+      if (isCustomCursor && cursorVisible) {
+        const lerp = 0.18;
+        ringX += (mouseX - ringX) * lerp;
+        ringY += (mouseY - ringY) * lerp;
+        if (cursorRing) {
+          cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+        }
+      }
+      requestAnimationFrame(renderCursor);
+    }
+    requestAnimationFrame(renderCursor);
+
+    // Fade out when cursor leaves viewport
+    document.addEventListener('mouseleave', () => {
+      cursorVisible = false;
+      if (cursorDot) cursorDot.style.opacity = '0';
+      if (cursorRing) cursorRing.style.opacity = '0';
+    });
+    document.addEventListener('mouseenter', () => {
+      if (isCustomCursor) {
+        cursorVisible = true;
+        if (cursorDot) cursorDot.style.opacity = '1';
+        if (cursorRing) cursorRing.style.opacity = '1';
+      }
+    });
+
+    // Tactile Click Recoil
+    window.addEventListener('mousedown', () => {
+      if (isCustomCursor && cursorRoot) cursorRoot.classList.add('cursor-active');
+    });
+    window.addEventListener('mouseup', () => {
+      if (isCustomCursor && cursorRoot) cursorRoot.classList.remove('cursor-active');
+    });
+
+    // Contextual Hover States
+    function bindCursorHovers() {
+      // Interactive elements: Buttons, Links, Clickables
+      document.querySelectorAll('a, button, .nb-button, [role="button"]').forEach(el => {
+        el.addEventListener('mouseenter', () => cursorRoot && cursorRoot.classList.add('cursor-hover'));
+        el.addEventListener('mouseleave', () => cursorRoot && cursorRoot.classList.remove('cursor-hover'));
+      });
+
+      // Inputs / Textareas: Let standard text caret show without interference
+      document.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          if (cursorRoot) cursorRoot.style.opacity = '0';
+        });
+        el.addEventListener('mouseleave', () => {
+          if (cursorRoot && isCustomCursor && cursorVisible) cursorRoot.style.opacity = '1';
+        });
+      });
+
+      // Draggable stickers: Grab Reticle
+      document.querySelectorAll('.draggable-sticker').forEach(el => {
+        el.addEventListener('mouseenter', () => cursorRoot && cursorRoot.classList.add('cursor-grab'));
+        el.addEventListener('mouseleave', () => cursorRoot && cursorRoot.classList.remove('cursor-grab'));
+      });
+
+      // Hardware Canvases & Workbench: Precision CAD Crosshair Reticle
+      document.querySelectorAll('#pcbCanvas, #scopeCanvas, .pcb-viewport, #workbench').forEach(el => {
+        el.addEventListener('mouseenter', () => cursorRoot && cursorRoot.classList.add('cursor-reticle'));
+        el.addEventListener('mouseleave', () => cursorRoot && cursorRoot.classList.remove('cursor-reticle'));
+      });
+    }
+    bindCursorHovers();
 
     // -----------------------------------------------------------------
     // 3. Draggable Physics Stickers
