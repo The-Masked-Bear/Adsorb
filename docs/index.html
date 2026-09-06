@@ -89,14 +89,30 @@
     .blueprint header .text-black {
       color: #ffffff !important;
     }
+    .blueprint header nav {
+      background-color: #0b2545 !important;
+      border-color: #00d4ff !important;
+      box-shadow: 3px 3px 0px #00d4ff !important;
+    }
+    .blueprint header nav.divide-x-2 {
+      border-color: #00d4ff !important;
+    }
     .blueprint header nav a {
       color: #c8e1ff !important;
     }
     .blueprint header nav a:hover {
-      color: #00d4ff !important;
+      background-color: #00d4ff !important;
+      color: #081a2f !important;
+    }
+    .blueprint header nav a:hover span {
+      color: #081a2f !important;
     }
     .blueprint .header-logo-img {
       filter: drop-shadow(2px 2px 0px #00d4ff) !important;
+    }
+    .blueprint #mobileNavDrawer {
+      background-color: #081a2f !important;
+      border-color: #00d4ff !important;
     }
 
     html, body {
@@ -425,34 +441,49 @@
   <!-- TOP STATUS STRIP & NAVIGATION BAR                                 -->
   <!-- ================================================================= -->
   <header class="sticky top-0 z-40 bg-[#f4f4ee] dark:bg-[#090a0c] border-b-2.5 border-black dark:border-brand-lime transition-colors">
-    <div class="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
       
       <!-- Brand & ISO Serial -->
-      <a href="#" class="flex items-center gap-2.5 sm:gap-3.5 group flex-shrink-0">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center flex-shrink-0 transition-transform duration-150 group-hover:scale-105 group-hover:rotate-2">
+      <a href="#" class="flex items-center gap-2.5 sm:gap-3 group flex-shrink-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0 transition-transform duration-150 group-hover:scale-105 group-hover:rotate-2">
           <img src="logo.svg" alt="Adsorb Logo" class="header-logo-img w-full h-full object-contain filter drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:drop-shadow-[2px_2px_0px_#d4ff00]" />
         </div>
         <div class="flex flex-col min-w-0">
-          <div class="flex items-center gap-1.5 sm:gap-2">
+          <div class="flex items-center gap-1.5">
             <span class="font-display font-black text-lg sm:text-xl tracking-tight leading-none text-black dark:text-white">ADSORB</span>
-            <span class="hidden xs:inline-block text-[9px] font-bold px-1.5 py-0.2 bg-brand-lime text-black border border-black uppercase">v1.0.0</span>
+            <span class="hidden xs:inline-block text-[9px] font-bold px-1.5 py-0.2 bg-brand-lime text-black border border-black uppercase shadow-[1px_1px_0px_#000]">v1.0.0</span>
           </div>
-          <span class="hidden md:block text-[10px] text-zinc-500 font-mono tracking-widest truncate">ESP32-S3 BARE-METAL HARDWARE SINKHOLE</span>
+          <span class="hidden xl:block text-[9px] text-zinc-500 dark:text-zinc-400 font-mono tracking-wider truncate">ESP32-S3 BARE-METAL SINKHOLE</span>
         </div>
       </a>
 
-      <!-- Navigation Links -->
-      <nav class="hidden lg:flex items-center gap-7 text-xs font-mono font-bold uppercase tracking-wider">
-        <a href="#schematic" class="hover:text-brand-orange transition-colors">01// Silicon 3D</a>
-        <a href="#workbench" class="hover:text-brand-orange transition-colors">02// Wire Workbench</a>
-        <a href="#oscilloscope" class="hover:text-brand-orange transition-colors">03// Oscilloscope</a>
-        <a href="#benchmarks" class="hover:text-brand-orange transition-colors">04// Telemetry</a>
-        <a href="#flasher" class="hover:text-brand-orange transition-colors">05// Flash Specs</a>
+      <!-- Hardware Segmented Navigation Deck (Tabs) -->
+      <nav class="hidden lg:flex items-center bg-[#e4e4dc] dark:bg-[#12151a] border-2 border-black dark:border-brand-lime shadow-brutal-sm font-mono text-[11px] font-bold uppercase tracking-tight divide-x-2 divide-black dark:divide-zinc-800">
+        <a href="#schematic" class="px-2.5 xl:px-3 py-1.5 text-black dark:text-zinc-200 hover:bg-brand-lime hover:text-black transition-colors whitespace-nowrap flex items-center gap-1 group/tab">
+          <span class="text-brand-orange group-hover/tab:text-black font-black">01</span>
+          <span>SILICON</span>
+        </a>
+        <a href="#workbench" class="px-2.5 xl:px-3 py-1.5 text-black dark:text-zinc-200 hover:bg-brand-lime hover:text-black transition-colors whitespace-nowrap flex items-center gap-1 group/tab">
+          <span class="text-brand-orange group-hover/tab:text-black font-black">02</span>
+          <span>WORKBENCH</span>
+        </a>
+        <a href="#oscilloscope" class="px-2.5 xl:px-3 py-1.5 text-black dark:text-zinc-200 hover:bg-brand-lime hover:text-black transition-colors whitespace-nowrap flex items-center gap-1 group/tab">
+          <span class="text-brand-orange group-hover/tab:text-black font-black">03</span>
+          <span>SCOPE</span>
+        </a>
+        <a href="#benchmarks" class="px-2.5 xl:px-3 py-1.5 text-black dark:text-zinc-200 hover:bg-brand-lime hover:text-black transition-colors whitespace-nowrap flex items-center gap-1 group/tab">
+          <span class="text-brand-orange group-hover/tab:text-black font-black">04</span>
+          <span>TELEMETRY</span>
+        </a>
+        <a href="#flasher" class="px-2.5 xl:px-3 py-1.5 text-black dark:text-zinc-200 hover:bg-brand-lime hover:text-black transition-colors whitespace-nowrap flex items-center gap-1 group/tab">
+          <span class="text-brand-orange group-hover/tab:text-black font-black">05</span>
+          <span>FLASH</span>
+        </a>
       </nav>
 
       <!-- Action Controls -->
-      <div class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-        <!-- Audio Synth Toggle (Hidden on small mobile to save space) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <!-- Audio Synth Toggle -->
         <button id="sfxButton" onclick="toggleAudioEngine()" class="hidden sm:flex nb-button px-2.5 py-1.5 text-xs items-center gap-1.5 bg-white dark:bg-zinc-800" title="Toggle Mechanical Audio Synthesizer">
           <span id="sfxIndicator">🔇</span>
           <span class="font-mono text-[11px]">AUDIO</span>
@@ -472,7 +503,39 @@
         <!-- GitHub Repository Button -->
         <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" rel="noopener" class="nb-button px-2.5 sm:px-3 py-1.5 bg-brand-lime text-black text-xs font-bold flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span class="font-bold">STAR</span>
+          <span class="font-bold hidden sm:inline">STAR</span>
+        </a>
+
+        <!-- Mobile Quick-Nav Dropdown Button -->
+        <button onclick="toggleMobileNav()" id="mobileNavBtn" class="lg:hidden nb-button px-2 py-1.5 text-xs font-mono font-bold flex items-center gap-1 bg-white dark:bg-zinc-800 text-black dark:text-white" title="Toggle Section Navigation">
+          <span>NAV</span>
+          <span id="mobileNavIcon" class="text-[9px]">▼</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation Strip -->
+    <div id="mobileNavDrawer" class="hidden lg:hidden bg-[#eaeade] dark:bg-[#12151a] border-t-2 border-black dark:border-brand-lime px-4 py-3 transition-all">
+      <div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 font-mono text-xs font-bold uppercase">
+        <a href="#schematic" onclick="toggleMobileNav()" class="nb-button px-2 py-2 text-center bg-white dark:bg-zinc-900 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-brand-orange text-[10px] font-black">01 //</span>
+          <span>SILICON</span>
+        </a>
+        <a href="#workbench" onclick="toggleMobileNav()" class="nb-button px-2 py-2 text-center bg-white dark:bg-zinc-900 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-brand-orange text-[10px] font-black">02 //</span>
+          <span>WORKBENCH</span>
+        </a>
+        <a href="#oscilloscope" onclick="toggleMobileNav()" class="nb-button px-2 py-2 text-center bg-white dark:bg-zinc-900 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-brand-orange text-[10px] font-black">03 //</span>
+          <span>SCOPE</span>
+        </a>
+        <a href="#benchmarks" onclick="toggleMobileNav()" class="nb-button px-2 py-2 text-center bg-white dark:bg-zinc-900 flex flex-col items-center justify-center gap-0.5">
+          <span class="text-brand-orange text-[10px] font-black">04 //</span>
+          <span>TELEMETRY</span>
+        </a>
+        <a href="#flasher" onclick="toggleMobileNav()" class="nb-button px-2 py-2 text-center bg-brand-lime text-black flex flex-col items-center justify-center gap-0.5 col-span-2 xs:col-span-1">
+          <span class="text-black text-[10px] font-black">05 //</span>
+          <span>FLASH</span>
         </a>
       </div>
     </div>
@@ -1680,7 +1743,26 @@
     applyThemeMode(savedMode);
 
     // -----------------------------------------------------------------
-    // 10. Developer Terminal Drawer
+    // 10. Mobile Section Navigation Drawer
+    // -----------------------------------------------------------------
+    function toggleMobileNav() {
+      initAudio();
+      playKeyBeep(520, 0.03);
+      const drawer = document.getElementById('mobileNavDrawer');
+      const icon = document.getElementById('mobileNavIcon');
+      if (!drawer) return;
+      const isHidden = drawer.classList.contains('hidden');
+      if (isHidden) {
+        drawer.classList.remove('hidden');
+        if (icon) icon.textContent = '▲';
+      } else {
+        drawer.classList.add('hidden');
+        if (icon) icon.textContent = '▼';
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // 11. Developer Terminal Drawer
     // -----------------------------------------------------------------
     function toggleCliDrawer() {
       initAudio();
