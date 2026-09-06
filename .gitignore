@@ -1,0 +1,32 @@
+# PlatformIO
+.pio/
+.vscode/
+compile_commands.json
+.agents/
+ORIGINAL_REQUEST.md
+PROJECT.md
+TEST_INFRA.md
+TEST_READY.md
+__pycache__/
+*.pyc
+
+# Build & binary artifacts
+*.bin
+*.elf
+
+# Environment & credentials (if any)
+.env
+wifi_secrets.h
+include/credentials.h
+
+# Temporary test & benchmark files
+extracted_ad_tests.txt
+turtlecute_index.js
+d3ward_adblock.js
+test_report.json
+install_driver.bat
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
