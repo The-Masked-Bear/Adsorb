@@ -127,26 +127,91 @@
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
       transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
-      background-image: 
-        linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
-      background-size: 32px 32px;
     }
 
-    .dark body, body.dark {
+    /* ================================================================= */
+    /* TRILLION-DOLLAR SPATIAL PARALLAX MATRIX                           */
+    /* ================================================================= */
+    #spatialBackdrop {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+      contain: strict;
+    }
+
+    #parallaxGridPlane {
+      position: absolute;
+      top: -120px;
+      left: -120px;
+      right: -120px;
+      bottom: -120px;
+      background-image: 
+        linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px),
+        radial-gradient(circle 2px at 32px 32px, rgba(0,0,0,0.12) 1.5px, transparent 0);
+      background-size: 32px 32px, 32px 32px, 64px 64px;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .dark #parallaxGridPlane {
       background-image: 
         linear-gradient(to right, rgba(212,255,0,0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(212,255,0,0.06) 1px, transparent 1px);
+        linear-gradient(to bottom, rgba(212,255,0,0.06) 1px, transparent 1px),
+        radial-gradient(circle 2px at 32px 32px, rgba(212,255,0,0.15) 1.5px, transparent 0);
     }
 
-    .blueprint body, body.blueprint {
+    .blueprint #parallaxGridPlane {
       background-image: 
-        linear-gradient(to right, rgba(0,212,255,0.15) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,212,255,0.15) 1px, transparent 1px),
+        linear-gradient(to right, rgba(0,212,255,0.18) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,212,255,0.18) 1px, transparent 1px),
         linear-gradient(to right, rgba(0,212,255,0.05) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(0,212,255,0.05) 1px, transparent 1px);
       background-size: 64px 64px, 64px 64px, 16px 16px, 16px 16px;
     }
+
+    #parallaxSpotlight {
+      position: absolute;
+      top: -200px;
+      left: -200px;
+      right: -200px;
+      bottom: -200px;
+      pointer-events: none;
+      background: radial-gradient(circle 750px at var(--spot-x, 50%) var(--spot-y, 35%), rgba(212,255,0,0.14), transparent 70%);
+      will-change: background;
+      mix-blend-mode: multiply;
+      transition: opacity 0.4s ease;
+    }
+
+    .dark #parallaxSpotlight {
+      background: radial-gradient(circle 750px at var(--spot-x, 50%) var(--spot-y, 35%), rgba(212,255,0,0.18), transparent 65%);
+      mix-blend-mode: screen;
+    }
+
+    .blueprint #parallaxSpotlight {
+      background: radial-gradient(circle 750px at var(--spot-x, 50%) var(--spot-y, 35%), rgba(0,212,255,0.24), transparent 65%);
+      mix-blend-mode: screen;
+    }
+
+    /* Metallic Sheen Glare for SoC Chip Package */
+    .soc-metallic-sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        var(--sheen-deg, 135deg),
+        transparent 30%,
+        rgba(255,255,255,0.05) 45%,
+        rgba(212,255,0,0.25) 50%,
+        rgba(255,255,255,0.12) 55%,
+        transparent 70%
+      );
+      mix-blend-mode: overlay;
+      z-index: 15;
+    }
+
 
     /* Tactile Neo-Brutalist Surfaces */
     .nb-panel {
@@ -423,6 +488,20 @@
 <body class="overflow-x-hidden selection:bg-brand-lime selection:text-black">
 
   <!-- ================================================================= -->
+  <!-- TRILLION-DOLLAR SPATIAL PARALLAX MATRIX                           -->
+  <!-- ================================================================= -->
+  <div id="spatialBackdrop" aria-hidden="true">
+    <!-- Layer 0: Deep Cyber Grid Plane (translates in 3D parallax) -->
+    <div id="parallaxGridPlane"></div>
+
+    <!-- Layer 1: Reactive Ambient Cyber Spotlight Beam -->
+    <div id="parallaxSpotlight"></div>
+
+    <!-- Layer 2: Floating Micro-Particles / Quantum Circuit Sparks -->
+    <canvas id="parallaxDustCanvas" class="absolute inset-0 w-full h-full"></canvas>
+  </div>
+
+  <!-- ================================================================= -->
   <!-- PRECISION HARDWARE CURSOR ENGINE                                  -->
   <!-- ================================================================= -->
   <div id="customCursorRoot" class="pointer-events-none select-none fixed inset-0 z-[9999] overflow-hidden" aria-hidden="true">
@@ -696,7 +775,9 @@
             <canvas id="pcbCanvas" width="440" height="280" class="absolute inset-0 w-full h-full"></canvas>
 
             <!-- ESP32-S3 Silicon Centerpiece -->
-            <div id="mainSoC" onclick="pulseSoC()" class="relative z-10 w-44 h-44 bg-[#1b2028] border-3 border-brand-lime shadow-[0_0_20px_rgba(212,255,0,0.25)] flex flex-col items-center justify-center p-3 text-center transition-transform hover:scale-105 select-none">
+            <div id="mainSoC" onclick="pulseSoC()" class="relative z-10 w-44 h-44 bg-[#1b2028] border-3 border-brand-lime shadow-[0_0_20px_rgba(212,255,0,0.25)] flex flex-col items-center justify-center p-3 text-center transition-transform hover:scale-105 select-none overflow-hidden">
+              <!-- Dynamic Metallic Sheen Glare Overlay -->
+              <div class="soc-metallic-sheen"></div>
               
               <!-- Espressif Emblem & Label -->
               <span class="text-3xl mb-1">⏣</span>
@@ -1127,28 +1208,31 @@
   </footer>
 
   <!-- ================================================================= -->
-  <!-- FLOATING HARDWARE TELEMETRY DOCK & CURSOR CONTROLLER              -->
+  <!-- FLOATING HARDWARE TELEMETRY DOCK & SENSOR CONTROLLER              -->
   <!-- ================================================================= -->
-  <aside id="telemetryHUD" aria-label="Hardware Telemetry" class="fixed bottom-3 right-4 z-40 hidden sm:flex items-center gap-3 bg-[#0d0f12]/90 text-white px-3.5 py-1.5 border-2 border-black dark:border-brand-lime font-mono text-[10px] shadow-brutal-sm backdrop-blur-md transition-all select-none">
+  <aside id="telemetryHUD" aria-label="Hardware Telemetry" class="fixed bottom-3 right-3 sm:right-4 z-40 flex items-center gap-2 sm:gap-3 bg-[#0d0f12]/92 text-white px-2.5 sm:px-3.5 py-1.5 border-2 border-black dark:border-brand-lime font-mono text-[9px] sm:text-[10px] shadow-brutal-sm backdrop-blur-md transition-all select-none max-w-[95vw]">
     <div class="flex items-center gap-1.5">
       <span class="w-2 h-2 rounded-full bg-brand-lime animate-pulse"></span>
-      <span class="text-zinc-400 font-semibold">BUS:</span>
+      <span class="text-zinc-400 font-semibold hidden xs:inline">BUS:</span>
       <span class="text-brand-lime font-bold">ONLINE</span>
     </div>
     <span class="text-zinc-600">|</span>
-    <div class="flex items-center gap-1.5">
-      <span class="text-zinc-400 font-semibold">COORDS:</span>
-      <span id="hudCoords" class="font-bold text-white w-20 text-left">X:0000 Y:0000</span>
+    <div class="flex items-center gap-1">
+      <span id="hudSensorLabel" class="text-zinc-400 font-semibold">COORDS:</span>
+      <span id="hudCoords" class="font-bold text-white w-20 sm:w-24 text-left truncate">X:0000 Y:0000</span>
     </div>
-    <span class="text-zinc-600">|</span>
-    <div class="flex items-center gap-1.5">
+    <span class="text-zinc-600 hidden sm:inline">|</span>
+    <div class="hidden sm:flex items-center gap-1.5">
       <span class="text-zinc-400 font-semibold">CLK:</span>
       <span class="text-brand-orange font-bold">240MHz</span>
     </div>
-    <span class="text-zinc-600">|</span>
-    <button id="cursorToggleBtn" onclick="toggleCustomCursor()" title="Switch between custom precision reticle and standard OS mouse cursor" class="flex items-center gap-1 text-zinc-300 hover:text-white transition-colors">
+    <span class="text-zinc-600 hidden md:inline">|</span>
+    <button id="cursorToggleBtn" onclick="toggleCustomCursor()" title="Switch between custom precision reticle and standard OS mouse cursor" class="hidden md:flex items-center gap-1 text-zinc-300 hover:text-white transition-colors">
       <span class="text-zinc-400">PTR:</span>
       <span id="cursorModeLabel" class="text-brand-lime font-bold underline decoration-dotted">PRECISION</span>
+    </button>
+    <button id="gyroPermBtn" onclick="requestGyroPermission()" class="hidden items-center gap-1 px-1.5 py-0.5 bg-brand-lime text-black font-bold text-[9px] uppercase border border-black shadow-sm" title="Enable 3D Motion Sensors">
+      🧭 3D SENSORS
     </button>
   </aside>
 
@@ -1262,6 +1346,7 @@
     let ringX = -100, ringY = -100;
     let isCustomCursor = localStorage.getItem('adsorb_cursor_mode') !== 'system';
     let cursorVisible = false;
+    let isGyroActive = false;
 
     function applyCursorMode() {
       if (isCustomCursor) {
@@ -1274,24 +1359,22 @@
         if (cursorModeLabel) cursorModeLabel.textContent = 'SYSTEM';
       }
     }
-
-    function toggleCustomCursor() {
-      isCustomCursor = !isCustomCursor;
-      localStorage.setItem('adsorb_cursor_mode', isCustomCursor ? 'precision' : 'system');
-      applyCursorMode();
-      playTone(isCustomCursor ? 880 : 440, 'triangle', 0.05);
-    }
-
     applyCursorMode();
+
+    function setCursorMode(mode) {
+      isCustomCursor = (mode === 'custom');
+      localStorage.setItem('adsorb_cursor_mode', mode);
+      applyCursorMode();
+      playKeyBeep(700, 0.04);
+    }
 
     window.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
 
-      if (!cursorVisible && isCustomCursor) {
+      if (!cursorVisible) {
         cursorVisible = true;
-        if (cursorDot) cursorDot.style.opacity = '1';
-        if (cursorRing) cursorRing.style.opacity = '1';
+        if (cursorRoot) cursorRoot.style.opacity = '1';
       }
 
       // Zero-lag dot positioning
@@ -1300,7 +1383,7 @@
       }
 
       // Live coordinates in fixed corner HUD
-      if (hudCoords) {
+      if (hudCoords && !isGyroActive) {
         hudCoords.textContent = `X:${String(mouseX).padStart(4, '0')} Y:${String(mouseY).padStart(4, '0')}`;
       }
     });
@@ -1418,25 +1501,194 @@
     });
 
     // -----------------------------------------------------------------
-    // 4. Interactive 3D Perspective Tilt on PCB Card
+    // 4. Trillion-Dollar Spatial Parallax & Motion Sensor Engine
     // -----------------------------------------------------------------
+    const gridPlane = document.getElementById('parallaxGridPlane');
+    const spotlight = document.getElementById('parallaxSpotlight');
+    const dustCanvas = document.getElementById('parallaxDustCanvas');
     const pcbCard = document.getElementById('pcbCard');
-    const viewport = document.getElementById('schematic');
+    const mainSoC = document.getElementById('mainSoC');
+    const hudSensorLabel = document.getElementById('hudSensorLabel');
+    const hudCoordsEl = document.getElementById('hudCoords');
+    const gyroPermBtn = document.getElementById('gyroPermBtn');
+    const sticker1 = document.getElementById('sticker1');
+    const sticker2 = document.getElementById('sticker2');
+    const sticker3 = document.getElementById('sticker3');
 
-    if (viewport && pcbCard) {
-      viewport.addEventListener('mousemove', (e) => {
-        const rect = viewport.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        const rotY = (x / (rect.width / 2)) * 10;
-        const rotX = -(y / (rect.height / 2)) * 10;
-        pcbCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-      });
+    let baseBeta = null; // Calibrated natural holding pitch
+    let baseGamma = null; // Calibrated natural roll
+    let targetTiltX = 0; // Normalized -1 to 1 (X / roll)
+    let targetTiltY = 0; // Normalized -1 to 1 (Y / pitch)
+    let currentTiltX = 0;
+    let currentTiltY = 0;
+    let targetSpotX = 50; // percentage
+    let targetSpotY = 35; // percentage
+    let currentSpotX = 50;
+    let currentSpotY = 35;
 
-      viewport.addEventListener('mouseleave', () => {
-        pcbCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
-      });
+    // Mobile Gyroscope / DeviceOrientation Listener
+    function handleOrientation(e) {
+      if (e.beta === null || e.gamma === null) return;
+      isGyroActive = true;
+      if (gyroPermBtn) gyroPermBtn.classList.add('hidden');
+
+      // Calibrate resting phone angle (standard 35-50 degree holding pitch)
+      if (baseBeta === null) {
+        baseBeta = e.beta;
+        baseGamma = e.gamma;
+      }
+
+      // Compute normalized delta from resting holding posture
+      const deltaBeta = e.beta - baseBeta;
+      const deltaGamma = e.gamma - (baseGamma || 0);
+
+      // Deadband & clamp (-1.0 to +1.0)
+      targetTiltX = Math.max(-1, Math.min(1, deltaGamma / 28));
+      targetTiltY = Math.max(-1, Math.min(1, deltaBeta / 28));
+
+      targetSpotX = 50 + targetTiltX * 35;
+      targetSpotY = 35 + targetTiltY * 25;
+
+      if (hudSensorLabel) hudSensorLabel.textContent = 'GYRO:';
+      if (hudCoordsEl) {
+        const pSign = deltaBeta >= 0 ? '+' : '';
+        const rSign = deltaGamma >= 0 ? '+' : '';
+        hudCoordsEl.textContent = `P:${pSign}${deltaBeta.toFixed(0)}° R:${rSign}${deltaGamma.toFixed(0)}°`;
+      }
     }
+
+    // iOS 13+ Gyroscope Permission Requester
+    function requestGyroPermission() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(res => {
+            if (res === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation);
+              if (gyroPermBtn) gyroPermBtn.classList.add('hidden');
+              playKeyBeep(880, 0.08);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
+    // Auto-bind device orientation listener (Android, Chrome, laptop accelerometers)
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    // Check if permission prompt is required (iOS Safari)
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (gyroPermBtn) gyroPermBtn.classList.remove('hidden');
+    }
+
+    // Desktop Mouse Fallback Parallax (seamlessly coordinates with cursor)
+    window.addEventListener('mousemove', (e) => {
+      if (isGyroActive) return; // Prioritize hardware physical sensors if active
+      const nx = (e.clientX / window.innerWidth) * 2 - 1; // -1 to 1
+      const ny = (e.clientY / window.innerHeight) * 2 - 1; // -1 to 1
+
+      targetTiltX = nx;
+      targetTiltY = ny;
+
+      targetSpotX = (e.clientX / window.innerWidth) * 100;
+      targetSpotY = (e.clientY / window.innerHeight) * 100;
+    });
+
+    // -----------------------------------------------------------------
+    // Floating Quantum Micro-Particles Canvas (Spatial Dust Layer)
+    // -----------------------------------------------------------------
+    let dustCtx = null;
+    let dustParticles = [];
+    let dWidth = 0, dHeight = 0;
+
+    if (dustCanvas) {
+      dustCtx = dustCanvas.getContext('2d');
+      function resizeDust() {
+        dWidth = dustCanvas.width = window.innerWidth;
+        dHeight = dustCanvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeDust);
+      resizeDust();
+
+      // Create 32 layered quantum particles
+      for (let i = 0; i < 32; i++) {
+        dustParticles.push({
+          x: Math.random() * dWidth,
+          y: Math.random() * dHeight,
+          z: 1 + Math.random() * 2.2, // Depth plane factor
+          size: 1.2 + Math.random() * 2,
+          speedY: -0.2 - Math.random() * 0.4,
+          speedX: (Math.random() - 0.5) * 0.25,
+          color: Math.random() > 0.6 ? '#d4ff00' : (Math.random() > 0.4 ? '#00f0ff' : 'rgba(255,255,255,0.7)')
+        });
+      }
+    }
+
+    // Main 60/120fps Spatial Spring Physics Loop
+    function runSpatialParallaxLoop() {
+      // Smooth exponential lerp filter
+      const lerp = 0.085;
+      currentTiltX += (targetTiltX - currentTiltX) * lerp;
+      currentTiltY += (targetTiltY - currentTiltY) * lerp;
+      currentSpotX += (targetSpotX - currentSpotX) * lerp;
+      currentSpotY += (targetSpotY - currentSpotY) * lerp;
+
+      // 1. Deep Cyber Grid Plane (translates opposite to tilt angle)
+      if (gridPlane) {
+        const gx = (-currentTiltX * 36).toFixed(2);
+        const gy = (-currentTiltY * 36).toFixed(2);
+        gridPlane.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+      }
+
+      // 2. Reactive Ambient Specular Spotlight
+      if (spotlight) {
+        spotlight.style.setProperty('--spot-x', `${currentSpotX.toFixed(1)}%`);
+        spotlight.style.setProperty('--spot-y', `${currentSpotY.toFixed(1)}%`);
+      }
+
+      // 3. Interactive 3D Silicon PCB Card
+      if (pcbCard) {
+        const rx = (-currentTiltY * 16).toFixed(2);
+        const ry = (currentTiltX * 18).toFixed(2);
+        pcbCard.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateZ(10px)`;
+      }
+
+      // 4. Anisotropic Metallic Sheen Glare across ESP32 SoC
+      if (mainSoC) {
+        const sheenDeg = (135 + currentTiltX * 55).toFixed(1);
+        mainSoC.style.setProperty('--sheen-deg', `${sheenDeg}deg`);
+      }
+
+      // 5. Staggered Draggable Stickers Parallax (Desktop)
+      if (sticker1) sticker1.style.transform = `translate3d(${(currentTiltX * 16).toFixed(1)}px, ${(currentTiltY * 16).toFixed(1)}px, 0) rotate(-6deg)`;
+      if (sticker2) sticker2.style.transform = `translate3d(${(currentTiltX * -14).toFixed(1)}px, ${(currentTiltY * -14).toFixed(1)}px, 0) rotate(4deg)`;
+      if (sticker3) sticker3.style.transform = `translate3d(${(currentTiltX * 22).toFixed(1)}px, ${(currentTiltY * 22).toFixed(1)}px, 0) rotate(-3deg)`;
+
+      // 6. Quantum Particles Dust Render
+      if (dustCtx && dustParticles.length > 0) {
+        dustCtx.clearRect(0, 0, dWidth, dHeight);
+        dustParticles.forEach(p => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.y < -10) p.y = dHeight + 10;
+          if (p.x < -10) p.x = dWidth + 10;
+          if (p.x > dWidth + 10) p.x = -10;
+
+          // Parallax displacement based on depth plane (z)
+          const px = p.x + currentTiltX * p.z * 22;
+          const py = p.y + currentTiltY * p.z * 22;
+
+          dustCtx.fillStyle = p.color;
+          dustCtx.beginPath();
+          dustCtx.arc(px, py, p.size, 0, Math.PI * 2);
+          dustCtx.fill();
+        });
+      }
+
+      requestAnimationFrame(runSpatialParallaxLoop);
+    }
+    requestAnimationFrame(runSpatialParallaxLoop);
 
     // -----------------------------------------------------------------
     // 5. Dynamic PCB Circuit Traces Animation (Canvas)
