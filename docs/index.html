@@ -81,6 +81,13 @@
       --cyan: #00d4ff;
     }
 
+    html, body {
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+      position: relative;
+    }
+
     body {
       background-color: var(--bg);
       color: var(--text);
@@ -134,6 +141,23 @@
     .nb-button:active {
       transform: translate(3px, 3px);
       box-shadow: 1px 1px 0px var(--border);
+    }
+
+    @media (max-width: 640px) {
+      .nb-panel {
+        box-shadow: 3px 3px 0px var(--border);
+      }
+      .nb-button {
+        box-shadow: 3px 3px 0px var(--border);
+      }
+      .nb-button:hover {
+        transform: none;
+        box-shadow: 3px 3px 0px var(--border);
+      }
+      .nb-button:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0px var(--border);
+      }
     }
 
     /* Draggable Physics Sticker */
@@ -386,16 +410,16 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
       
       <!-- Brand & ISO Serial -->
-      <a href="#" class="flex items-center gap-3.5 group">
-        <div class="w-10 h-10 bg-black text-brand-lime dark:bg-brand-lime dark:text-black border-2 border-black dark:border-brand-lime flex items-center justify-center font-display font-black text-xl shadow-brutal-sm group-hover:rotate-3 transition-transform">
+      <a href="#" class="flex items-center gap-2.5 sm:gap-3.5 group flex-shrink-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 bg-black text-brand-lime dark:bg-brand-lime dark:text-black border-2 border-black dark:border-brand-lime flex items-center justify-center font-display font-black text-lg sm:text-xl shadow-brutal-sm group-hover:rotate-3 transition-transform flex-shrink-0">
           ⏣
         </div>
-        <div class="flex flex-col">
-          <div class="flex items-center gap-2">
-            <span class="font-display font-black text-xl tracking-tight leading-none text-black dark:text-white">ADSORB</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.2 bg-brand-lime text-black border border-black uppercase">FIRMWARE v1.0.0</span>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="font-display font-black text-lg sm:text-xl tracking-tight leading-none text-black dark:text-white">ADSORB</span>
+            <span class="hidden xs:inline-block text-[9px] font-bold px-1.5 py-0.2 bg-brand-lime text-black border border-black uppercase">v1.0.0</span>
           </div>
-          <span class="text-[10px] text-zinc-500 font-mono tracking-widest">ESP32-S3 BARE-METAL HARDWARE SINKHOLE</span>
+          <span class="hidden md:block text-[10px] text-zinc-500 font-mono tracking-widest truncate">ESP32-S3 BARE-METAL HARDWARE SINKHOLE</span>
         </div>
       </a>
 
@@ -409,27 +433,27 @@
       </nav>
 
       <!-- Action Controls -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Audio Synth Toggle -->
-        <button id="sfxButton" onclick="toggleAudioEngine()" class="nb-button px-2.5 py-1.5 text-xs flex items-center gap-1.5 bg-white dark:bg-zinc-800" title="Toggle Mechanical Audio Synthesizer">
+      <div class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+        <!-- Audio Synth Toggle (Hidden on small mobile to save space) -->
+        <button id="sfxButton" onclick="toggleAudioEngine()" class="hidden sm:flex nb-button px-2.5 py-1.5 text-xs items-center gap-1.5 bg-white dark:bg-zinc-800" title="Toggle Mechanical Audio Synthesizer">
           <span id="sfxIndicator">🔇</span>
-          <span class="hidden sm:inline font-mono text-[11px]">AUDIO</span>
+          <span class="font-mono text-[11px]">AUDIO</span>
         </button>
 
         <!-- Theme Mode Switcher -->
-        <button id="themeButton" onclick="switchThemeMode()" class="nb-button px-2.5 py-1.5 text-xs flex items-center gap-1.5 bg-brand-cyan text-black" title="Toggle Theme (Light / Cyber / CAD Blueprint)">
+        <button id="themeButton" onclick="switchThemeMode()" class="nb-button px-2 sm:px-2.5 py-1.5 text-xs flex items-center justify-center bg-brand-cyan text-black" title="Toggle Theme (Light / Cyber / CAD Blueprint)">
           <span id="themeIndicator">☀️</span>
         </button>
 
         <!-- Terminal Drawer Button -->
-        <button onclick="toggleCliDrawer()" class="nb-button px-3.5 py-1.5 bg-black text-white dark:bg-brand-lime dark:text-black text-xs font-mono font-bold flex items-center gap-2">
+        <button onclick="toggleCliDrawer()" class="nb-button px-2.5 sm:px-3 py-1.5 bg-black text-white dark:bg-brand-lime dark:text-black text-xs font-mono font-bold flex items-center gap-1.5">
           <span>&gt;_</span>
-          <span class="hidden sm:inline">TERMINAL</span>
+          <span class="hidden xs:inline">CLI</span>
         </button>
 
         <!-- GitHub Repository Button -->
-        <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" rel="noopener" class="nb-button px-3 py-1.5 bg-brand-lime text-black text-xs font-bold flex items-center gap-1.5">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" rel="noopener" class="nb-button px-2.5 sm:px-3 py-1.5 bg-brand-lime text-black text-xs font-bold flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           <span class="font-bold">STAR</span>
         </a>
       </div>
@@ -469,41 +493,48 @@
   <!-- ================================================================= -->
   <section class="max-w-7xl mx-auto px-4 sm:px-8 pt-12 pb-20 relative">
     
-    <!-- Draggable Physics Stickers (Tossable across screen) -->
-    <div id="sticker1" class="draggable-sticker px-3 py-1.5 bg-brand-lime text-black text-xs font-bold uppercase rotate-[-6deg]" style="top: 25px; right: 40px;">
+    <!-- Draggable Physics Stickers (Large/Desktop screens only to prevent mobile text collision) -->
+    <div id="sticker1" class="hidden lg:block draggable-sticker px-3 py-1.5 bg-brand-lime text-black text-xs font-bold uppercase rotate-[-6deg]" style="top: 25px; right: 40px;">
       ⚡ 0.58 WATTS
     </div>
-    <div id="sticker2" class="draggable-sticker px-3 py-1.5 bg-brand-cyan text-black text-xs font-bold uppercase rotate-[4deg]" style="top: 80px; right: 190px;">
+    <div id="sticker2" class="hidden lg:block draggable-sticker px-3 py-1.5 bg-brand-cyan text-black text-xs font-bold uppercase rotate-[4deg]" style="top: 80px; right: 190px;">
       🧠 8MB OCTAL PSRAM
     </div>
-    <div id="sticker3" class="draggable-sticker px-3 py-1.5 bg-brand-orange text-white text-xs font-bold uppercase rotate-[-3deg]" style="top: 135px; right: 70px;">
+    <div id="sticker3" class="hidden lg:block draggable-sticker px-3 py-1.5 bg-brand-orange text-white text-xs font-bold uppercase rotate-[-3deg]" style="top: 135px; right: 70px;">
       🛡️ 100% SINKHOLED
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
       
       <!-- Left Column: Manifesto & Value Proposition (7 cols) -->
-      <div class="lg:col-span-7 flex flex-col gap-6">
+      <div class="lg:col-span-7 flex flex-col gap-5 sm:gap-6 min-w-0">
         
         <!-- Registration Crop Marks Header -->
-        <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-500">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-zinc-500">
           <span class="border border-black dark:border-zinc-700 px-2 py-0.5 bg-white dark:bg-zinc-900 font-bold text-black dark:text-white">
             SPEC-REV: 2026.09
           </span>
-          <span>ISO-9001 COMPLIANT ARCHITECTURE</span>
+          <span>ISO-9001 ARCHITECTURE</span>
           <span class="hidden sm:inline">•</span>
           <span class="hidden sm:inline">SERIAL: ADSB-N16R8-PRO</span>
         </div>
 
         <!-- Giant Architectural Headline -->
-        <h1 class="font-display font-black text-4xl sm:text-6xl md:text-7xl leading-[0.96] tracking-tight uppercase text-black dark:text-white">
+        <h1 class="font-display font-black text-3xl xs:text-4xl sm:text-6xl md:text-7xl leading-[0.96] tracking-tight uppercase text-black dark:text-white break-words">
           HARDWARE <br/>
-          <span class="bg-brand-lime text-black px-2 py-0.5 inline-block border-2.5 border-black shadow-brutal-sm">DNS SINKHOLE</span> <br/>
+          <span class="bg-brand-lime text-black px-2 py-0.5 inline-block border-2.5 border-black shadow-brutal-sm max-w-full">DNS SINKHOLE</span> <br/>
           AT WIRE SPEED.
         </h1>
 
+        <!-- Mobile Telemetry Badges (Rendered neatly inline on phones instead of floating over the text) -->
+        <div class="flex flex-wrap gap-2 lg:hidden">
+          <span class="nb-panel px-2.5 py-1 bg-brand-lime text-black text-[11px] font-mono font-bold uppercase shadow-brutal-sm">⚡ 0.58 WATTS</span>
+          <span class="nb-panel px-2.5 py-1 bg-brand-cyan text-black text-[11px] font-mono font-bold uppercase shadow-brutal-sm">🧠 8MB PSRAM</span>
+          <span class="nb-panel px-2.5 py-1 bg-brand-orange text-white text-[11px] font-mono font-bold uppercase shadow-brutal-sm">🛡️ 100% SINKHOLED</span>
+        </div>
+
         <!-- Subtitle Engineering Pitch -->
-        <p class="text-sm sm:text-base font-mono text-zinc-700 dark:text-zinc-300 max-w-2xl leading-relaxed">
+        <p class="text-xs sm:text-base font-mono text-zinc-700 dark:text-zinc-300 max-w-2xl leading-relaxed">
           Why burn <strong>15 Watts</strong> on a Raspberry Pi or babysit an overheating Docker homelab just to drop 40-byte UDP packets? 
           <strong>Adsorb</strong> executes deterministic network defense directly on the silicon of an ESP32-S3 microcontroller. 
           Over <strong>255,000 ad, telemetry, and tracking rules</strong> reside inside an in-memory 64-bit FNV-1a hash table backed by 8MB Octal PSRAM. 
@@ -511,53 +542,53 @@
         </p>
 
         <!-- Technical Telemetry Pill Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
-          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
-            <span class="text-zinc-500 block text-[10px] font-bold">CORE LATENCY</span>
-            <span class="font-bold text-lg text-brand-orange">&lt; 0.84 ms</span>
-            <span class="text-[10px] text-zinc-500 block">Dual Xtensa LX7</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 text-xs font-mono pt-1">
+          <div class="nb-panel p-2.5 sm:p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[9px] sm:text-[10px] font-bold">CORE LATENCY</span>
+            <span class="font-bold text-base sm:text-lg text-brand-orange">&lt; 0.84 ms</span>
+            <span class="text-[9px] sm:text-[10px] text-zinc-500 block">Dual Xtensa LX7</span>
           </div>
-          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
-            <span class="text-zinc-500 block text-[10px] font-bold">PSRAM VECTORS</span>
-            <span class="font-bold text-lg text-black dark:text-brand-lime">255,042</span>
-            <span class="text-[10px] text-zinc-500 block">64-Bit FNV-1a O(1)</span>
+          <div class="nb-panel p-2.5 sm:p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[9px] sm:text-[10px] font-bold">PSRAM VECTORS</span>
+            <span class="font-bold text-base sm:text-lg text-black dark:text-brand-lime">255,042</span>
+            <span class="text-[9px] sm:text-[10px] text-zinc-500 block">64-Bit FNV-1a O(1)</span>
           </div>
-          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
-            <span class="text-zinc-500 block text-[10px] font-bold">ACTIVE DRAW</span>
-            <span class="font-bold text-lg text-black dark:text-white">0.58 W</span>
-            <span class="text-[10px] text-zinc-500 block">~$0.46 / Year</span>
+          <div class="nb-panel p-2.5 sm:p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[9px] sm:text-[10px] font-bold">ACTIVE DRAW</span>
+            <span class="font-bold text-base sm:text-lg text-black dark:text-white">0.58 W</span>
+            <span class="text-[9px] sm:text-[10px] text-zinc-500 block">~$0.46 / Year</span>
           </div>
-          <div class="nb-panel p-3 bg-white dark:bg-zinc-900">
-            <span class="text-zinc-500 block text-[10px] font-bold">TURTLECUTE</span>
-            <span class="font-bold text-lg text-green-600 dark:text-brand-lime">100.0%</span>
-            <span class="text-[10px] text-zinc-500 block">131/131 Null Routed</span>
+          <div class="nb-panel p-2.5 sm:p-3 bg-white dark:bg-zinc-900">
+            <span class="text-zinc-500 block text-[9px] sm:text-[10px] font-bold">TURTLECUTE</span>
+            <span class="font-bold text-base sm:text-lg text-green-600 dark:text-brand-lime">100.0%</span>
+            <span class="text-[9px] sm:text-[10px] text-zinc-500 block">131/131 Blocked</span>
           </div>
         </div>
 
         <!-- Primary Trigger Buttons -->
-        <div class="flex flex-wrap items-center gap-4 pt-2">
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="nb-button px-6 py-3.5 bg-brand-lime text-black font-display font-black text-sm flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
+          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="nb-button px-5 sm:px-6 py-3 sm:py-3.5 bg-brand-lime text-black font-display font-black text-xs sm:text-sm flex items-center justify-center gap-2 text-center">
             <span>DOWNLOAD FIRMWARE v1.0.0</span>
             <span>↓</span>
           </a>
 
-          <a href="#workbench" class="nb-button px-5 py-3.5 bg-white dark:bg-zinc-800 text-black dark:text-white font-mono text-xs font-bold flex items-center gap-2">
+          <a href="#workbench" class="nb-button px-4 sm:px-5 py-3 sm:py-3.5 bg-white dark:bg-zinc-800 text-black dark:text-white font-mono text-xs font-bold flex items-center justify-center gap-2 text-center">
             <span>PACKET WORKBENCH</span>
             <span>→</span>
           </a>
 
-          <button onclick="toggleCliDrawer()" class="nb-button px-5 py-3.5 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-zinc-300 font-mono text-xs font-bold">
+          <button onclick="toggleCliDrawer()" class="nb-button px-4 sm:px-5 py-3 sm:py-3.5 bg-zinc-100 dark:bg-zinc-900 text-black dark:text-zinc-300 font-mono text-xs font-bold text-center">
             &gt;_ LAUNCH CLI
           </button>
         </div>
 
         <!-- Quick Flash Snippet -->
-        <div class="nb-panel p-3 bg-zinc-100 dark:bg-zinc-900 text-xs font-mono flex items-center justify-between gap-2 border-2 border-black dark:border-zinc-700">
-          <div class="flex items-center gap-2 truncate">
-            <span class="text-brand-orange font-bold text-[10px]">FLASH://</span>
-            <code class="text-[11px] truncate select-all">pip install esptool && esptool.py --chip esp32s3 write_flash 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x610000 littlefs.bin</code>
+        <div class="nb-panel p-2.5 sm:p-3 bg-zinc-100 dark:bg-zinc-900 text-xs font-mono flex items-center justify-between gap-2 border-2 border-black dark:border-zinc-700 max-w-full overflow-hidden">
+          <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+            <span class="text-brand-orange font-bold text-[10px] flex-shrink-0">FLASH://</span>
+            <code class="text-[10px] sm:text-[11px] truncate select-all block">pip install esptool && esptool.py --chip esp32s3 write_flash 0x0000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x610000 littlefs.bin</code>
           </div>
-          <button onclick="copySnippet()" id="cpBtn" class="nb-button px-2.5 py-1 bg-white dark:bg-zinc-800 text-[10px] font-bold whitespace-nowrap">
+          <button onclick="copySnippet()" id="cpBtn" class="nb-button px-2 sm:px-2.5 py-1 bg-white dark:bg-zinc-800 text-[10px] font-bold whitespace-nowrap flex-shrink-0">
             COPY
           </button>
         </div>
@@ -656,39 +687,39 @@
       </div>
 
       <!-- Preset Domain Buttons -->
-      <div class="flex flex-wrap gap-2 text-xs font-mono">
-        <span class="text-zinc-500 self-center text-[11px] font-bold">PRESETS:</span>
-        <button onclick="loadDomain('pagead2.googlesyndication.com')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">pagead2.google...</button>
-        <button onclick="loadDomain('use-application-dns.net')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold">use-app-dns.net (DoH)</button>
-        <button onclick="loadDomain('api.github.com')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-cyan hover:text-black font-bold">api.github.com</button>
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono">
+        <span class="text-zinc-500 self-center text-[10px] sm:text-[11px] font-bold">PRESETS:</span>
+        <button onclick="loadDomain('pagead2.googlesyndication.com')" class="px-2 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold truncate max-w-[140px] sm:max-w-none">pagead2.google...</button>
+        <button onclick="loadDomain('use-application-dns.net')" class="px-2 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold truncate max-w-[150px] sm:max-w-none">use-app-dns (DoH)</button>
+        <button onclick="loadDomain('api.github.com')" class="px-2 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-cyan hover:text-black font-bold">api.github.com</button>
       </div>
     </div>
 
-    <div class="nb-panel p-6 sm:p-8 bg-white dark:bg-zinc-900 flex flex-col gap-6">
+    <div class="nb-panel p-4 sm:p-8 bg-white dark:bg-zinc-900 flex flex-col gap-5 sm:gap-6">
       
       <!-- Search Input Bar -->
-      <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <div class="flex-1 relative">
-          <span class="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400 text-xs sm:text-sm">UDP://0.0.0.0:53/</span>
-          <input type="text" id="targetDomain" value="pagead2.googlesyndication.com" oninput="analyzeDomain(this.value)" class="w-full pl-36 sm:pl-44 pr-4 py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2.5 border-black dark:border-brand-lime font-mono text-sm sm:text-base font-bold focus:outline-none text-black dark:text-white" />
+          <span class="hidden sm:inline absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-zinc-400 text-xs sm:text-sm">UDP://0.0.0.0:53/</span>
+          <input type="text" id="targetDomain" value="pagead2.googlesyndication.com" oninput="analyzeDomain(this.value)" class="w-full pl-3.5 sm:pl-44 pr-3.5 py-3 sm:py-3.5 bg-zinc-50 dark:bg-zinc-800 border-2.5 border-black dark:border-brand-lime font-mono text-xs sm:text-base font-bold focus:outline-none text-black dark:text-white" placeholder="Enter domain to dissect..." />
         </div>
-        <button onclick="executeWireProbe()" class="nb-button px-6 py-3.5 bg-brand-lime text-black text-xs sm:text-sm font-display font-black flex items-center justify-center gap-2">
+        <button onclick="executeWireProbe()" class="nb-button px-4 sm:px-6 py-3 sm:py-3.5 bg-brand-lime text-black text-xs sm:text-sm font-display font-black flex items-center justify-center gap-2">
           <span>DISSECT WIRE DATAGRAM</span>
           <span>⚡</span>
         </button>
       </div>
 
       <!-- Verdict Banner -->
-      <div id="dissectVerdictCard" class="border-2.5 border-black p-4 bg-zinc-100 dark:bg-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <span id="dissectVerdictTitle" class="font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block">
+      <div id="dissectVerdictCard" class="border-2.5 border-black p-3.5 sm:p-4 bg-zinc-100 dark:bg-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 max-w-full overflow-hidden">
+        <div class="min-w-0">
+          <span id="dissectVerdictTitle" class="font-display font-black text-lg sm:text-2xl text-brand-orange uppercase block truncate">
             [SINKHOLED & ATOMIZED]
           </span>
-          <span id="dissectVerdictDetail" class="text-xs font-mono text-zinc-600 dark:text-zinc-300">
+          <span id="dissectVerdictDetail" class="text-[11px] sm:text-xs font-mono text-zinc-600 dark:text-zinc-300 block">
             Detected in Octal PSRAM 255,042 Hash Vector via Binary Search
           </span>
         </div>
-        <div id="dissectRcodePill" class="px-3.5 py-1.5 bg-black text-brand-lime font-mono text-xs font-bold border-2 border-black whitespace-nowrap">
+        <div id="dissectRcodePill" class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 bg-black text-brand-lime font-mono text-[10px] sm:text-xs font-bold border-2 border-black whitespace-nowrap self-start sm:self-auto">
           RCODE 0: 0.0.0.0 / ::
         </div>
       </div>
@@ -781,11 +812,11 @@
       </div>
 
       <!-- Scope Controls -->
-      <div class="flex items-center gap-3 font-mono text-xs">
-        <span class="text-zinc-500 text-[11px] font-bold">WAVEFORM:</span>
-        <button onclick="setScopeWave('carrier')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">SINE</button>
-        <button onclick="setScopeWave('clock')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold">240MHz CLK</button>
-        <button onclick="setScopeWave('burst')" class="px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold">UDP BURST</button>
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-3 font-mono text-xs">
+        <span class="text-zinc-500 text-[10px] sm:text-[11px] font-bold">WAVEFORM:</span>
+        <button onclick="setScopeWave('carrier')" class="px-2 sm:px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold text-[10px] sm:text-xs">SINE</button>
+        <button onclick="setScopeWave('clock')" class="px-2 sm:px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-lime hover:text-black font-bold text-[10px] sm:text-xs">240MHz CLK</button>
+        <button onclick="setScopeWave('burst')" class="px-2 sm:px-2.5 py-1 bg-white dark:bg-zinc-800 border-2 border-black hover:bg-brand-orange hover:text-white font-bold text-[10px] sm:text-xs">UDP BURST</button>
       </div>
     </div>
 
@@ -859,8 +890,8 @@
       </p>
     </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full text-left font-mono text-xs sm:text-sm border-2.5 border-black dark:border-brand-lime bg-white dark:bg-zinc-900 shadow-brutal">
+    <div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+      <table class="min-w-[620px] w-full text-left font-mono text-xs sm:text-sm border-2.5 border-black dark:border-brand-lime bg-white dark:bg-zinc-900 shadow-brutal">
         <thead class="bg-black text-white dark:bg-zinc-950 font-display text-xs sm:text-sm uppercase tracking-wider">
           <tr>
             <th class="p-4 border-b-2.5 border-black">Metric</th>
@@ -1043,7 +1074,7 @@
   <!-- ================================================================= -->
   <!-- SLIDE-OUT EMBEDDED DEVELOPER TERMINAL                             -->
   <!-- ================================================================= -->
-  <div id="cliDrawer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0c0d10] border-t-2.5 border-brand-lime shadow-brutal-lg transition-transform duration-200 translate-y-full font-mono text-xs text-brand-lime flex flex-col crt-monitor" style="height: 390px;">
+  <div id="cliDrawer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0c0d10] border-t-2.5 border-brand-lime shadow-brutal-lg transition-transform duration-200 translate-y-full font-mono text-xs text-brand-lime flex flex-col crt-monitor max-h-[85vh]" style="height: 390px;">
     
     <!-- Titlebar -->
     <div class="bg-[#121418] border-b border-zinc-800 px-4 py-2 flex items-center justify-between select-none">
@@ -1265,10 +1296,14 @@
     // 3. Draggable Physics Stickers
     // -----------------------------------------------------------------
     function initDraggable(el) {
+      // Skip dragging on touch/mobile to preserve native smooth scrolling
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
+
       let isDragging = false;
       let startX, startY, initialLeft, initialTop;
 
       el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') return;
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;

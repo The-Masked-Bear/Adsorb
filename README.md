@@ -6,12 +6,14 @@
 
 *Why burn 15 Watts on a Raspberry Pi or babysit a noisy homelab Docker container just to drop UDP packets?*
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Platform: ESP32-S3](https://img.shields.io/badge/Hardware-ESP32--S3_N16R8-red.svg)](https://www.espressif.com/)
-[![Memory: 8MB Octal PSRAM](https://img.shields.io/badge/Memory-8MB_Octal_PSRAM-orange.svg)]()
-[![Power: 0.6 Watts](https://img.shields.io/badge/Power_Draw-~0.6W_(<$0.50/yr)-green.svg)]()
-[![Website: Live](https://img.shields.io/badge/Live_Site-the--masked--bear.github.io%2FAdsorb-brightgreen.svg)](https://the-masked-bear.github.io/Adsorb/)
-[![Score: 100%](https://img.shields.io/badge/Adblock_Test-100%25_Verified-brightgreen.svg)](https://adblock.turtlecute.org/)
+<p align="center">
+  <a href="https://opensource.org/licenses/Apache-2.0"><img src="docs/badges/badge-license.svg" alt="License: Apache 2.0" height="28" /></a>
+  <a href="https://www.espressif.com/"><img src="docs/badges/badge-hardware.svg" alt="Hardware: ESP32-S3 N16R8" height="28" /></a>
+  <img src="docs/badges/badge-memory.svg" alt="Memory: 8MB Octal PSRAM" height="28" />
+  <img src="docs/badges/badge-power.svg" alt="Power Draw: ~0.58W" height="28" />
+  <a href="https://the-masked-bear.github.io/Adsorb/"><img src="docs/badges/badge-site.svg" alt="Live Site: Online" height="28" /></a>
+  <a href="https://adblock.turtlecute.org/"><img src="docs/badges/badge-adblock.svg" alt="Adblock Test: 100% Verified" height="28" /></a>
+</p>
 
 </div>
 

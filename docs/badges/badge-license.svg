@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="186" height="32" viewBox="0 0 186 32" fill="none">
+  <rect x="3" y="3" width="180" height="26" fill="#000000"/>
+  <rect x="0.5" y="0.5" width="180" height="26" fill="#FFFFFF" stroke="#000000" stroke-width="2.5"/>
+  <rect x="0.5" y="0.5" width="76" height="26" fill="#000000" stroke="#000000" stroke-width="2.5"/>
+  <text x="38" y="18" font-family="'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace" font-size="10" font-weight="900" fill="#D4FF00" text-anchor="middle" letter-spacing="0.5">LICENSE</text>
+  <text x="128" y="18" font-family="'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace" font-size="10" font-weight="900" fill="#000000" text-anchor="middle" letter-spacing="0.5">APACHE 2.0</text>
+</svg>
