@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" fill="none">
+  <!-- Neo-Brutalist Solid Shadow Plate -->
+  <path d="M 28 14 L 38 6 L 50 14 L 70 14 L 82 6 L 92 14 L 108 30 L 108 90 L 92 106 L 28 106 L 12 90 L 12 30 Z" 
+        transform="translate(4, 4)" 
+        fill="#000000" />
+
+  <!-- Outer Silicon / Bear Chassis -->
+  <path d="M 28 14 L 38 6 L 50 14 L 70 14 L 82 6 L 92 14 L 108 30 L 108 90 L 92 106 L 28 106 L 12 90 L 12 30 Z" 
+        fill="#D4FF00" 
+        stroke="#000000" 
+        stroke-width="3.5" 
+        stroke-linejoin="miter" />
+
+  <!-- IC Hardware Bus Pins (Left, Right, Bottom) -->
+  <!-- Left Pins -->
+  <line x1="4" y1="44" x2="12" y2="44" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="4" y1="60" x2="12" y2="60" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="4" y1="76" x2="12" y2="76" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+
+  <!-- Right Pins -->
+  <line x1="108" y1="44" x2="116" y2="44" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="108" y1="60" x2="116" y2="60" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="108" y1="76" x2="116" y2="76" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+
+  <!-- Bottom Pins -->
+  <line x1="44" y1="106" x2="44" y2="114" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="60" y1="106" x2="60" y2="114" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+  <line x1="76" y1="106" x2="76" y2="114" stroke="#000000" stroke-width="3" stroke-linecap="square" />
+
+  <!-- Pin 1 Hardware Index Dot -->
+  <circle cx="23" cy="27" r="3.5" fill="#000000" />
+
+  <!-- Bear Ear Liners (Hardware Silk-Screen) -->
+  <polygon points="34,14 38,8 44,14" fill="#000000" />
+  <polygon points="76,14 82,8 86,14" fill="#000000" />
+
+  <!-- Masked Visor (The Masked Bear Signature Cyber Visor) -->
+  <path d="M 22 36 L 98 36 L 92 50 L 28 50 Z" 
+        fill="#000000" 
+        stroke="#000000" 
+        stroke-width="1.5" />
+  <!-- Visor Cyber Optics Slit -->
+  <line x1="32" y1="43" x2="52" y2="43" stroke="#00F0FF" stroke-width="3.5" stroke-linecap="square" />
+  <line x1="68" y1="43" x2="88" y2="43" stroke="#00F0FF" stroke-width="3.5" stroke-linecap="square" />
+  <circle cx="60" cy="43" r="2.5" fill="#FF3700" />
+
+  <!-- The Architectural 'A' Monogram -->
+  <!-- Left Leg of A -->
+  <polygon points="55,20 65,20 48,96 36,96" fill="#000000" />
+  <!-- Right Leg of A -->
+  <polygon points="55,20 65,20 84,96 72,96" fill="#000000" />
+
+  <!-- Central Sinkhole Obliteration Core -->
+  <circle cx="60" cy="72" r="16" fill="#000000" stroke="#000000" stroke-width="2" />
+  <circle cx="60" cy="72" r="13" fill="#090A0C" stroke="#D4FF00" stroke-width="2" />
+  <circle cx="60" cy="72" r="7" fill="#000000" stroke="#00F0FF" stroke-width="1.5" />
+  
+  <!-- Null Routing Zero Symbol (0.0.0.0 / ::) -->
+  <ellipse cx="60" cy="72" rx="3.5" ry="4.5" fill="none" stroke="#FF3700" stroke-width="1.5" />
+
+  <!-- Ingestion Quantum Chevrons -->
+  <path d="M 60 58 L 60 62" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
+  <path d="M 50 72 L 54 72" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
+  <path d="M 70 72 L 66 72" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
+  <path d="M 60 86 L 60 82" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
+
+  <!-- Circuit Micro-traces on Bottom Flanks -->
+  <path d="M 22 68 L 30 68 L 36 74 L 36 86" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="square" />
+  <circle cx="36" cy="88" r="2" fill="#000000" />
+
+  <path d="M 98 68 L 90 68 L 84 74 L 84 86" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="square" />
+  <circle cx="84" cy="88" r="2" fill="#000000" />
+</svg>

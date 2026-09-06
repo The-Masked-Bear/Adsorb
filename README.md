@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🧽 Adsorb
+<img src="docs/logo.svg" alt="Adsorb Logo" width="96" height="96" />
+
+# Adsorb
 
 ### **The Arrogant, Bare-Metal DNS Sinkhole for ESP32-S3**
 

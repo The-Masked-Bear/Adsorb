@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Adsorb — Hardware DNS Sinkhole for ESP32-S3</title>
   <meta name="description" content="Ultra-high performance, bare-metal hardware DNS sinkhole for ESP32-S3 N16R8. 255,000+ rules in Octal PSRAM, dual-stack null routing, sub-millisecond wire latency." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
   <!-- Typography: Space Grotesk + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -79,6 +80,23 @@
       --accent: #00d4ff;
       --orange: #ffaa00;
       --cyan: #00d4ff;
+    }
+
+    .blueprint header {
+      background-color: #081a2f !important;
+      border-color: #00d4ff !important;
+    }
+    .blueprint header .text-black {
+      color: #ffffff !important;
+    }
+    .blueprint header nav a {
+      color: #c8e1ff !important;
+    }
+    .blueprint header nav a:hover {
+      color: #00d4ff !important;
+    }
+    .blueprint .header-logo-img {
+      filter: drop-shadow(2px 2px 0px #00d4ff) !important;
     }
 
     html, body {
@@ -411,8 +429,8 @@
       
       <!-- Brand & ISO Serial -->
       <a href="#" class="flex items-center gap-2.5 sm:gap-3.5 group flex-shrink-0">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 bg-black text-brand-lime dark:bg-brand-lime dark:text-black border-2 border-black dark:border-brand-lime flex items-center justify-center font-display font-black text-lg sm:text-xl shadow-brutal-sm group-hover:rotate-3 transition-transform flex-shrink-0">
-          ⏣
+        <div class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center flex-shrink-0 transition-transform duration-150 group-hover:scale-105 group-hover:rotate-2">
+          <img src="logo.svg" alt="Adsorb Logo" class="header-logo-img w-full h-full object-contain filter drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:drop-shadow-[2px_2px_0px_#d4ff00]" />
         </div>
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-1.5 sm:gap-2">
