@@ -1,0 +1,34 @@
+{
+  "name": "adsorb",
+  "version": "1.0.0",
+  "description": "Adsorb — Bare-Metal Hardware DNS Sinkhole for ESP32-S3",
+  "type": "module",
+  "scripts": {
+    "vgpu": "vgpu",
+    "vgpu:doctor": "vgpu doctor",
+    "vgpu:docs": "vgpu docs",
+    "vgpu:check": "vgpu check",
+    "test:vgpu": "node test_vgpu.js",
+    "test": "node test_vgpu.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Masked-Bear/Adsorb.git"
+  },
+  "keywords": [
+    "adsorb",
+    "dns-sinkhole",
+    "esp32-s3",
+    "webgpu",
+    "vgpu"
+  ],
+  "author": "The Masked Bear <The-Masked-Bear@users.noreply.github.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/The-Masked-Bear/Adsorb/issues"
+  },
+  "homepage": "https://github.com/The-Masked-Bear/Adsorb#readme",
+  "dependencies": {
+    "vgpu": "^0.4.0"
+  }
+}

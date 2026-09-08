@@ -32,3 +32,6 @@ install_driver.bat
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Node / npm
+node_modules/
