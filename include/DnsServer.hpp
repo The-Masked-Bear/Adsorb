@@ -6,6 +6,8 @@
 
 #include "Config.hpp"
 #include "Blocklist.hpp"
+#include "DnsCache.hpp"
+#include "EncryptedDns.hpp"
 
 // ============================================================================
 // Query Log Entry (stored in PSRAM ring buffer)
@@ -27,8 +29,10 @@ public:
     volatile uint32_t totalQueries  = 0;
     volatile uint32_t blockedQueries = 0;
 
-    bool begin(Blocklist& blocklist) {
+    bool begin(Blocklist& blocklist, DnsCache* cache = nullptr, EncryptedDns* doh = nullptr) {
         _blocklist = &blocklist;
+        _cache = cache;
+        _doh = doh;
 
         // Allocate query log ring buffer in PSRAM
         _queryLog = (QueryLogEntry*)heap_caps_calloc(
@@ -130,7 +134,22 @@ public:
         } else {
             bool isWhitelisted = _blocklist->isWhitelisted(domain);
             uint32_t fwdStart = millis();
-            _forwardAndRelay(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, isWhitelisted);
+
+            // 1. FAST PATH: Check Sub-Millisecond PSRAM LRU Cache (<0.2ms)
+            int cachedLen = 0;
+            if (_cache && _cache->lookup(domain, qtype, txnId, _fwdBuf, cachedLen)) {
+                _udp.beginPacket(clientIP, clientPort);
+                _udp.write(_fwdBuf, cachedLen);
+                _udp.endPacket();
+
+                uint32_t latency = millis() - fwdStart;
+                if (latency == 0) latency = 1;
+                _logQuery(domain.c_str(), clientIP, clientPort, false, (uint16_t)latency);
+                return true;
+            }
+
+            // 2. CACHE MISS: Forward to Upstream (DoH or Fallback UDP)
+            _forwardAndRelay(domain, qtype, clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, isWhitelisted);
             uint32_t latency = millis() - fwdStart;
             if (latency == 0) latency = 1;
             _logQuery(domain.c_str(), clientIP, clientPort, false, (uint16_t)latency);
@@ -148,6 +167,8 @@ public:
 
 private:
     Blocklist* _blocklist = nullptr;
+    DnsCache* _cache = nullptr;
+    EncryptedDns* _doh = nullptr;
     WiFiUDP _udp;
     WiFiUDP _fwdUdp;   // Socket for upstream forwarding
     uint8_t _packetBuf[512];
@@ -396,55 +417,52 @@ private:
     // -----------------------------------------------------------------------
     // Forward query to upstream DNS and relay the response
     // -----------------------------------------------------------------------
-    void _forwardAndRelay(IPAddress clientIP, uint16_t clientPort,
+    void _forwardAndRelay(const String& domain, uint16_t qtype,
+                           IPAddress clientIP, uint16_t clientPort,
                            const uint8_t* query, int queryLen,
                            uint16_t txnId, int qnameEnd, bool isWhitelisted) {
-        IPAddress upstream;
-        upstream.fromString(Config::UPSTREAM_DNS_PRIMARY);
+        bool resolved = false;
 
-        // Drain any stale packets
-        while (_fwdUdp.parsePacket() > 0) {
-            _fwdUdp.flush();
-        }
+        // 1. Primary Encrypted Upstream (DoH - RFC 8484 over TLS)
+        if (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH && _doh) {
+            int dohLen = _doh->query(query, queryLen, _fwdBuf, sizeof(_fwdBuf));
+            if (dohLen >= 12) {
+                // Ensure Transaction ID matches client's request
+                _fwdBuf[0] = (uint8_t)(txnId >> 8);
+                _fwdBuf[1] = (uint8_t)(txnId & 0xFF);
 
-        _fwdUdp.beginPacket(upstream, 53);
-        _fwdUdp.write(query, queryLen);
-        _fwdUdp.endPacket();
+                if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
+                    _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
+                } else {
+                    _udp.beginPacket(clientIP, clientPort);
+                    _udp.write(_fwdBuf, dohLen);
+                    _udp.endPacket();
 
-        // Wait for reply with timeout
-        // Wait for reply with timeout (150ms)
-        uint32_t start = millis();
-        bool received = false;
-        while (millis() - start < 150) {
-            int replySize = _fwdUdp.parsePacket();
-            if (replySize > 0) {
-                int replyLen = _fwdUdp.read(_fwdBuf, sizeof(_fwdBuf));
-                _fwdUdp.flush();
-                if (replyLen >= 12) {
-                    if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
-                        _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-                    } else {
-                        _udp.beginPacket(clientIP, clientPort);
-                        _udp.write(_fwdBuf, replyLen);
-                        _udp.endPacket();
+                    // Insert into Sub-Millisecond PSRAM LRU Cache
+                    if (_cache) {
+                        uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, dohLen);
+                        _cache->insert(domain, qtype, _fwdBuf, dohLen, minTtl);
                     }
-                    received = true;
                 }
-                break;
+                resolved = true;
             }
-            delay(1);
         }
 
-        if (!received) {
-            // Timeout: try secondary DNS (150ms)
-            IPAddress secondary;
-            secondary.fromString(Config::UPSTREAM_DNS_SECONDARY);
+        // 2. Primary UDP 53 Fallback
+        if (!resolved) {
+            IPAddress upstream;
+            upstream.fromString(Config::UPSTREAM_DNS_PRIMARY);
 
-            _fwdUdp.beginPacket(secondary, 53);
+            // Drain any stale packets
+            while (_fwdUdp.parsePacket() > 0) {
+                _fwdUdp.flush();
+            }
+
+            _fwdUdp.beginPacket(upstream, 53);
             _fwdUdp.write(query, queryLen);
             _fwdUdp.endPacket();
 
-            start = millis();
+            uint32_t start = millis();
             while (millis() - start < 150) {
                 int replySize = _fwdUdp.parsePacket();
                 if (replySize > 0) {
@@ -457,8 +475,14 @@ private:
                             _udp.beginPacket(clientIP, clientPort);
                             _udp.write(_fwdBuf, replyLen);
                             _udp.endPacket();
+
+                            // Insert into PSRAM LRU Cache
+                            if (_cache) {
+                                uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
+                                _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
+                            }
                         }
-                        received = true;
+                        resolved = true;
                     }
                     break;
                 }
@@ -466,7 +490,44 @@ private:
             }
         }
 
-        if (!received) {
+        // 3. Secondary UDP 53 Fallback
+        if (!resolved) {
+            IPAddress secondary;
+            secondary.fromString(Config::UPSTREAM_DNS_SECONDARY);
+
+            _fwdUdp.beginPacket(secondary, 53);
+            _fwdUdp.write(query, queryLen);
+            _fwdUdp.endPacket();
+
+            uint32_t start = millis();
+            while (millis() - start < 150) {
+                int replySize = _fwdUdp.parsePacket();
+                if (replySize > 0) {
+                    int replyLen = _fwdUdp.read(_fwdBuf, sizeof(_fwdBuf));
+                    _fwdUdp.flush();
+                    if (replyLen >= 12) {
+                        if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
+                            _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
+                        } else {
+                            _udp.beginPacket(clientIP, clientPort);
+                            _udp.write(_fwdBuf, replyLen);
+                            _udp.endPacket();
+
+                            // Insert into PSRAM LRU Cache
+                            if (_cache) {
+                                uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
+                                _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
+                            }
+                        }
+                        resolved = true;
+                    }
+                    break;
+                }
+                delay(1);
+            }
+        }
+
+        if (!resolved) {
             if (isWhitelisted) {
                 _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
             } else {

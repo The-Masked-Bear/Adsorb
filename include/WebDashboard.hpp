@@ -7,15 +7,22 @@
 #include "Config.hpp"
 #include "Blocklist.hpp"
 #include "DnsServer.hpp"
+#include "DnsCache.hpp"
+#include "EncryptedDns.hpp"
+#include "OledDisplay.hpp"
 
 // ============================================================================
 // Web Dashboard — Fully Interactive Neo-Brutalist Interface with Easter Eggs
 // ============================================================================
 class WebDashboard {
 public:
-    void begin(DnsEngine& dns, Blocklist& blocklist) {
+    void begin(DnsEngine& dns, Blocklist& blocklist,
+               DnsCache* cache = nullptr, EncryptedDns* doh = nullptr, OledDisplay* oled = nullptr) {
         _dns = &dns;
         _blocklist = &blocklist;
+        _cache = cache;
+        _doh = doh;
+        _oled = oled;
 
         _server.on("/", HTTP_GET, [this]() { _handleRoot(); });
         _server.on("/", HTTP_HEAD, [this]() { _handleRoot(); });
@@ -42,6 +49,9 @@ private:
     WebServer _server{Config::WEB_PORT};
     DnsEngine* _dns = nullptr;
     Blocklist* _blocklist = nullptr;
+    DnsCache* _cache = nullptr;
+    EncryptedDns* _doh = nullptr;
+    OledDisplay* _oled = nullptr;
 
     String _formatUptime() {
         uint32_t sec = millis() / 1000;
@@ -1047,20 +1057,31 @@ if (cryingCardEl) {
         uint32_t freePsram = ESP.getFreePsram();
         uint32_t uptime = millis() / 1000;
 
-        char json[512];
+        uint32_t cacheHits = _cache ? _cache->getTotalHits() : 0;
+        uint32_t cacheMisses = _cache ? _cache->getTotalMisses() : 0;
+        uint32_t cacheEntries = _cache ? _cache->getActiveCount() : 0;
+        float cacheRate = _cache ? _cache->getHitRatePercent() : 0.0f;
+        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DoH (1.1.1.1)" : "UDP 53";
+        bool oledConnected = _oled ? _oled->isConnected() : false;
+
+        char json[768];
         snprintf(json, sizeof(json),
                  "{\"total\":%u,\"blocked\":%u,\"percentage\":%.2f,\"rate\":%.2f,"
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
                  "\"uptime\":%u,"
                  "\"blocklist_count\":%u,\"blocklist_size\":%u,"
                  "\"whitelist_count\":%u,\"whitelist_size\":%u,"
-                 "\"blacklist_count\":%u}",
+                 "\"blacklist_count\":%u,"
+                 "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
+                 "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
                  total, blocked, rate, rate,
                  freeHeap, freeHeap, freePsram, freePsram,
                  uptime,
                  (unsigned)_blocklist->blockedCount(), (unsigned)_blocklist->blockedCount(),
                  (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
-                 (unsigned)_blocklist->customBlacklistCount());
+                 (unsigned)_blocklist->customBlacklistCount(),
+                 cacheHits, cacheMisses, cacheEntries, cacheRate,
+                 upstreamStr, oledConnected ? "true" : "false");
 
         _server.send(200, "application/json", json);
     }

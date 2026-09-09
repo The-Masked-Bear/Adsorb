@@ -52,4 +52,26 @@ constexpr UBaseType_t PRIORITY_DNS     = 5;
 // Ring Buffer & Cache Configuration
 constexpr size_t      RING_BUFFER_CAPACITY = 1000;
 
+// PSRAM LRU DNS Cache Configuration
+constexpr size_t      DNS_CACHE_CAPACITY   = 2048; // 2,048 entries in Octal PSRAM (~1.1 MB)
+constexpr uint32_t    DNS_CACHE_MIN_TTL    = 30;   // Minimum TTL 30s
+constexpr uint32_t    DNS_CACHE_MAX_TTL    = 86400; // Maximum TTL 24h
+
+// Encrypted Upstream DNS Configuration
+enum UpstreamMode {
+    UPSTREAM_MODE_DOH,  // DNS-over-HTTPS (RFC 8484)
+    UPSTREAM_MODE_UDP   // Standard Plain UDP 53 fallback
+};
+constexpr UpstreamMode UPSTREAM_MODE       = UPSTREAM_MODE_DOH;
+constexpr const char* DOH_PRIMARY_URL      = "https://1.1.1.1/dns-query";
+constexpr const char* DOH_SECONDARY_URL    = "https://8.8.8.8/dns-query";
+constexpr uint32_t    DOH_TIMEOUT_MS       = 1500;
+
+// Physical 1.3" I2C OLED Display Configuration (SH1106 / SSD1306 128x64)
+constexpr int         OLED_SDA_PIN         = 8;  // Default ESP32-S3 I2C SDA
+constexpr int         OLED_SCL_PIN         = 9;  // Default ESP32-S3 I2C SCL
+constexpr uint8_t     OLED_I2C_ADDR        = 0x3C; // Standard I2C address (0x3C or 0x3D)
+constexpr uint32_t    OLED_REFRESH_MS      = 1000; // 1s refresh interval
+constexpr uint32_t    OLED_PAGE_CYCLE_MS   = 5000; // Cycle telemetry screens every 5s
+
 } // namespace Config

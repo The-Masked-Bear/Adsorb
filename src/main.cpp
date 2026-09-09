@@ -20,17 +20,24 @@
 #include "Config.hpp"
 #include "Blocklist.hpp"
 #include "DnsServer.hpp"
+#include "DnsCache.hpp"
+#include "EncryptedDns.hpp"
+#include "OledDisplay.hpp"
 #include "WebDashboard.hpp"
 
 // ============================================================================
 // Global Instances
 // ============================================================================
 static Blocklist    g_blocklist;
+static DnsCache     g_cache;
+static EncryptedDns g_encryptedDns;
+static OledDisplay  g_oled;
 static DnsEngine    g_dns;
 static WebDashboard g_dashboard;
 
-// FreeRTOS task handle for DNS engine on Core 1
+// FreeRTOS task handles
 static TaskHandle_t g_dnsTaskHandle = nullptr;
+static TaskHandle_t g_oledTaskHandle = nullptr;
 
 // ============================================================================
 // DNS Engine Task — Pinned to Core 1 (Real-Time)
@@ -45,6 +52,19 @@ static void dnsTask(void* param) {
         } else {
             taskYIELD();
         }
+    }
+}
+
+// ============================================================================
+// OLED Display Task — Pinned to Core 0 (Low Priority UI Telemetry)
+// ============================================================================
+static void oledTask(void* param) {
+    Serial.printf("[OLED Task] Started on Core %d (Priority %d)\n",
+                  xPortGetCoreID(), uxTaskPriorityGet(nullptr));
+
+    for (;;) {
+        g_oled.render(g_dns.totalQueries, g_dns.blockedQueries, g_cache, g_encryptedDns);
+        vTaskDelay(pdMS_TO_TICKS(Config::OLED_REFRESH_MS));
     }
 }
 
@@ -159,39 +179,52 @@ void setup() {
 
     printBootBanner();
 
-    // 1. Verify PSRAM
+    // 1. Initialize Physical 1.3" I2C OLED Display (Early splash screen)
+    g_oled.begin();
+
+    // 2. Verify PSRAM
     if (!psramFound()) {
         Serial.println("[BOOT] CRITICAL: No PSRAM! Cannot operate. Halting.");
         while (true) delay(1000);
     }
 
-    // 2. Connect to Wi-Fi
+    // 3. Connect to Wi-Fi
     connectWiFi();
 
-    // 3. Mount LittleFS
+    // 4. Mount LittleFS
     if (!initFilesystem()) {
         Serial.println("[BOOT] CRITICAL: Filesystem failed! Halting.");
         while (true) delay(1000);
     }
 
-    // 4. Initialize Blocklist (loads domains into PSRAM hash set)
+    // 5. Initialize PSRAM LRU DNS Cache (Sub-millisecond repeat queries)
+    Serial.println();
+    if (!g_cache.begin()) {
+        Serial.println("[BOOT] WARNING: DNS Cache failed to allocate in PSRAM.");
+    }
+
+    // 6. Initialize Encrypted Upstream DNS (RFC 8484 DoH)
+    Serial.println();
+    g_encryptedDns.begin();
+
+    // 7. Initialize Blocklist (loads domains into PSRAM hash set)
     Serial.println();
     if (!g_blocklist.init()) {
         Serial.println("[BOOT] WARNING: Blocklist loaded 0 domains. DNS will forward all queries.");
     }
 
-    // 5. Start DNS Engine
+    // 8. Start DNS Engine with PSRAM Cache & DoH Upstream
     Serial.println();
-    if (!g_dns.begin(g_blocklist)) {
+    if (!g_dns.begin(g_blocklist, &g_cache, &g_encryptedDns)) {
         Serial.println("[BOOT] CRITICAL: DNS engine failed to start! Halting.");
         while (true) delay(1000);
     }
 
-    // 6. Start Web Dashboard
+    // 9. Start Web Dashboard
     Serial.println();
-    g_dashboard.begin(g_dns, g_blocklist);
+    g_dashboard.begin(g_dns, g_blocklist, &g_cache, &g_encryptedDns, &g_oled);
 
-    // 7. Launch DNS task on Core 1 (high priority)
+    // 10. Launch DNS task on Core 1 (real-time high priority)
     Serial.println();
     xTaskCreatePinnedToCore(
         dnsTask,                    // Task function
@@ -203,17 +236,37 @@ void setup() {
         Config::CORE_DNS_ENGINE     // Core 1
     );
 
+    // 11. Launch OLED task on Core 0 (low priority UI telemetry)
+    if (g_oled.isConnected()) {
+        xTaskCreatePinnedToCore(
+            oledTask,
+            "OLED_Display",
+            4096,
+            nullptr,
+            Config::PRIORITY_SYSTEM,
+            &g_oledTaskHandle,
+            Config::CORE_SYSTEM_WEB
+        );
+    }
+
     Serial.println("================================================================================");
     Serial.println("  SYSTEM READY — DNS Ad Blocker is operational!");
     Serial.printf("  Set your router/device DNS to: %s\n",
                   (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString().c_str()
                                                    : WiFi.softAPIP().toString().c_str());
-    Serial.printf("  Dashboard: http://%s/\n",
+    Serial.printf("  Dashboard : http://%s/\n",
                   (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString().c_str()
                                                    : WiFi.softAPIP().toString().c_str());
-    Serial.printf("  Blocking %u domains | Upstream DNS: %s / %s\n",
-                  (unsigned)g_blocklist.blockedCount(),
-                  Config::UPSTREAM_DNS_PRIMARY, Config::UPSTREAM_DNS_SECONDARY);
+    Serial.printf("  Blocking  : %u domains in Octal PSRAM\n",
+                  (unsigned)g_blocklist.blockedCount());
+    Serial.printf("  RAM Cache : %u entries in Octal PSRAM (<0.2ms latency)\n",
+                  (unsigned)Config::DNS_CACHE_CAPACITY);
+    Serial.printf("  Upstream  : %s (%s / %s)\n",
+                  (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "Encrypted DoH" : "Plain UDP",
+                  Config::DOH_PRIMARY_URL, Config::UPSTREAM_DNS_PRIMARY);
+    Serial.printf("  OLED 1.3\" : %s (SDA:%d, SCL:%d)\n",
+                  g_oled.isConnected() ? "ACTIVE (SH1106)" : "DISCONNECTED (Idling)",
+                  Config::OLED_SDA_PIN, Config::OLED_SCL_PIN);
     Serial.println("================================================================================");
 }
 
