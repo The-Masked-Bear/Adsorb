@@ -423,11 +423,10 @@ private:
                            uint16_t txnId, int qnameEnd, bool isWhitelisted) {
         bool resolved = false;
 
-        // 1. Primary Encrypted Upstream (DoH - RFC 8484 over TLS)
+        // 1. Primary Encrypted Upstream (DoH - RFC 8484 over TLS, if enabled)
         if (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH && _doh) {
             int dohLen = _doh->query(query, queryLen, _fwdBuf, sizeof(_fwdBuf));
             if (dohLen >= 12) {
-                // Ensure Transaction ID matches client's request
                 _fwdBuf[0] = (uint8_t)(txnId >> 8);
                 _fwdBuf[1] = (uint8_t)(txnId & 0xFF);
 
@@ -438,7 +437,6 @@ private:
                     _udp.write(_fwdBuf, dohLen);
                     _udp.endPacket();
 
-                    // Insert into Sub-Millisecond PSRAM LRU Cache
                     if (_cache) {
                         uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, dohLen);
                         _cache->insert(domain, qtype, _fwdBuf, dohLen, minTtl);
@@ -448,90 +446,66 @@ private:
             }
         }
 
-        // 2. Primary UDP 53 Fallback
+        // 2. Ultra-Fast Parallel Upstream UDP (Race Cloudflare 1.1.1.1 & Google 8.8.8.8)
         if (!resolved) {
-            IPAddress upstream;
-            upstream.fromString(Config::UPSTREAM_DNS_PRIMARY);
+            IPAddress primaryIP, secondaryIP;
+            primaryIP.fromString(Config::UPSTREAM_DNS_PRIMARY);
+            secondaryIP.fromString(Config::UPSTREAM_DNS_SECONDARY);
 
-            // Drain any stale packets
+            // Drain any stale packets from previous queries
             while (_fwdUdp.parsePacket() > 0) {
                 _fwdUdp.flush();
             }
 
-            _fwdUdp.beginPacket(upstream, 53);
+            // Blast query to BOTH upstream resolvers simultaneously (parallel race)
+            _fwdUdp.beginPacket(primaryIP, 53);
+            _fwdUdp.write(query, queryLen);
+            _fwdUdp.endPacket();
+
+            _fwdUdp.beginPacket(secondaryIP, 53);
             _fwdUdp.write(query, queryLen);
             _fwdUdp.endPacket();
 
             uint32_t start = millis();
-            while (millis() - start < 150) {
+            while (millis() - start < Config::UPSTREAM_UDP_TIMEOUT_MS) {
                 int replySize = _fwdUdp.parsePacket();
-                if (replySize > 0) {
+                if (replySize >= 12) {
                     int replyLen = _fwdUdp.read(_fwdBuf, sizeof(_fwdBuf));
                     _fwdUdp.flush();
                     if (replyLen >= 12) {
-                        if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
-                            _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-                        } else {
-                            _udp.beginPacket(clientIP, clientPort);
-                            _udp.write(_fwdBuf, replyLen);
-                            _udp.endPacket();
+                        uint16_t replyTxnId = (_fwdBuf[0] << 8) | _fwdBuf[1];
+                        if (replyTxnId == txnId) {
+                            if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
+                                _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
+                            } else {
+                                _udp.beginPacket(clientIP, clientPort);
+                                _udp.write(_fwdBuf, replyLen);
+                                _udp.endPacket();
 
-                            // Insert into PSRAM LRU Cache
-                            if (_cache) {
-                                uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
-                                _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
+                                // Insert into Sub-Millisecond PSRAM LRU Cache
+                                if (_cache) {
+                                    uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
+                                    _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
+                                }
                             }
+                            resolved = true;
+                            break;
                         }
-                        resolved = true;
                     }
-                    break;
                 }
-                delay(1);
+                vTaskDelay(pdMS_TO_TICKS(1));
             }
         }
 
-        // 3. Secondary UDP 53 Fallback
-        if (!resolved) {
-            IPAddress secondary;
-            secondary.fromString(Config::UPSTREAM_DNS_SECONDARY);
-
-            _fwdUdp.beginPacket(secondary, 53);
-            _fwdUdp.write(query, queryLen);
-            _fwdUdp.endPacket();
-
-            uint32_t start = millis();
-            while (millis() - start < 150) {
-                int replySize = _fwdUdp.parsePacket();
-                if (replySize > 0) {
-                    int replyLen = _fwdUdp.read(_fwdBuf, sizeof(_fwdBuf));
-                    _fwdUdp.flush();
-                    if (replyLen >= 12) {
-                        if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
-                            _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-                        } else {
-                            _udp.beginPacket(clientIP, clientPort);
-                            _udp.write(_fwdBuf, replyLen);
-                            _udp.endPacket();
-
-                            // Insert into PSRAM LRU Cache
-                            if (_cache) {
-                                uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
-                                _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
-                            }
-                        }
-                        resolved = true;
-                    }
-                    break;
-                }
-                delay(1);
-            }
-        }
-
+        // 3. Fallback on complete upstream failure
         if (!resolved) {
             if (isWhitelisted) {
                 _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
             } else {
-                _sendErrorResponse(clientIP, clientPort, txnId, 3); // NXDOMAIN (RCODE 3)
+                // Return SERVFAIL (RCODE 2) — NEVER NXDOMAIN (RCODE 3)!
+                // SERVFAIL notifies client OS of temporary upstream failure so it immediately
+                // fails over to secondary DNS (e.g. 1.1.1.1) instead of corrupting client DNS cache!
+                _sendErrorResponse(clientIP, clientPort, txnId, 2);
             }
         }
     }

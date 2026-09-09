@@ -125,9 +125,52 @@ public:
         return _blockedHashes.size() > 0;
     }
 
+    // -----------------------------------------------------------------------
+    // Essential OS Connectivity & Push Notification Whitelist
+    // Protects Android Captive Portal, Apple APNs, Windows NCSI, and Firebase
+    // -----------------------------------------------------------------------
+    static bool _isEssentialSystemDomain(const PsramString& domain) {
+        static const char* const SYSTEM_WHITELIST[] = {
+            "connectivitycheck.gstatic.com",
+            "connectivitycheck.android.com",
+            "clients3.google.com",
+            "clients1.google.com",
+            "captive.apple.com",
+            "msftconnecttest.com",
+            "msftncsi.com",
+            "ipv6.msftncsi.com",
+            "firebaseinstallations.googleapis.com",
+            "fcm.googleapis.com",
+            "fcmtoken.googleapis.com",
+            "android.clients.google.com",
+            "play.googleapis.com",
+            "gvt1.com",
+            "time.windows.com",
+            "time.apple.com",
+            "time.google.com",
+            "time.android.com",
+            "push.apple.com",
+            "identity.apple.com"
+        };
+        for (const char* sysDomain : SYSTEM_WHITELIST) {
+            size_t sysLen = strlen(sysDomain);
+            if (domain.length() == sysLen && domain.compare(sysDomain) == 0) return true;
+            if (domain.length() > sysLen && domain[domain.length() - sysLen - 1] == '.' &&
+                domain.compare(domain.length() - sysLen, sysLen, sysDomain) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool isBlocked(const String& rawDomain) const {
         PsramString domain = _cleanDomain(rawDomain);
         if (domain.empty()) return false;
+
+        // 0. Essential OS Connectivity & Push Notification Whitelist
+        if (_isEssentialSystemDomain(domain)) {
+            return false;
+        }
 
         // 1. Whitelist override (progressive check from full domain up to TLD)
         if (_checkHierarchy(domain, [this](const PsramString& d) {

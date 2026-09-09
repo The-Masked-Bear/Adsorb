@@ -261,9 +261,9 @@ void setup() {
                   (unsigned)g_blocklist.blockedCount());
     Serial.printf("  RAM Cache : %u entries in Octal PSRAM (<0.2ms latency)\n",
                   (unsigned)Config::DNS_CACHE_CAPACITY);
-    Serial.printf("  Upstream  : %s (%s / %s)\n",
-                  (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "Encrypted DoH" : "Plain UDP",
-                  Config::DOH_PRIMARY_URL, Config::UPSTREAM_DNS_PRIMARY);
+    Serial.printf("  Upstream  : %s (%s & %s)\n",
+                  (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "Encrypted DoH" : "Ultra-Fast Parallel Race UDP",
+                  Config::UPSTREAM_DNS_PRIMARY, Config::UPSTREAM_DNS_SECONDARY);
     Serial.printf("  OLED 1.3\" : %s (SDA:%d, SCL:%d)\n",
                   g_oled.isConnected() ? "ACTIVE (SH1106)" : "DISCONNECTED (Idling)",
                   Config::OLED_SDA_PIN, Config::OLED_SCL_PIN);

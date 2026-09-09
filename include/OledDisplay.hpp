@@ -154,13 +154,17 @@ private:
         snprintf(buf, sizeof(buf), "RAM HITS: %u", cache.getTotalHits());
         _u8g2.drawStr(2, 36, buf);
 
-        // DoH Status
-        snprintf(buf, sizeof(buf), "UPSTREAM: DoH TLS");
-        _u8g2.drawStr(2, 49, buf);
+        // Upstream Status
+        const char* modeLabel = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "UPSTREAM: DoH TLS" : "UPSTREAM: RACE UDP";
+        _u8g2.drawStr(2, 49, modeLabel);
 
-        // DoH Success Rate
+        // Telemetry Subtext
         _u8g2.setFont(u8g2_font_4x6_tf);
-        snprintf(buf, sizeof(buf), "DoH SUCCESS: %.1f%% (%u)", doh.getSuccessRate(), doh.getSuccessfulQueries());
+        if (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) {
+            snprintf(buf, sizeof(buf), "DoH SUCCESS: %.1f%% (%u)", doh.getSuccessRate(), doh.getSuccessfulQueries());
+        } else {
+            snprintf(buf, sizeof(buf), "RACE: 1.1.1.1 + 8.8.8.8 (<15ms)");
+        }
         _u8g2.drawStr(2, 60, buf);
 
         _drawPageDots(1);

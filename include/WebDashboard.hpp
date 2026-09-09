@@ -1061,7 +1061,7 @@ if (cryingCardEl) {
         uint32_t cacheMisses = _cache ? _cache->getTotalMisses() : 0;
         uint32_t cacheEntries = _cache ? _cache->getActiveCount() : 0;
         float cacheRate = _cache ? _cache->getHitRatePercent() : 0.0f;
-        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DoH (1.1.1.1)" : "UDP 53";
+        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DoH (1.1.1.1)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8)";
         bool oledConnected = _oled ? _oled->isConnected() : false;
 
         char json[768];
