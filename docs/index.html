@@ -242,17 +242,12 @@
       filter: drop-shadow(0 0 14px rgba(212, 255, 0, 0.9));
     }
 
-    /* Precision Hardware Custom Cursor */
-    @media (pointer: fine) {
-      body.custom-cursor-enabled,
-      body.custom-cursor-enabled a,
-      body.custom-cursor-enabled button {
-        cursor: none !important;
-      }
-      body.custom-cursor-enabled input,
-      body.custom-cursor-enabled textarea {
-        cursor: text !important;
-      }
+    /* Precision Hardware Interactive Elements */
+    a, button, .tech-button, .silicon-zone, [role="button"], input[type="range"], select {
+      cursor: pointer;
+    }
+    input[type="text"], textarea {
+      cursor: text;
     }
 
     #customCursorRoot {
@@ -270,65 +265,45 @@
     }
 
     #cursorDot {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 6px;
-      height: 6px;
-      margin-left: -3px;
-      margin-top: -3px;
-      border-radius: 9999px;
-      background-color: var(--orange);
-      pointer-events: none;
-      z-index: 10000;
-      opacity: 0;
-      transform: translate3d(-100px, -100px, 0);
-      transition: opacity 0.2s ease;
-      will-change: transform;
-    }
-    .dark #cursorDot {
-      background-color: var(--accent);
-    }
-    .blueprint #cursorDot {
-      background-color: var(--cyan);
+      display: none !important;
     }
 
     #cursorRing {
       position: fixed;
       top: 0;
       left: 0;
-      width: 28px;
-      height: 28px;
-      margin-left: -14px;
-      margin-top: -14px;
+      width: 32px;
+      height: 32px;
+      margin-left: -16px;
+      margin-top: -16px;
       border-radius: 9999px;
-      border: 1.5px solid rgba(13, 15, 18, 0.65);
+      border: 1.5px solid rgba(13, 15, 18, 0.35);
       pointer-events: none;
       z-index: 9999;
       opacity: 0;
       transform: translate3d(-100px, -100px, 0);
-      transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                  height 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                  margin 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                  margin 0.18s cubic-bezier(0.16, 1, 0.3, 1),
                   border-color 0.2s ease,
                   background-color 0.2s ease,
                   opacity 0.2s ease;
       will-change: transform;
     }
     .dark #cursorRing {
-      border-color: rgba(212, 255, 0, 0.7);
+      border-color: rgba(212, 255, 0, 0.5);
     }
     .blueprint #cursorRing {
-      border-color: rgba(0, 212, 255, 0.7);
+      border-color: rgba(0, 212, 255, 0.5);
     }
 
     .cursor-hover #cursorRing {
-      width: 42px;
-      height: 42px;
-      margin-left: -21px;
-      margin-top: -21px;
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      margin-top: -22px;
       border-color: var(--orange);
-      background-color: rgba(255, 55, 0, 0.08);
+      background-color: rgba(255, 55, 0, 0.06);
     }
     .dark .cursor-hover #cursorRing {
       border-color: var(--accent);
@@ -364,7 +339,7 @@
     }
   </style>
 </head>
-<body class="selection:bg-brand-lime selection:text-black antialiased custom-cursor-enabled">
+<body class="selection:bg-brand-lime selection:text-black antialiased">
 
   <!-- Spatial Parallax Backdrop Matrix -->
   <div id="spatialBackdrop" aria-hidden="true">
@@ -1263,21 +1238,21 @@
     // 2. Precision Hardware Cursor Engine
     // -----------------------------------------------------------------
     const cursorRoot = document.getElementById('customCursorRoot');
-    const cursorDot = document.getElementById('cursorDot');
     const cursorRing = document.getElementById('cursorRing');
     const hudCoords = document.getElementById('hudCoords');
     const cursorModeLabel = document.getElementById('cursorModeLabel');
 
     let mouseX = -100, mouseY = -100;
     let ringX = -100, ringY = -100;
-    let isCustomCursor = localStorage.getItem('adsorb_cursor_mode') !== 'system';
+    // Default to clean system pointer so mouse is 100% visible, natural, and never hidden
+    let isCustomCursor = localStorage.getItem('adsorb_cursor_mode') === 'precision';
     let cursorVisible = false;
     let isGyroActive = false;
 
     function applyCursorMode() {
       if (isCustomCursor) {
         document.body.classList.add('custom-cursor-enabled');
-        if (cursorRoot) cursorRoot.style.display = '';
+        if (cursorRoot) cursorRoot.style.display = 'block';
         if (cursorModeLabel) cursorModeLabel.textContent = 'PRECISION';
       } else {
         document.body.classList.remove('custom-cursor-enabled');
@@ -1301,10 +1276,7 @@
       if (!cursorVisible) {
         cursorVisible = true;
         if (cursorRoot) cursorRoot.style.opacity = '1';
-      }
-
-      if (cursorDot && isCustomCursor) {
-        cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+        if (cursorRing) cursorRing.style.opacity = '1';
       }
 
       if (hudCoords && !isGyroActive) {
@@ -1312,9 +1284,21 @@
       }
     });
 
+    document.addEventListener('mouseleave', () => {
+      cursorVisible = false;
+      if (cursorRing) cursorRing.style.opacity = '0';
+    });
+
+    document.addEventListener('mouseenter', () => {
+      if (isCustomCursor) {
+        cursorVisible = true;
+        if (cursorRing) cursorRing.style.opacity = '1';
+      }
+    });
+
     function renderCursor() {
       if (isCustomCursor && cursorVisible) {
-        const lerp = 0.18;
+        const lerp = 0.2;
         ringX += (mouseX - ringX) * lerp;
         ringY += (mouseY - ringY) * lerp;
         if (cursorRing) {
@@ -1328,7 +1312,7 @@
     // Dynamic Hover States for Interactive Elements
     document.addEventListener('mouseover', (e) => {
       if (!isCustomCursor) return;
-      const target = e.target.closest('a, button, input, .silicon-zone, .tech-button');
+      const target = e.target.closest('a, button, input, .silicon-zone, .tech-button, [role="button"]');
       if (target) {
         document.body.classList.add('cursor-hover');
       } else {
