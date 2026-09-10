@@ -44,10 +44,10 @@ public:
         // Draw Startup Splash
         _u8g2.clearBuffer();
         _u8g2.setFont(u8g2_font_7x14B_tf);
-        _u8g2.drawStr(16, 18, "ADSORB v1.1");
+        _u8g2.drawStr(16, 18, "ADSORB v1.2");
         _u8g2.setFont(u8g2_font_6x10_tf);
         _u8g2.drawStr(12, 34, "ESP32-S3 N16R8");
-        _u8g2.drawStr(10, 48, "PSRAM LRU + DoH");
+        _u8g2.drawStr(10, 48, "128b SIMD + TRNG");
         _u8g2.drawFrame(0, 56, 128, 6);
         _u8g2.drawBox(2, 58, 124, 2);
         _u8g2.sendBuffer();
@@ -97,7 +97,7 @@ private:
         _u8g2.drawBox(0, 0, 128, 11);
         _u8g2.setFont(u8g2_font_5x7_tf);
         _u8g2.setDrawColor(0); // Inverted text
-        _u8g2.drawStr(2, 8, "ADSORB - SINKHOLE");
+        _u8g2.drawStr(2, 8, "ADSORB v1.2 SINK");
         if (WiFi.isConnected()) {
             _u8g2.drawStr(98, 8, "ONLINE");
         } else {
@@ -173,7 +173,7 @@ private:
         _u8g2.drawBox(0, 0, 128, 11);
         _u8g2.setFont(u8g2_font_5x7_tf);
         _u8g2.setDrawColor(0);
-        _u8g2.drawStr(2, 8, "SILICON TELEMETRY");
+        _u8g2.drawStr(2, 8, "SILICON v1.2 TELEM");
         _u8g2.drawStr(88, 8, "240 MHz");
         _u8g2.setDrawColor(1);
 
