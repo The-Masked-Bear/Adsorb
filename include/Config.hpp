@@ -5,7 +5,7 @@
 namespace Config {
 
 // Firmware metadata
-constexpr const char* FIRMWARE_VERSION = "1.0.0";
+constexpr const char* FIRMWARE_VERSION = "1.2.0";
 constexpr const char* FIRMWARE_NAME    = "ESP32-S3 High-Performance DNS Ad Blocker";
 constexpr uint32_t    SERIAL_BAUD_RATE = 115200;
 

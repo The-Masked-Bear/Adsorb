@@ -2419,7 +2419,7 @@
           <a href="partitions.bin" download="partitions.bin" class="brutal-btn color-white btn-small">📦 PARTITIONS.BIN (0x8000)</a>
           <a href="firmware.bin" download="firmware.bin" class="brutal-btn color-white btn-small">📦 FIRMWARE.BIN (0x10000)</a>
           <a href="littlefs.bin" download="littlefs.bin" class="brutal-btn color-white btn-small">📦 LITTLEFS.BIN (0x610000)</a>
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
+          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.2.0" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
         </div>
       </div>
 
@@ -2546,7 +2546,7 @@
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            In firmware v1.1.0, Adsorb features a Parallel Race UDP engine. When a query is not in the blocklist or the local PSRAM cache, Adsorb queries both Cloudflare (1.1.1.1) and Google (8.8.8.8) concurrently. The fastest response is used and cached. If both fail, Adsorb returns an RFC-compliant SERVFAIL (RCODE 2) rather than NXDOMAIN, preventing client OS caching of erroneous negative results.
+            In firmware v1.2.0, Adsorb features a Parallel Race UDP engine. When a query is not in the blocklist or the local PSRAM cache, Adsorb queries both Cloudflare (1.1.1.1) and Google (8.8.8.8) concurrently. The fastest response is used and cached. If both fail, Adsorb returns an RFC-compliant SERVFAIL (RCODE 2) rather than NXDOMAIN, preventing client OS caching of erroneous negative results.
           </div>
         </div>
 
@@ -2638,7 +2638,7 @@
   <div id="install-modal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="font-size:1.8rem;">INSTALL ADSORB v1.1.0</h2>
+        <h2 style="font-size:1.8rem;">INSTALL ADSORB v1.2.0</h2>
         <button onclick="closeInstallModal()" style="background:var(--red); color:#FFF; border:2px solid var(--border); padding:4px 10px; font-family:'Archivo Black'; font-size:0.9rem; cursor:pointer;">X</button>
       </div>
       <p style="font-weight:700; color:var(--text-secondary); margin-bottom:14px; font-size:0.9rem;">
@@ -3035,7 +3035,7 @@
             appendTermLine('  Captive Endpoints: /generate_204, /hotspot-detect.html, /ncsi.txt');
             appendTermLine('  Redirect Target: http://adsorb.local/');
           } else if (cmd === 'cache') {
-            appendTermLine('[*] PSRAM LRU CACHE METRICS (v1.1.0):', false, 'var(--yellow)');
+            appendTermLine('[*] PSRAM LRU CACHE METRICS (v1.2.0):', false, 'var(--yellow)');
             appendTermLine('  Slots: 2,048 (2-Way Set-Associative)');
             appendTermLine('  Hit Latency: 138 µs (&lt; 0.20 ms)');
             appendTermLine('  Hits: 18,940 | Misses: 1,421 (93.0% hit ratio)');
@@ -3274,7 +3274,7 @@
         oledCtx.fillStyle = '#00F0FF';
         oledCtx.fillRect(0, 0, w, 18);
         oledCtx.fillStyle = '#000000';
-        oledCtx.fillText(' ADSORB SINKHOLE v1.1.0', 4, 3);
+        oledCtx.fillText(' ADSORB SINKHOLE v1.2.0', 4, 3);
 
         oledCtx.fillStyle = '#FFFFFF';
         oledCtx.fillText('STATUS : CORE 1 ARMED (UDP 53)', 6, 24);
@@ -3853,7 +3853,7 @@
         const stages = [
           { name: 'Writing Bootloader (0x0000)...', p: 15 },
           { name: 'Writing 16MB Partition Table (0x8000)...', p: 35 },
-          { name: 'Writing Adsorb Core Firmware v1.1.0 (0x10000)...', p: 65 },
+          { name: 'Writing Adsorb Core Firmware v1.2.0 (0x10000)...', p: 65 },
           { name: 'Writing 255,042 Rule LittleFS Vector (0x610000)...', p: 85 },
           { name: isApMode ? 'Setting NVS Config: Fallback AP Mode (192.168.4.1)...' : `Transmitting Wi-Fi Credentials for "${ssid}" to ESP32 NVS...`, p: 95 },
           { name: 'Hardware MD5 Verification OK. Rebooting ESP32-S3...', p: 100 }
