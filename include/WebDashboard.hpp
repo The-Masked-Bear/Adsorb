@@ -35,6 +35,28 @@ public:
         _server.on("/api/blacklist", HTTP_GET, [this]() { _handleGetBlacklist(); });
         _server.on("/api/blacklist", HTTP_POST, [this]() { _handlePostBlacklist(); });
         _server.on("/api/blacklist", HTTP_DELETE, [this]() { _handleDeleteBlacklist(); });
+
+        // Captive Portal Probe Redirections for iOS, Android, and Windows
+        _server.on("/hotspot-detect.html", HTTP_GET, [this]() {
+            _server.sendHeader("Location", "http://adsorb.local/", true);
+            _server.send(302, "text/plain", "");
+        });
+        _server.on("/generate_204", HTTP_GET, [this]() {
+            _server.sendHeader("Location", "http://adsorb.local/", true);
+            _server.send(302, "text/plain", "");
+        });
+        _server.on("/gen_204", HTTP_GET, [this]() {
+            _server.sendHeader("Location", "http://adsorb.local/", true);
+            _server.send(302, "text/plain", "");
+        });
+        _server.on("/connecttest.txt", HTTP_GET, [this]() {
+            _server.sendHeader("Location", "http://adsorb.local/", true);
+            _server.send(302, "text/plain", "");
+        });
+        _server.on("/ncsi.txt", HTTP_GET, [this]() {
+            _server.send(200, "text/plain", "Microsoft NCSI");
+        });
+
         _server.onNotFound([this]() { _handleNotFound(); });
 
         _server.begin();
@@ -1064,7 +1086,7 @@ if (cryingCardEl) {
         const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DoH (1.1.1.1)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8)";
         bool oledConnected = _oled ? _oled->isConnected() : false;
 
-        char json[768];
+        char json[900];
         snprintf(json, sizeof(json),
                  "{\"total\":%u,\"blocked\":%u,\"percentage\":%.2f,\"rate\":%.2f,"
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
@@ -1073,6 +1095,8 @@ if (cryingCardEl) {
                  "\"whitelist_count\":%u,\"whitelist_size\":%u,"
                  "\"blacklist_count\":%u,"
                  "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
+                 "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
+                 "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
                  "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
                  total, blocked, rate, rate,
                  freeHeap, freeHeap, freePsram, freePsram,
@@ -1081,6 +1105,7 @@ if (cryingCardEl) {
                  (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
                  (unsigned)_blocklist->customBlacklistCount(),
                  cacheHits, cacheMisses, cacheEntries, cacheRate,
+                 (unsigned)_blocklist->simdPatternCount(),
                  upstreamStr, oledConnected ? "true" : "false");
 
         _server.send(200, "application/json", json);

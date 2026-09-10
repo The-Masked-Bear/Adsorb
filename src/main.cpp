@@ -12,6 +12,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <ESPmDNS.h>
 #include <LittleFS.h>
 #include <esp_heap_caps.h>
 #include <esp_system.h>
@@ -99,7 +100,23 @@ static bool connectWiFi() {
     Serial.printf("[WiFi] Connecting to '%s'...\n", Config::WIFI_SSID);
 
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname("esp32-adblocker");
+    WiFi.setHostname(Config::MDNS_HOSTNAME);
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
+    WiFi.setSleep(false); // Disable 802.11 modem sleep to eliminate DNS latency spikes & packet drops
+
+    if (Config::USE_STATIC_IP) {
+        if (!WiFi.config(Config::STATIC_IP, Config::STATIC_GATEWAY, Config::STATIC_SUBNET, Config::STATIC_DNS_PRIMARY, Config::STATIC_DNS_SECONDARY)) {
+            Serial.println("[WiFi] WARNING: Static IP configuration failed! Falling back to DHCP.");
+        } else {
+            Serial.printf("[WiFi] Static IP configured: %s (Gateway: %s, Upstream: %s, %s)\n",
+                          Config::STATIC_IP.toString().c_str(),
+                          Config::STATIC_GATEWAY.toString().c_str(),
+                          Config::STATIC_DNS_PRIMARY.toString().c_str(),
+                          Config::STATIC_DNS_SECONDARY.toString().c_str());
+        }
+    }
+
     WiFi.begin(Config::WIFI_SSID, Config::WIFI_PASSWORD);
 
     uint32_t start = millis();
@@ -111,6 +128,19 @@ static bool connectWiFi() {
             Serial.printf("[WiFi]   DNS        : %s\n", WiFi.dnsIP().toString().c_str());
             Serial.printf("[WiFi]   RSSI       : %d dBm\n", WiFi.RSSI());
             Serial.printf("[WiFi]   MAC        : %s\n", WiFi.macAddress().c_str());
+
+            // Initialize mDNS Responder: http://adsorb.local/
+            if (MDNS.begin(Config::MDNS_HOSTNAME)) {
+                MDNS.addService("http", "tcp", Config::WEB_PORT);
+                MDNS.addService("dns", "udp", Config::DNS_PORT);
+                MDNS.addServiceTxt("http", "tcp", "version", Config::FIRMWARE_VERSION);
+                MDNS.addServiceTxt("http", "tcp", "arch", "ESP32-S3-N16R8");
+                MDNS.addServiceTxt("http", "tcp", "simd", "128bit-PIE");
+                Serial.printf("[mDNS] Zero-Config responder active at http://%s.local/\n", Config::MDNS_HOSTNAME);
+            } else {
+                Serial.println("[mDNS] WARNING: Failed to start mDNS responder");
+            }
+
             configTime(0, 0, "216.239.35.0", "129.6.15.28", "time.google.com");
             uint32_t startNtp = millis();
             while (time(nullptr) < 1700000000 && (millis() - startNtp < 3000)) {
@@ -129,6 +159,12 @@ static bool connectWiFi() {
     WiFi.mode(WIFI_AP_STA);
     WiFi.softAP(Config::AP_SSID, Config::AP_PASSWORD, Config::AP_CHANNEL, 0, Config::AP_MAX_CLIENTS);
     Serial.printf("[WiFi] AP active at %s\n", WiFi.softAPIP().toString().c_str());
+
+    if (MDNS.begin(Config::MDNS_HOSTNAME)) {
+        MDNS.addService("http", "tcp", Config::WEB_PORT);
+        MDNS.addService("dns", "udp", Config::DNS_PORT);
+        Serial.printf("[mDNS] AP Zero-Config responder active at http://%s.local/\n", Config::MDNS_HOSTNAME);
+    }
 
     // Keep trying station in background
     WiFi.begin(Config::WIFI_SSID, Config::WIFI_PASSWORD);
@@ -294,12 +330,12 @@ void loop() {
                       (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString().c_str() : "AP Mode");
     }
 
-    // Wi-Fi reconnection check every 60 seconds
+    // Fast Wi-Fi watchdog: check every 3 seconds to guarantee 100% uptime
     static uint32_t lastWifiCheck = 0;
-    if (millis() - lastWifiCheck >= 60000) {
+    if (millis() - lastWifiCheck >= 3000) {
         lastWifiCheck = millis();
         if (WiFi.status() != WL_CONNECTED) {
-            Serial.println("[WiFi] Disconnected! Attempting reconnection...");
+            Serial.println("[WiFi] Disconnected! Attempting instant reconnection...");
             WiFi.reconnect();
         }
     }

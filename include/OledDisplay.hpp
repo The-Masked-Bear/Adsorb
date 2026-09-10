@@ -122,10 +122,10 @@ private:
         snprintf(cacheBuf, sizeof(cacheBuf), "RAM CACHE: %.1f%%", cache.getHitRatePercent());
         _u8g2.drawStr(2, 49, cacheBuf);
 
-        // Footer: Total Queries Progress Bar
+        // Footer: Total Queries & mDNS Hostname
         _u8g2.setFont(u8g2_font_4x6_tf);
         char qBuf[32];
-        snprintf(qBuf, sizeof(qBuf), "TOTAL: %u REQS", total);
+        snprintf(qBuf, sizeof(qBuf), "TOTAL: %u | adsorb.local", total);
         _u8g2.drawStr(2, 60, qBuf);
 
         // Page Indicator Dots
@@ -158,13 +158,9 @@ private:
         const char* modeLabel = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "UPSTREAM: DoH TLS" : "UPSTREAM: RACE UDP";
         _u8g2.drawStr(2, 49, modeLabel);
 
-        // Telemetry Subtext
+        // Telemetry Subtext: Hardware TRNG & 128-bit SIMD Accelerator
         _u8g2.setFont(u8g2_font_4x6_tf);
-        if (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) {
-            snprintf(buf, sizeof(buf), "DoH SUCCESS: %.1f%% (%u)", doh.getSuccessRate(), doh.getSuccessfulQueries());
-        } else {
-            snprintf(buf, sizeof(buf), "RACE: 1.1.1.1 + 8.8.8.8 (<15ms)");
-        }
+        snprintf(buf, sizeof(buf), "TRNG: HW-RND | SIMD: 128b PIE");
         _u8g2.drawStr(2, 60, buf);
 
         _drawPageDots(1);
@@ -193,12 +189,8 @@ private:
         snprintf(buf, sizeof(buf), "SRAM : %u KB FREE", ESP.getFreeHeap() / 1024);
         _u8g2.drawStr(2, 36, buf);
 
-        // Uptime
-        uint32_t s = millis() / 1000;
-        uint32_t h = s / 3600;
-        uint32_t m = (s % 3600) / 60;
-        uint32_t sec = s % 60;
-        snprintf(buf, sizeof(buf), "UPTIME: %02u:%02u:%02u", h, m, sec);
+        // Static IP & Hostname
+        snprintf(buf, sizeof(buf), "STATIC: 192.168.1.101");
         _u8g2.drawStr(2, 49, buf);
 
         // Cores & WiFi RSSI

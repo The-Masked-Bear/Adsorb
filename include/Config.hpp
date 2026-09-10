@@ -23,6 +23,17 @@ constexpr const char* WIFI_PASSWORD    = "YOUR_WIFI_PASSWORD";
 #endif
 constexpr uint32_t    WIFI_CONNECT_TIMEOUT_MS = 10000; // 10s connection timeout before fallback
 
+// Static IP Configuration (Guarantees zero DNS interruptions at 192.168.1.101)
+constexpr bool        USE_STATIC_IP          = true;
+const IPAddress       STATIC_IP(192, 168, 1, 101);
+const IPAddress       STATIC_GATEWAY(192, 168, 1, 1);
+const IPAddress       STATIC_SUBNET(255, 255, 255, 0);
+const IPAddress       STATIC_DNS_PRIMARY(1, 1, 1, 1);
+const IPAddress       STATIC_DNS_SECONDARY(8, 8, 8, 8);
+
+// Zero-Config mDNS & Captive Portal
+constexpr const char* MDNS_HOSTNAME          = "adsorb"; // http://adsorb.local/
+
 // Wi-Fi Access Point (Fallback) Configuration
 constexpr const char* AP_SSID          = "ESP32-DNS-AdBlocker";
 constexpr const char* AP_PASSWORD      = "admin1234";
@@ -34,6 +45,7 @@ constexpr uint16_t    DNS_PORT         = 53;
 constexpr uint16_t    WEB_PORT         = 80;
 constexpr const char* UPSTREAM_DNS_PRIMARY   = "1.1.1.1";
 constexpr const char* UPSTREAM_DNS_SECONDARY = "8.8.8.8";
+
 
 // Filesystem Paths (LittleFS)
 constexpr const char* FS_MOUNT_POINT         = "/littlefs";

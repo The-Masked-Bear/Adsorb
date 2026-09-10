@@ -10,6 +10,7 @@
 #include <functional>
 
 #include "Config.hpp"
+#include "VectorWildcard.hpp"
 
 // ============================================================================
 // PSRAM Allocator — forces std containers to allocate in external SPIRAM
@@ -109,6 +110,14 @@ public:
         _loadSetFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist, "custom blacklist");
         _loadSetFile(Config::PATH_CUSTOM_WHITELIST, _whitelist, "whitelist");
 
+        // 5. Initialize Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator
+        _simd.init();
+        for (const auto& d : _customBlacklist) {
+            if (d.find('*') != PsramString::npos) {
+                _simd.addPattern(d.c_str());
+            }
+        }
+
         uint32_t elapsed = millis() - startMs;
         uint32_t psramUsed = psramBefore > ESP.getFreePsram() ? (psramBefore - ESP.getFreePsram()) : 0;
 
@@ -191,7 +200,12 @@ public:
             return true;
         }
 
-        // 4. Arrogant Heuristic & Keyword matching (annihilate unlisted ad/telemetry subdomains)
+        // 4. Xtensa LX7 128-bit Vector SIMD (PIE) Wildcard Rule Accelerator
+        if (_simd.matchesAny(domain.c_str(), domain.length())) {
+            return true;
+        }
+
+        // 5. Arrogant Heuristic & Keyword matching (annihilate unlisted ad/telemetry subdomains)
         if (_matchHeuristics(domain)) {
             return true;
         }
@@ -210,6 +224,9 @@ public:
         PsramString domain = _cleanDomain(rawDomain);
         if (domain.empty()) return false;
         _customBlacklist.insert(domain);
+        if (rawDomain.indexOf('*') >= 0) {
+            _simd.addPattern(rawDomain.c_str());
+        }
         return _appendToFile(Config::PATH_CUSTOM_BLACKLIST, String(domain.c_str()));
     }
 
@@ -230,6 +247,7 @@ public:
     size_t blockedCount() const { return _blockedHashes.size(); }
     size_t customBlacklistCount() const { return _customBlacklist.size(); }
     size_t whitelistCount() const { return _whitelist.size(); }
+    size_t simdPatternCount() const { return _simd.patternCount(); }
 
     bool isWhitelisted(const String& rawDomain) const {
         PsramString domain = _cleanDomain(rawDomain);
@@ -241,11 +259,13 @@ public:
 
     const DomainSet& getWhitelist() const { return _whitelist; }
     const DomainSet& getCustomBlacklist() const { return _customBlacklist; }
+    const VectorWildcardAccelerator& getSimdAccelerator() const { return _simd; }
 
 private:
     HashVector _blockedHashes;
     DomainSet _customBlacklist;
     DomainSet _whitelist;
+    VectorWildcardAccelerator _simd;
 
     bool _checkHierarchyHash(const PsramString& domain) const {
         if (_blockedHashes.empty()) return false;

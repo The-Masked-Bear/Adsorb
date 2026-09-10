@@ -1,6 +1,6 @@
-﻿{
+{
   "name": "Adsorb Hardware DNS Sinkhole",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "home_assistant_domain": "adsorb",
   "new_install_prompt_erase": false,
   "builds": [

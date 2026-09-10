@@ -104,6 +104,23 @@ public:
 
         uint16_t qtype = (_packetBuf[qnameEnd] << 8) | _packetBuf[qnameEnd + 1];
 
+        // 0. Zero-Config mDNS & Local Hostname: adsorb.local, adsorb, or esp32-adblocker
+        if (domain.equalsIgnoreCase("adsorb.local") || domain.equalsIgnoreCase("adsorb") || domain.equalsIgnoreCase("esp32-adblocker")) {
+            totalQueries++;
+            IPAddress myIP = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
+            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, myIP);
+            _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
+            return true;
+        }
+
+        // 0b. Captive Portal Redirection for SoftAP setup clients (192.168.4.x)
+        if (clientIP[0] == 192 && clientIP[1] == 168 && clientIP[2] == 4 && _isCaptiveProbe(domain)) {
+            totalQueries++;
+            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, WiFi.softAPIP());
+            _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
+            return true;
+        }
+
         // 1. Check for DoH canary domain (Mozilla RFC specification: return NXDOMAIN to auto-disable DoH)
         if (_isDohCanary(domain)) {
             blockedQueries++;
@@ -277,6 +294,53 @@ private:
         _udp.beginPacket(clientIP, clientPort);
         _udp.write(resp, respLen);
         _udp.endPacket();
+    }
+
+    // Send authoritative A-record response pointing to a specific IP (e.g. adsorb.local or captive portal)
+    void _sendAuthoritativeIpResponse(IPAddress clientIP, uint16_t clientPort,
+                                      const uint8_t* query, int queryLen,
+                                      uint16_t txnId, int qnameEnd, IPAddress ip) {
+        uint8_t resp[512];
+        int questionEnd = qnameEnd + 4;
+        if (questionEnd > queryLen || questionEnd > (int)sizeof(resp) - 32) return;
+
+        memcpy(resp, query, questionEnd);
+        int respLen = questionEnd;
+
+        // Flags: QR=1 (response), AA=1 (Authoritative), RA=1, RCODE=0 (NoError)
+        resp[2] = 0x84 | (query[2] & 0x01);
+        resp[3] = 0x80;
+
+        // ANCOUNT = 1, NSCOUNT = 0, ARCOUNT = 0
+        resp[6] = 0x00; resp[7] = 0x01;
+        resp[8] = 0; resp[9] = 0;
+        resp[10] = 0; resp[11] = 0;
+
+        // A record: pointer to QNAME (0xC00C) + TYPE A (1) + CLASS IN (1) + TTL 60 + RDLENGTH 4 + IP
+        resp[respLen++] = 0xC0; resp[respLen++] = 0x0C;
+        resp[respLen++] = 0x00; resp[respLen++] = 0x01;
+        resp[respLen++] = 0x00; resp[respLen++] = 0x01;
+        resp[respLen++] = 0x00; resp[respLen++] = 0x00;
+        resp[respLen++] = 0x00; resp[respLen++] = 0x3C; // TTL = 60s
+        resp[respLen++] = 0x00; resp[respLen++] = 0x04;
+        resp[respLen++] = ip[0];
+        resp[respLen++] = ip[1];
+        resp[respLen++] = ip[2];
+        resp[respLen++] = ip[3];
+
+        _udp.beginPacket(clientIP, clientPort);
+        _udp.write(resp, respLen);
+        _udp.endPacket();
+    }
+
+    static bool _isCaptiveProbe(const String& d) {
+        return d.indexOf("captive.apple.com") >= 0 ||
+               d.indexOf("hotspot-detect.html") >= 0 ||
+               d.indexOf("connectivitycheck.gstatic.com") >= 0 ||
+               d.indexOf("connectivitycheck.android.com") >= 0 ||
+               d.indexOf("clients3.google.com") >= 0 ||
+               d.indexOf("msftconnecttest.com") >= 0 ||
+               d.indexOf("msftncsi.com") >= 0;
     }
 
     static bool _isDohCanary(const String& domain) {
@@ -457,13 +521,25 @@ private:
                 _fwdUdp.flush();
             }
 
+            // Generate cryptographically secure 16-bit Transaction ID from ESP32-S3 Hardware TRNG
+            // Physical RF thermal entropy prevents Kaminsky DNS cache poisoning & spoofing attacks
+            uint16_t cryptoTxnId = (uint16_t)(esp_random() & 0xFFFF);
+            if (cryptoTxnId == 0) cryptoTxnId = 1;
+
+            // Clone query buffer and patch ID with hardware cryptographic entropy
+            uint8_t trngQuery[512];
+            int trngLen = (queryLen <= (int)sizeof(trngQuery)) ? queryLen : sizeof(trngQuery);
+            memcpy(trngQuery, query, trngLen);
+            trngQuery[0] = (uint8_t)(cryptoTxnId >> 8);
+            trngQuery[1] = (uint8_t)(cryptoTxnId & 0xFF);
+
             // Blast query to BOTH upstream resolvers simultaneously (parallel race)
             _fwdUdp.beginPacket(primaryIP, 53);
-            _fwdUdp.write(query, queryLen);
+            _fwdUdp.write(trngQuery, trngLen);
             _fwdUdp.endPacket();
 
             _fwdUdp.beginPacket(secondaryIP, 53);
-            _fwdUdp.write(query, queryLen);
+            _fwdUdp.write(trngQuery, trngLen);
             _fwdUdp.endPacket();
 
             uint32_t start = millis();
@@ -474,7 +550,12 @@ private:
                     _fwdUdp.flush();
                     if (replyLen >= 12) {
                         uint16_t replyTxnId = (_fwdBuf[0] << 8) | _fwdBuf[1];
-                        if (replyTxnId == txnId) {
+                        // Validate cryptographic hardware TRNG transaction ID:
+                        // Drops spoofed/poisoned packets that do not possess correct hardware entropy
+                        if (replyTxnId == cryptoTxnId) {
+                            // Restore client's original transaction ID before replying to LAN client
+                            _fwdBuf[0] = (uint8_t)(txnId >> 8);
+                            _fwdBuf[1] = (uint8_t)(txnId & 0xFF);
                             if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
                                 _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
                             } else {
