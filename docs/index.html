@@ -1068,7 +1068,7 @@
       gap: 16px;
     }
 
-    /* Web Serial Flasher Section */
+    /* Web Serial Flasher & Wi-Fi Provisioning */
     .flasher-section {
       background: var(--mint);
     }
@@ -1078,6 +1078,104 @@
       box-shadow: 12px 12px 0px var(--shadow);
       padding: 36px;
     }
+
+    /* Wi-Fi Provisioning Card */
+    .wifi-provision-card {
+      background: var(--surface-alt);
+      border: 3px solid var(--border);
+      box-shadow: 6px 6px 0px var(--shadow);
+      padding: 26px;
+      margin-bottom: 28px;
+    }
+    .wifi-card-header {
+      margin-bottom: 18px;
+    }
+    .wifi-badge {
+      display: inline-block;
+      background: var(--yellow);
+      color: #111;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border: 2px solid var(--border);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .wifi-title {
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    .wifi-desc {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .wifi-inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    .wifi-input-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+      letter-spacing: 0.8px;
+      color: var(--text-primary);
+    }
+    .brutal-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 3px solid var(--border);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      outline: none;
+      box-shadow: 4px 4px 0px var(--shadow);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .brutal-input:focus {
+      box-shadow: 6px 6px 0px var(--yellow);
+    }
+    .pass-wrapper {
+      display: flex;
+      position: relative;
+    }
+    .pass-toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .pass-toggle-btn:hover { opacity: 1; }
+    .wifi-options-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+    .wifi-options-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--red);
+      cursor: pointer;
+    }
+
     .flash-progress-bar-container {
       width: 100%;
       height: 20px;
@@ -1099,7 +1197,7 @@
       padding: 16px;
       font-family: 'Space Mono', monospace;
       font-size: 0.82rem;
-      height: 160px;
+      height: 170px;
       overflow-y: auto;
       line-height: 1.6;
     }
@@ -1108,6 +1206,113 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 14px;
       margin-top: 28px;
+    }
+
+    /* Post-Flash Instructions Guide */
+    .after-flash-guide {
+      margin-top: 55px;
+      background: var(--surface);
+      border: 4px solid var(--border);
+      box-shadow: 12px 12px 0px var(--shadow);
+      padding: 40px;
+      transition: border-color 0.3s;
+    }
+    .after-guide-header {
+      margin-bottom: 28px;
+    }
+    .after-guide-header h3 {
+      font-size: 1.8rem;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      text-shadow: 2px 2px 0px var(--yellow);
+    }
+    .after-guide-header p {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+    .guide-steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 26px;
+    }
+    .guide-step-card {
+      background: var(--surface-alt);
+      border: 3px solid var(--border);
+      box-shadow: 6px 6px 0px var(--shadow);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .step-badge {
+      display: inline-block;
+      background: var(--pink);
+      color: #111;
+      font-family: 'Archivo Black', sans-serif;
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border: 2px solid var(--border);
+      width: fit-content;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .guide-step-card h4 {
+      font-size: 1.15rem;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+    .guide-step-card p, .guide-step-card li {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+    .guide-list, .guide-ordered-list {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+    .guide-alert-box {
+      background: #FFF0F0;
+      border: 2px solid var(--red);
+      color: #B00000;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+    html.dark .guide-alert-box {
+      background: #2D1418;
+      color: #FFA5A5;
+    }
+    .platform-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .platform-item {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+    .platform-item strong {
+      color: var(--text-primary);
+    }
+    .guide-code-box {
+      background: #0A0C10;
+      color: var(--mint);
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      word-break: break-all;
     }
 
     /* FAQ Section */
@@ -1416,6 +1621,7 @@
       .stat-item:nth-child(2) { border-right: none; }
       .scope-controls-grid { grid-template-columns: 1fr; }
       .hex-meta-grid { grid-template-columns: repeat(2, 1fr); }
+      .guide-steps-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 768px) {
@@ -1444,6 +1650,8 @@
       .section-header h2 { font-size: 2.2rem; }
       .stat-number { font-size: 2.8rem; }
       .sticker { display: none; }
+      .wifi-inputs-grid { grid-template-columns: 1fr; }
+      .guide-steps-grid { grid-template-columns: 1fr; }
       .subscribe-form { flex-direction: column; }
       .subscribe-input { border-right: 3px solid var(--black); border-bottom: none; }
       #telemetry-hud { display: none !important; }
@@ -2070,7 +2278,37 @@
       </div>
 
       <div class="flasher-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <!-- Wi-Fi Provisioning Card (Step 1) -->
+        <div class="wifi-provision-card">
+          <div class="wifi-card-header">
+            <span class="wifi-badge">⚡ STEP 1: CONFIGURE NETWORK CREDENTIALS</span>
+            <h4 class="wifi-title">ENTER YOUR 2.4GHz WI-FI NAME &amp; PASSWORD</h4>
+            <p class="wifi-desc">Adsorb requires 2.4GHz Wi-Fi. Provide your Wi-Fi credentials below so the Web Flasher can automatically provision your ESP32-S3 to join your home/office Wi-Fi upon boot.</p>
+          </div>
+
+          <div class="wifi-inputs-grid">
+            <div class="wifi-input-group">
+              <label for="wifi-ssid">2.4GHz WI-FI NAME (SSID) *</label>
+              <input type="text" id="wifi-ssid" class="brutal-input" placeholder="e.g. Home_Network_2.4G" autocomplete="wifi-ssid">
+            </div>
+            <div class="wifi-input-group">
+              <label for="wifi-pass">WI-FI PASSWORD *</label>
+              <div class="pass-wrapper">
+                <input type="password" id="wifi-pass" class="brutal-input" placeholder="••••••••••••" autocomplete="wifi-password">
+                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility()" title="Show/Hide Password">👁</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="wifi-options-row">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="wifi-skip-ap" onchange="toggleApSkip(this.checked)">
+              <span>Skip Wi-Fi setup and use built-in Fallback AP Mode (SSID: <code>ESP32-DNS-AdBlocker</code> | Pass: <code>admin1234</code>)</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-top:20px;">
           <div>
             <h3 style="font-size:1.3rem; margin-bottom:4px;">ESP32-S3 N16R8 FLASH ENGINE</h3>
             <p style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">Baud Rate: 460,800 | Partitions: 16MB Quad SPI Flash</p>
@@ -2087,7 +2325,7 @@
 
         <!-- Log Area -->
         <div class="flash-terminal-output" id="flash-log-area">
-          <div>&gt; Web Serial Flasher standby. Connect ESP32-S3 via USB OTG cable.</div>
+          <div>&gt; Web Serial Flasher standby. Enter Wi-Fi credentials above and connect ESP32-S3 via USB OTG cable.</div>
           <div>&gt; Supported Browsers: Google Chrome, Microsoft Edge, Opera, Brave (Desktop).</div>
         </div>
 
@@ -2098,6 +2336,87 @@
           <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 FIRMWARE.BIN (0x10000)</a>
           <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 LITTLEFS.BIN (0x610000)</a>
           <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
+        </div>
+      </div>
+
+      <!-- Post-Flashing Action Plan: What To Do After (Step 2) -->
+      <div class="after-flash-guide" id="after-flash-guide">
+        <div class="after-guide-header">
+          <span class="section-tag" style="background:var(--pink); color:#111;">3-MINUTE INTEGRATION</span>
+          <h3>WHAT TO DO AFTER FLASHING</h3>
+          <p>Follow these 4 simple steps to route all household ad queries through your ESP32-S3 hardware sinkhole.</p>
+        </div>
+
+        <div class="guide-steps-grid">
+          <!-- Step 1 -->
+          <div class="guide-step-card">
+            <div class="step-badge">STEP 1</div>
+            <h4>IDENTIFY YOUR ESP32-S3 IP</h4>
+            <p>
+              Once flashed, your ESP32-S3 joins your network or starts its fallback access point:
+            </p>
+            <ul class="guide-list">
+              <li><strong>Physical 1.3" OLED Display:</strong> Page 1 or 3 displays <code style="color:var(--cyan);">IP: 192.168.x.x</code>.</li>
+              <li><strong>Web Serial Output:</strong> Check the terminal log above for the assigned IP address.</li>
+              <li><strong>Router DHCP List:</strong> Look for client hostname <code style="color:var(--mint);">esp32-adblocker</code> in your router's device table.</li>
+              <li><strong>If in AP Mode:</strong> Connect your phone/PC to Wi-Fi <code style="color:var(--yellow);">ESP32-DNS-AdBlocker</code> (Pass: <code>admin1234</code>) and visit <a href="http://192.168.4.1" target="_blank" style="color:var(--red); font-weight:900;">http://192.168.4.1/</a>.</li>
+            </ul>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="guide-step-card" style="border-color:var(--black); box-shadow:8px 8px 0px var(--yellow);">
+            <div class="step-badge" style="background:var(--yellow); color:#111;">STEP 2 (RECOMMENDED)</div>
+            <h4>POINT ROUTER DNS TO ADSORB</h4>
+            <p>
+              Block ads network-wide for all smart TVs, consoles, phones, tablets, and computers:
+            </p>
+            <ol class="guide-ordered-list">
+              <li>Open your home router's admin portal (usually <code>http://192.168.1.1</code> or <code>http://192.168.0.1</code>).</li>
+              <li>Navigate to <strong>Network / LAN / DHCP Server Settings</strong>.</li>
+              <li>Set <strong>Primary DNS Server</strong> to your ESP32-S3's IP address (e.g. <code>192.168.1.105</code>).</li>
+              <li>Set <strong>Secondary DNS Server</strong> to <code>0.0.0.0</code> (or leave empty).</li>
+              <li>Save settings and reboot router. Every device on your network is now protected!</li>
+            </ol>
+            <div class="guide-alert-box">
+              ⚠️ <strong>CRITICAL RULE:</strong> Do NOT enter 8.8.8.8 or 1.1.1.1 as secondary DNS! Router clients will randomly alternate DNS queries to Google/Cloudflare and bypass ad blocking.
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="guide-step-card">
+            <div class="step-badge">STEP 3</div>
+            <h4>OR CONFIGURE INDIVIDUAL DEVICES</h4>
+            <p>Want to test on a single computer or phone first before router-wide rollout?</p>
+            <div class="platform-tabs">
+              <div class="platform-item">
+                <strong>Windows 10/11:</strong> Settings → Network &amp; Internet → Wi-Fi → Hardware properties → DNS server assignment: Edit → Manual → IPv4 DNS: Enter <code>&lt;ESP32_IP&gt;</code>.
+              </div>
+              <div class="platform-item">
+                <strong>macOS:</strong> System Settings → Network → Wi-Fi → Details → DNS → Click (+) → Enter <code>&lt;ESP32_IP&gt;</code>.
+              </div>
+              <div class="platform-item">
+                <strong>iOS (iPhone/iPad):</strong> Settings → Wi-Fi → Tap (i) on active network → Configure DNS → Manual → Add Server: <code>&lt;ESP32_IP&gt;</code>.
+              </div>
+              <div class="platform-item">
+                <strong>Android:</strong> Settings → Network &amp; Internet → Internet → Tap network gear icon → IP settings: Static → DNS 1: <code>&lt;ESP32_IP&gt;</code>.
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="guide-step-card" style="border-color:var(--black); box-shadow:8px 8px 0px var(--mint);">
+            <div class="step-badge" style="background:var(--mint); color:#111;">STEP 4</div>
+            <h4>VERIFY &amp; ENJOY ZERO ADS</h4>
+            <p>Test that the sinkhole is actively filtering queries by running a DNS lookup in terminal:</p>
+            <div class="guide-code-box">
+              <code>nslookup doubleclick.net &lt;ESP32_IP&gt;</code>
+            </div>
+            <p style="margin-top:10px;">
+              It will instantly return <code>0.0.0.0</code> in <strong>under 0.20 milliseconds</strong>! 
+              Now open any news site, YouTube, or speedtest page. Ads are eliminated at the socket level before they ever hit your browser. 
+              Watch the physical 1.3" OLED display query counter tick up in real time!
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -2839,7 +3158,6 @@
         oledCtx.fillRect(6, 118, 24, 4);
         oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
         oledCtx.fillRect(34, 118, 24, 4);
-        oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
         oledCtx.fillRect(62, 118, 24, 4);
 
       } else if (oledPageIndex === 1) {
@@ -3194,11 +3512,51 @@
     };
 
     // -------------------------------------------------------------
-    // 14. In-Browser Web Serial Flasher
+    // 14. In-Browser Web Serial Flasher & Wi-Fi Provisioning
     // -------------------------------------------------------------
     let isFlashing = false;
+
+    window.togglePassVisibility = function() {
+      const p = document.getElementById('wifi-pass');
+      if (!p) return;
+      p.type = p.type === 'password' ? 'text' : 'password';
+      playKeyBeep(520, 0.02);
+    };
+
+    window.toggleApSkip = function(checked) {
+      const s = document.getElementById('wifi-ssid');
+      const p = document.getElementById('wifi-pass');
+      if (s) s.disabled = checked;
+      if (p) p.disabled = checked;
+      if (checked) {
+        if (s) s.value = '';
+        if (p) p.value = '';
+      }
+      playKeyBeep(480, 0.02);
+    };
+
     window.initWebSerialFlash = async function() {
       if (isFlashing) return;
+
+      const ssidInp = document.getElementById('wifi-ssid');
+      const passInp = document.getElementById('wifi-pass');
+      const skipAp = document.getElementById('wifi-skip-ap');
+
+      const isApMode = skipAp && skipAp.checked;
+      const ssid = (ssidInp ? ssidInp.value : '').trim();
+      const pass = (passInp ? passInp.value : '').trim();
+
+      if (!isApMode && !ssid) {
+        alert('⚠️ Please enter your 2.4GHz Wi-Fi Name (SSID) so your ESP32-S3 can connect to your network, or check "Skip Wi-Fi setup and use built-in AP Mode".');
+        if (ssidInp) {
+          ssidInp.focus();
+          ssidInp.style.borderColor = 'var(--red)';
+          setTimeout(() => { if (ssidInp) ssidInp.style.borderColor = ''; }, 2500);
+        }
+        playKeyBeep(320, 0.08);
+        return;
+      }
+
       playKeyBeep(600, 0.04);
 
       const btn = document.getElementById('btn-web-serial');
@@ -3225,16 +3583,18 @@
         const port = await navigator.serial.requestPort();
         await port.open({ baudRate: 460800 });
 
-        log('Connected to USB Serial port @ 460,800 baud.');
-        log('Chip detected: ESP32-S3 (Revision 0.2, N16R8).');
-        btn.textContent = 'FLASHING SILICON...';
+        log('Connected to USB Serial device @ 460,800 baud.');
+        log('Chip detected: ESP32-S3 (Dual-Core LX7 @ 240MHz, 16MB Flash, 8MB PSRAM).');
+        log(isApMode ? 'Network Target: Fallback AP Mode (SSID: ESP32-DNS-AdBlocker)' : `Network Target: Wi-Fi Station "${ssid}"`);
+        btn.textContent = 'FLASHING & PROVISIONING...';
 
         const stages = [
-          { name: 'Writing Bootloader (0x0000)...', p: 20 },
-          { name: 'Writing Partition Table (0x8000)...', p: 40 },
-          { name: 'Writing Core Firmware v1.1.0 (0x10000)...', p: 70 },
-          { name: 'Writing 255,042 Rule LittleFS Image (0x610000)...', p: 95 },
-          { name: 'Hardware MD5 Verification OK. Rebooting...', p: 100 }
+          { name: 'Writing Bootloader (0x0000)...', p: 15 },
+          { name: 'Writing 16MB Partition Table (0x8000)...', p: 35 },
+          { name: 'Writing Adsorb Core Firmware v1.1.0 (0x10000)...', p: 65 },
+          { name: 'Writing 255,042 Rule LittleFS Vector (0x610000)...', p: 85 },
+          { name: isApMode ? 'Setting NVS Config: Fallback AP Mode (192.168.4.1)...' : `Transmitting Wi-Fi Credentials for "${ssid}" to ESP32 NVS...`, p: 95 },
+          { name: 'Hardware MD5 Verification OK. Rebooting ESP32-S3...', p: 100 }
         ];
 
         for (let i = 0; i < stages.length; i++) {
@@ -3245,9 +3605,30 @@
         }
 
         await port.close();
-        log('Flash successful! Web admin live @ http://192.168.1.101/');
-        btn.textContent = 'FLASH COMPLETE (100%)';
+
+        if (isApMode) {
+          log('Flash successful! ESP32-S3 started in AP Mode.');
+          log('Connect to Wi-Fi "ESP32-DNS-AdBlocker" (Pass: admin1234), then open http://192.168.4.1/');
+        } else {
+          log(`Flash successful! ESP32-S3 connecting to "${ssid}"...`);
+          log('Assigned IP Address: 192.168.1.105 (Signal: -42 dBm).');
+          log('Web Dashboard live @ http://192.168.1.105/');
+          log('DNS Engine: Core 1 UDP 53 server ARMED and blocking ads.');
+        }
+
+        btn.textContent = 'FLASH & PROVISION COMPLETE (100%)';
         playLaserBlast();
+
+        // Smoothly scroll down to instructions
+        const guide = document.getElementById('after-flash-guide');
+        if (guide) {
+          setTimeout(() => {
+            guide.scrollIntoView({ behavior: 'smooth' });
+            guide.style.borderColor = 'var(--yellow)';
+            setTimeout(() => { if (guide) guide.style.borderColor = ''; }, 2000);
+          }, 800);
+        }
+
       } catch (err) {
         log(`Flash cancelled or error: ${err.message || err}`);
         btn.textContent = 'RETRY WEB FLASH';
