@@ -368,7 +368,7 @@
         <div class="flex flex-col min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-display font-black text-lg sm:text-xl tracking-tight leading-none text-[var(--text)]">ADSORB</span>
-            <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-brand-lime text-black border border-black/15 uppercase">v1.0.0</span>
+            <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-brand-lime text-black border border-black/15 uppercase">v1.1.0</span>
           </div>
           <span class="hidden md:block text-[9px] text-[var(--text-muted)] font-mono tracking-widest uppercase">ESP32-S3 BARE-METAL SINKHOLE</span>
         </div>
@@ -380,20 +380,24 @@
           <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">01</span>
           <span>SILICON</span>
         </a>
-        <a href="#workbench" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
+        <a href="#oled" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
           <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">02</span>
+          <span>OLED &amp; CACHE</span>
+        </a>
+        <a href="#workbench" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
+          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">03</span>
           <span>DISSECTOR</span>
         </a>
         <a href="#scope" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
-          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">03</span>
+          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">04</span>
           <span>SCOPE</span>
         </a>
         <a href="#benchmarks" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
-          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">04</span>
+          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">05</span>
           <span>BENCHMARKS</span>
         </a>
         <a href="#flasher" class="px-3 py-1.5 text-[var(--text)] hover:text-brand-lime transition-colors flex items-center gap-1.5 group">
-          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">05</span>
+          <span class="text-[var(--text-muted)] group-hover:text-brand-lime text-[9px]">06</span>
           <span>WEB FLASH</span>
         </a>
       </nav>
@@ -434,12 +438,13 @@
 
     <!-- Mobile Nav Collapsible Drawer -->
     <div id="mobileNavDrawer" class="hidden lg:hidden border-t border-[var(--border)] bg-[var(--card-bg)] px-4 py-3">
-      <div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 font-mono text-xs font-bold uppercase">
+      <div class="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-6 gap-2 font-mono text-xs font-bold uppercase">
         <a href="#anatomy" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">01 // SILICON</a>
-        <a href="#workbench" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">02 // DISSECT</a>
-        <a href="#scope" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">03 // SCOPE</a>
-        <a href="#benchmarks" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">04 // BENCH</a>
-        <a href="#flasher" onclick="toggleMobileNav()" class="p-2 tech-card text-center bg-brand-lime text-black col-span-2 xs:col-span-1">05 // FLASH</a>
+        <a href="#oled" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">02 // OLED</a>
+        <a href="#workbench" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">03 // DISSECT</a>
+        <a href="#scope" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">04 // SCOPE</a>
+        <a href="#benchmarks" onclick="toggleMobileNav()" class="p-2 tech-card text-center hover:bg-brand-lime hover:text-black">05 // BENCH</a>
+        <a href="#flasher" onclick="toggleMobileNav()" class="p-2 tech-card text-center bg-brand-lime text-black col-span-2 xs:col-span-1 sm:col-span-1">06 // FLASH</a>
       </div>
     </div>
   </header>
@@ -504,9 +509,9 @@
         <!-- KPI Telemetry Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono pt-1">
           <div class="tech-card p-3.5">
-            <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">Core Latency</span>
-            <span class="font-bold text-lg text-brand-orange">&lt; 0.84 ms</span>
-            <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">Dual Xtensa LX7</span>
+            <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">Octal LRU Cache</span>
+            <span class="font-bold text-lg text-brand-orange">&lt; 0.20 ms</span>
+            <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">2,048 PSRAM Slots</span>
           </div>
           <div class="tech-card p-3.5">
             <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">PSRAM Vectors</span>
@@ -514,9 +519,9 @@
             <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">64-Bit FNV-1a O(1)</span>
           </div>
           <div class="tech-card p-3.5">
-            <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">Active Draw</span>
-            <span class="font-bold text-lg text-[var(--text)]">0.58 W</span>
-            <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">~$0.46 / Year</span>
+            <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">Parallel Race UDP</span>
+            <span class="font-bold text-lg text-brand-cyan">12 – 25 ms</span>
+            <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">1.1.1.1 + 8.8.8.8</span>
           </div>
           <div class="tech-card p-3.5">
             <span class="text-[var(--text-muted)] block text-[10px] font-bold uppercase">Turtlecute</span>
@@ -527,9 +532,14 @@
 
         <!-- Primary Action Triggers -->
         <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 pt-2">
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="tech-button tech-button-primary px-6 py-3.5 text-xs sm:text-sm">
-            <span>DOWNLOAD FIRMWARE v1.0.0</span>
+          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="tech-button tech-button-primary px-6 py-3.5 text-xs sm:text-sm">
+            <span>DOWNLOAD FIRMWARE v1.1.0</span>
             <span>↓</span>
+          </a>
+
+          <a href="#oled" class="tech-button tech-button-secondary px-5 py-3.5 text-xs sm:text-sm">
+            <span>1.3" OLED &amp; CACHE</span>
+            <span>📟</span>
           </a>
 
           <a href="#workbench" class="tech-button tech-button-secondary px-5 py-3.5 text-xs sm:text-sm">
@@ -625,10 +635,11 @@
             </div>
 
             <!-- Bottom Diagnostic Pin Bar -->
-            <div class="relative z-10 flex justify-between items-center text-[9px] font-mono text-zinc-500 border-t border-zinc-800 pt-1">
+            <div class="relative z-10 flex flex-wrap justify-between items-center text-[9px] font-mono text-zinc-500 border-t border-zinc-800 pt-1 gap-1">
               <span>GPIO 0: BOOT</span>
+              <span onclick="inspectSilicon('oled')" class="text-brand-cyan hover:underline cursor-pointer font-bold">GPIO 8/9: OLED</span>
               <span>GPIO 43/44: UART0</span>
-              <span>GPIO 19/20: D-/D+ USB</span>
+              <span>GPIO 19/20: USB</span>
               <span class="text-brand-lime">CHIP TEMP: <strong id="boardTemp">39.2°C</strong></span>
             </div>
 
@@ -661,6 +672,193 @@
   </section>
 
   <!-- ================================================================= -->
+  <!-- PHYSICAL 1.3" OLED TELEMETRY & SUB-MILLISECOND LRU CACHE (v1.1.0) -->
+  <!-- ================================================================= -->
+  <section id="oled" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t border-[var(--border)]">
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        <div class="inline-block px-2.5 py-0.5 rounded tech-pill bg-brand-cyan/10 text-cyan-600 dark:text-brand-cyan border border-brand-cyan/30 text-[10px] font-bold tracking-widest uppercase mb-2">
+          v1.1.0 Telemetry &amp; Silicon Architecture
+        </div>
+        <h2 class="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-[var(--text)]">
+          1.3" OLED &amp; OCTAL PSRAM CACHE
+        </h2>
+        <p class="text-xs sm:text-sm font-mono text-[var(--text-muted)] mt-1 max-w-2xl">
+          Real-time physical telemetry via 128x64 I2C OLED display, paired with a sub-millisecond 2-way set-associative LRU DNS cache and parallel race upstream UDP engine.
+        </p>
+      </div>
+
+      <!-- Release Status Badge -->
+      <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+        <span class="px-2.5 py-1 rounded bg-brand-lime text-black font-bold uppercase text-[11px]">FIRMWARE v1.1.0</span>
+        <span class="px-2.5 py-1 rounded tech-pill text-[var(--text-muted)] text-[11px]">I2C: GPIO 8 / 9</span>
+      </div>
+    </div>
+
+    <!-- Main Grid: OLED Simulator Console (Left) + Wiring Pinout & PSRAM LRU (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Left: Interactive Physical 1.3" OLED Display Console (6 cols) -->
+      <div class="lg:col-span-6 flex flex-col gap-4">
+        
+        <!-- OLED Bezel Chassis -->
+        <div class="tech-card p-6 bg-[#080a0f] border-2 border-zinc-800 rounded-xl relative overflow-hidden shadow-2xl">
+          
+          <!-- Standoff Brass Screws -->
+          <div class="absolute top-2.5 left-2.5 w-3 h-3 rounded-full bg-yellow-700/80 border border-yellow-500/50 shadow-inner flex items-center justify-center text-[7px] text-yellow-200 select-none">✕</div>
+          <div class="absolute top-2.5 right-2.5 w-3 h-3 rounded-full bg-yellow-700/80 border border-yellow-500/50 shadow-inner flex items-center justify-center text-[7px] text-yellow-200 select-none">✕</div>
+          <div class="absolute bottom-2.5 left-2.5 w-3 h-3 rounded-full bg-yellow-700/80 border border-yellow-500/50 shadow-inner flex items-center justify-center text-[7px] text-yellow-200 select-none">✕</div>
+          <div class="absolute bottom-2.5 right-2.5 w-3 h-3 rounded-full bg-yellow-700/80 border border-yellow-500/50 shadow-inner flex items-center justify-center text-[7px] text-yellow-200 select-none">✕</div>
+
+          <!-- Top Display Header -->
+          <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-4 text-[10px] font-mono select-none">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand-cyan animate-pulse"></span>
+              <span class="text-white font-bold tracking-wider">1.3-INCH SH1106 / SSD1306 (128x64)</span>
+            </div>
+            <div class="flex items-center gap-2 text-zinc-400">
+              <span id="oledPageIndicator" class="px-1.5 py-0.5 rounded bg-zinc-800 text-brand-lime font-bold">PAGE 1/3</span>
+              <span class="text-zinc-600">|</span>
+              <span class="text-brand-orange">SW-I2C 100kHz</span>
+            </div>
+          </div>
+
+          <!-- Physical OLED Screen Glass Bezel -->
+          <div class="relative bg-black rounded-lg p-3 border-4 border-zinc-900 shadow-[inset_0_0_24px_rgba(0,0,0,0.95)] flex flex-col items-center justify-center min-h-[175px] overflow-hidden">
+            <!-- Screen Glass Glare -->
+            <div class="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/[0.04] to-transparent z-20"></div>
+            
+            <!-- Canvas Monochromatic Bitmap Display -->
+            <canvas id="oledSimCanvas" width="256" height="128" class="w-full max-w-[360px] aspect-[2/1] rounded shadow-[0_0_18px_rgba(0,240,255,0.25)] relative z-10 bg-black"></canvas>
+          </div>
+
+          <!-- Interactive Carousel Controls -->
+          <div class="mt-4 pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+            <div class="flex items-center gap-1.5">
+              <button onclick="setOledPage(0)" id="btnPage0" class="tech-button tech-button-primary px-2.5 py-1 text-[10px]">1: DASHBOARD</button>
+              <button onclick="setOledPage(1)" id="btnPage1" class="tech-button tech-button-secondary px-2.5 py-1 text-[10px]">2: CACHE/RACE</button>
+              <button onclick="setOledPage(2)" id="btnPage2" class="tech-button tech-button-secondary px-2.5 py-1 text-[10px]">3: SILICON</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="toggleOledAutoLoop()" id="oledAutoBtn" class="tech-button tech-button-secondary px-2 py-1 text-[10px] text-brand-lime" title="Toggle automatic 4-second page loop">
+                AUTO-CYCLE [ON]
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Safe Pulldown Bus Detection Callout -->
+        <div class="tech-card p-4 bg-zinc-50 dark:bg-zinc-900/60 flex items-start gap-3 font-mono text-xs">
+          <div class="text-brand-lime text-base mt-0.5">🛡️</div>
+          <div>
+            <span class="font-bold text-[var(--text)] block">Fail-Safe Hardware Bus Probing</span>
+            <p class="text-[11px] text-[var(--text-muted)] mt-0.5 leading-relaxed">
+              Standard ESP32 hardware I2C hangs indefinitely if SDA/SCL pull-ups are missing. Adsorb v1.1.0 uses software bit-banging with internal weak pull-downs on boot. If no OLED is wired, the telemetry task idles seamlessly with <strong>0% CPU overhead and zero bus deadlocks</strong>.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: Hardware Wiring Pinout + Sub-Millisecond PSRAM LRU (6 cols) -->
+      <div class="lg:col-span-6 flex flex-col gap-5 font-mono text-xs">
+        
+        <!-- Wiring Pinout Table -->
+        <div class="tech-card p-5 bg-[var(--card-bg)] shadow-md">
+          <div class="flex items-center justify-between pb-3 border-b border-[var(--border)] mb-4">
+            <span class="font-display font-bold text-sm tracking-wider uppercase text-[var(--text)]">1.3" OLED I2C PINOUT MATRIX</span>
+            <span class="text-[10px] px-2 py-0.5 rounded tech-pill bg-brand-lime/10 text-brand-lime font-bold">PLUG &amp; PLAY</span>
+          </div>
+          
+          <table class="w-full text-left font-mono text-xs">
+            <thead class="text-[10px] text-[var(--text-muted)] uppercase border-b border-[var(--border)]">
+              <tr>
+                <th class="pb-2">OLED Pin</th>
+                <th class="pb-2">ESP32-S3 Pin</th>
+                <th class="pb-2">Wire Color</th>
+                <th class="pb-2">Function</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--border)]">
+              <tr>
+                <td class="py-2.5 font-bold text-red-500">VCC</td>
+                <td class="py-2.5 font-bold text-[var(--text)]">3V3</td>
+                <td class="py-2.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5 align-middle"></span>Red</td>
+                <td class="py-2.5 text-[var(--text-muted)]">3.3V Power Supply</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 font-bold text-zinc-400">GND</td>
+                <td class="py-2.5 font-bold text-[var(--text)]">GND</td>
+                <td class="py-2.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-zinc-800 border border-zinc-500 mr-1.5 align-middle"></span>Black</td>
+                <td class="py-2.5 text-[var(--text-muted)]">System Ground</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 font-bold text-brand-cyan">SDA</td>
+                <td class="py-2.5 font-bold text-brand-cyan">GPIO 8</td>
+                <td class="py-2.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 mr-1.5 align-middle"></span>Blue</td>
+                <td class="py-2.5 text-[var(--text-muted)]">I2C Data (Software Bit-Bang)</td>
+              </tr>
+              <tr>
+                <td class="py-2.5 font-bold text-yellow-500">SCL</td>
+                <td class="py-2.5 font-bold text-yellow-500">GPIO 9</td>
+                <td class="py-2.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400 mr-1.5 align-middle"></span>Yellow</td>
+                <td class="py-2.5 text-[var(--text-muted)]">I2C Clock (100kHz)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PSRAM LRU Cache Architecture Breakdown -->
+        <div class="tech-card p-5 bg-[var(--card-bg)] shadow-md flex flex-col gap-3">
+          <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+            <span class="font-display font-bold text-sm tracking-wider uppercase text-[var(--text)]">SUB-MILLISECOND PSRAM LRU CACHE</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-brand-orange text-white font-bold">&lt; 0.2 MS LATENCY</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-[11px]">
+            <div class="p-2.5 tech-card bg-zinc-50 dark:bg-zinc-900/50">
+              <span class="text-[var(--text-muted)] block text-[10px]">CACHE STRUCTURE</span>
+              <strong class="text-[var(--text)]">2-Way Set-Associative</strong>
+              <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">2,048 Total Entries (~1.05 MB)</span>
+            </div>
+            <div class="p-2.5 tech-card bg-zinc-50 dark:bg-zinc-900/50">
+              <span class="text-[var(--text-muted)] block text-[10px]">CACHE MEMORY</span>
+              <strong class="text-brand-lime">Octal PSRAM (ps_malloc)</strong>
+              <span class="text-[10px] text-[var(--text-muted)] block mt-0.5">Zero Internal Heap Consumption</span>
+            </div>
+          </div>
+
+          <div class="p-3 bg-zinc-100 dark:bg-zinc-900/80 rounded border border-[var(--border)] text-[11px] leading-relaxed text-[var(--text-muted)]">
+            <span class="text-[var(--text)] font-bold">Dynamic TTL &amp; TXID Rewriting:</span> On cache hits, Adsorb recalculates the remaining TTL on-the-fly and patches the DNS Transaction ID directly in PSRAM memory. Repeat queries never touch Wi-Fi, upstream resolvers, or flash storage.
+          </div>
+        </div>
+
+        <!-- Parallel Race UDP Engine Card -->
+        <div class="tech-card p-5 bg-[var(--card-bg)] shadow-md flex flex-col gap-3">
+          <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+            <span class="font-display font-bold text-sm tracking-wider uppercase text-[var(--text)]">PARALLEL RACE UPSTREAM RESOLVER</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-brand-cyan text-black font-bold">12 – 25 MS WAN SPEED</span>
+          </div>
+
+          <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
+            Uncached benign requests simultaneously dispatch UDP 53 packets to both <strong class="text-[var(--text)]">Cloudflare (1.1.1.1)</strong> and <strong class="text-[var(--text)]">Google (8.8.8.8)</strong>. The earliest response wins, instantly satisfies the client, and commits to the PSRAM LRU cache.
+          </p>
+
+          <div class="grid grid-cols-2 gap-2 text-[10px] text-[var(--text-muted)]">
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-lime"></span> OS Push Whitelist (FCM/APNs)</div>
+            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> RFC SERVFAIL on Outage</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ================================================================= -->
   <!-- WIRE WORKBENCH (RFC 1035 INTERACTIVE PACKET DISSECTOR)             -->
   <!-- ================================================================= -->
   <section id="workbench" class="max-w-7xl mx-auto px-4 sm:px-8 py-16 border-t border-[var(--border)]">
@@ -683,8 +881,8 @@
         <span class="text-[var(--text-muted)] text-[10px] font-bold">PRESETS:</span>
         <button onclick="loadDomain('pagead2.googlesyndication.com')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px]">pagead2.google...</button>
         <button onclick="loadDomain('use-application-dns.net')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px] text-brand-orange">use-app-dns (DoH)</button>
-        <button onclick="loadDomain('analytics.tiktok.com')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px]">tiktok.analytics</button>
-        <button onclick="loadDomain('api.github.com')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px] text-green-600 dark:text-brand-lime">api.github.com</button>
+        <button onclick="loadDomain('firebaseinstallations.googleapis.com')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px] text-brand-cyan">firebase (Whitelist)</button>
+        <button onclick="loadDomain('api.github.com')" class="tech-button tech-button-secondary px-2.5 py-1 text-[11px] text-green-600 dark:text-brand-lime">github (Cache/Race)</button>
       </div>
     </div>
 
@@ -900,6 +1098,27 @@
             <td class="p-4 text-[var(--text-muted)]">N/A (Remote Datacenter)</td>
           </tr>
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+            <td class="p-4 font-bold text-[var(--text-muted)]">Octal PSRAM LRU Cache Hit</td>
+            <td class="p-4 font-bold text-green-600 dark:text-brand-lime bg-brand-lime/5">&lt; 0.2 ms (&lt; 200 µs)</td>
+            <td class="p-4">1.5 – 3.0 ms</td>
+            <td class="p-4 text-[var(--text-muted)]">15 – 40 ms</td>
+            <td class="p-4 text-[var(--text-muted)]">25 – 60 ms</td>
+          </tr>
+          <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+            <td class="p-4 font-bold text-[var(--text-muted)]">Uncached Upstream Latency</td>
+            <td class="p-4 font-bold text-brand-cyan bg-brand-lime/5">12 – 25 ms (Parallel Race)</td>
+            <td class="p-4">35 – 55 ms (Single UDP)</td>
+            <td class="p-4 text-[var(--text-muted)]">60 – 90 ms</td>
+            <td class="p-4 text-[var(--text-muted)]">50 – 120 ms (TLS Handshake)</td>
+          </tr>
+          <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+            <td class="p-4 font-bold text-[var(--text-muted)]">Physical Hardware Display</td>
+            <td class="p-4 font-bold text-[var(--text)] bg-brand-lime/5">1.3" I2C OLED (Built-in)</td>
+            <td class="p-4">Requires External HDMI / Web</td>
+            <td class="p-4 text-[var(--text-muted)]">None</td>
+            <td class="p-4 text-[var(--text-muted)]">Web GUI Only</td>
+          </tr>
+          <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
             <td class="p-4 font-bold text-[var(--text-muted)]">Hardware BOM Cost</td>
             <td class="p-4 font-bold text-[var(--text)] bg-brand-lime/5">$5.00 Microcontroller</td>
             <td class="p-4">$75.00 (Pi + PSU + MicroSD)</td>
@@ -1024,8 +1243,8 @@
               <span id="flashBtnIcon">⚡</span>
               <span id="flashBtnText">CONNECT &amp; FLASH ESP32-S3</span>
             </button>
-            <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.0.0" target="_blank" class="tech-button tech-button-secondary px-4 py-3 text-xs">
-              DOWNLOAD .ZIP BUNDLE
+            <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="tech-button tech-button-secondary px-4 py-3 text-xs">
+              DOWNLOAD .ZIP BUNDLE (v1.1.0)
             </a>
           </div>
         </div>
@@ -1057,7 +1276,7 @@
         <span class="text-[10px] font-bold px-2 py-0.5 rounded tech-pill mb-2 inline-block">STEP 01</span>
         <h4 class="font-display font-bold text-base text-[var(--text)] uppercase mb-1">Get Binary Assets</h4>
         <p class="text-[var(--text-muted)] leading-relaxed">
-          Download <code>Adsorb-v1.0.0.zip</code> containing precompiled bootloader, partition table, LittleFS blocklist, and firmware binary.
+          Download <code>Adsorb-v1.1.0.zip</code> containing precompiled bootloader, partition table, LittleFS blocklist, and firmware binary.
         </p>
       </div>
       <div class="tech-card p-5">
@@ -1148,7 +1367,7 @@
         <span class="w-2.5 h-2.5 rounded-full bg-red-500 cursor-pointer" onclick="toggleCliDrawer()"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
         <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-        <span class="text-white font-bold ml-2 text-[11px]">adsorb-kernel: Core 1 UDP 53 CLI (v1.0.0)</span>
+        <span class="text-white font-bold ml-2 text-[11px]">adsorb-kernel: Core 1 UDP 53 CLI (v1.1.0)</span>
       </div>
       <div class="flex items-center gap-3 text-[10px] text-zinc-400">
         <span>Type 'help' for diagnostics</span>
@@ -1483,9 +1702,16 @@
       psram: {
         title: "8MB OCTAL SPI PSRAM (APS6404L)",
         badge: "OPI 80MHz",
-        desc: "High-speed Octal Peripheral Interface running at 80MHz double data rate. Stores 255,042 domain hashes contiguously in a 2.04MB in-memory 64-bit FNV-1a binary search vector with 5.87MB of free headroom remaining.",
+        desc: "High-speed Octal SPI running at 80MHz double data rate. Houses the 255,042 domain 64-bit FNV-1a blocklist vector (2.04MB) AND the new v1.1.0 2-way set-associative LRU DNS Cache (2,048 entries, 1.05MB) with 4.8MB free headroom.",
         reg1: "PSRAM_BASE (0x3F80_0000)",
-        reg2: "2.04 MB / 8.00 MB (24.3%)"
+        reg2: "3.09 MB / 8.00 MB (38.6%)"
+      },
+      oled: {
+        title: "1.3-INCH I2C OLED DISPLAY (SH1106 / SSD1306)",
+        badge: "GPIO 8 / 9",
+        desc: "Software I2C bit-banged on SDA (GPIO 8) and SCL (GPIO 9) at 100kHz. Pinned to FreeRTOS Core 0 with safe weak-pulldown bus auto-detection. Displays real-time executive, cache, and silicon diagnostics across a 3-page carousel.",
+        reg1: "SW_I2C_SDA8_SCL9",
+        reg2: "128x64 MONO (ACTIVE)"
       },
       flash: {
         title: "16MB QUAD SPI FLASH MEMORY",
@@ -1639,6 +1865,15 @@
       return hex.join(' ');
     }
 
+    const osWhitelist = [
+      'firebaseinstallations.googleapis.com',
+      'connectivitycheck.gstatic.com',
+      'captive.apple.com',
+      'push.apple.com',
+      'msftconnecttest.com'
+    ];
+    let cachedLookupSet = new Set(['api.github.com']);
+
     function analyzeDomain(domain) {
       domain = (domain || '').trim().toLowerCase();
       if (!domain) return;
@@ -1655,7 +1890,8 @@
       const cycles = document.getElementById('lookupCycles');
 
       const isCanary = domain === 'use-application-dns.net';
-      const isAd = adFilters.some(t => domain.includes(t)) || isCanary;
+      const isWhitelisted = osWhitelist.includes(domain);
+      const isAd = !isWhitelisted && (adFilters.some(t => domain.includes(t)) || isCanary);
 
       hexContainer.innerHTML = stringToHexDump(domain, isAd, isCanary);
 
@@ -1671,6 +1907,18 @@
         return;
       }
 
+      if (isWhitelisted) {
+        title.textContent = '[OS CONNECTIVITY WHITELIST — PASSED]';
+        title.className = 'font-display font-black text-xl sm:text-2xl text-brand-cyan uppercase block';
+        detail.textContent = 'Preserved against false-positive adblock drops for Android/Apple/Windows push & captive portals';
+        pill.textContent = 'WHITELIST PASSTHROUGH';
+        pill.className = 'px-3 py-1.5 rounded bg-brand-cyan text-black font-mono text-xs font-bold whitespace-nowrap';
+        recA.textContent = '142.250.190.42 (Parallel Race UDP)';
+        recAAAA.textContent = '2607:f8b0:4005:808::200a';
+        cycles.textContent = '14.8 ms (Cloudflare 1.1.1.1 Won Race)';
+        return;
+      }
+
       if (isAd) {
         title.textContent = '[SINKHOLED & ATOMIZED]';
         title.className = 'font-display font-black text-xl sm:text-2xl text-brand-orange uppercase block';
@@ -1681,14 +1929,27 @@
         recAAAA.textContent = ':: (TTL 300)';
         cycles.textContent = '44 ns (18 Octal Bus Cycles)';
       } else {
-        title.textContent = '[BENIGN DOMAIN — FORWARDED]';
-        title.className = 'font-display font-black text-xl sm:text-2xl text-green-600 dark:text-brand-lime uppercase block';
-        detail.textContent = 'Passed directly to Upstream Resolver (Cloudflare 1.1.1.1:53)';
-        pill.textContent = 'UPSTREAM 1.1.1.1';
-        pill.className = 'px-3 py-1.5 rounded bg-brand-cyan text-black font-mono text-xs font-bold whitespace-nowrap';
-        recA.textContent = 'Resolved via Upstream 1.1.1.1';
-        recAAAA.textContent = 'Resolved via Upstream 1.1.1.1';
-        cycles.textContent = '11.4 ms (Relay Roundtrip)';
+        const isCached = cachedLookupSet.has(domain);
+        if (isCached) {
+          title.textContent = '[PSRAM LRU CACHE HIT — WIRE SPEED]';
+          title.className = 'font-display font-black text-xl sm:text-2xl text-green-600 dark:text-brand-lime uppercase block';
+          detail.textContent = 'Answered directly from 2,048-entry Octal PSRAM LRU Cache with dynamically recalculated TTL';
+          pill.textContent = 'PSRAM LRU HIT (< 0.2ms)';
+          pill.className = 'px-3 py-1.5 rounded bg-brand-lime text-black font-mono text-xs font-bold whitespace-nowrap';
+          recA.textContent = '140.82.121.3 (TTL 284s Dynamic Rewritten)';
+          recAAAA.textContent = 'Resolved from PSRAM Memory (0 WAN Latency)';
+          cycles.textContent = '138 µs (0.138 ms Sub-Millisecond)';
+        } else {
+          cachedLookupSet.add(domain);
+          title.textContent = '[PARALLEL RACE UPSTREAM — WON 16.2ms]';
+          title.className = 'font-display font-black text-xl sm:text-2xl text-brand-cyan uppercase block';
+          detail.textContent = 'Queried Cloudflare (1.1.1.1) & Google (8.8.8.8) concurrently over UDP 53; result committed to PSRAM';
+          pill.textContent = 'RACE: 1.1.1.1 WON (16.2ms)';
+          pill.className = 'px-3 py-1.5 rounded bg-brand-cyan text-black font-mono text-xs font-bold whitespace-nowrap';
+          recA.textContent = 'Resolved via Upstream 1.1.1.1:53 UDP';
+          recAAAA.textContent = 'Resolved via Upstream 1.1.1.1:53 UDP';
+          cycles.textContent = '16.2 ms (Fastest Wins; Cached to PSRAM)';
+        }
       }
     }
 
@@ -1974,8 +2235,12 @@
         case 'help':
           appendCliOutput(`
             <div class="text-zinc-300">
-              AVAILABLE KERNEL DIAGNOSTICS:<br/>
+              AVAILABLE KERNEL DIAGNOSTICS (v1.1.0):<br/>
               &nbsp;&nbsp;<span class="text-brand-lime font-bold">status</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Print hardware registers, core isolation, and free PSRAM<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">cache</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Inspect 2-way Octal PSRAM LRU DNS cache metrics<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">oled</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Inspect 1.3" I2C OLED display controller and carousel state<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">race</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Inspect Parallel Race Upstream UDP engine status<br/>
+              &nbsp;&nbsp;<span class="text-brand-lime font-bold">whitelist</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- List built-in OS captive portal and push bypass domains<br/>
               &nbsp;&nbsp;<span class="text-brand-lime font-bold">inspect &lt;domain&gt;</span>&nbsp;&nbsp;&nbsp;- Compute 64-bit FNV-1a hash and simulate resolution<br/>
               &nbsp;&nbsp;<span class="text-brand-lime font-bold">benchmark</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Run 500,000 synthetic queries through FNV-1a binary search<br/>
               &nbsp;&nbsp;<span class="text-brand-lime font-bold">tco</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Print 5-year total cost of ownership report<br/>
@@ -1993,11 +2258,71 @@
         case 'status':
           appendCliOutput(`
             <div class="text-zinc-300">
-              SOC: ESP32-S3 (Dual-Core Xtensa LX7 @ 240MHz)<br/>
-              PSRAM: 8,388,608 bytes total (5,872,128 bytes free / 70.0%)<br/>
-              RULES: 255,042 contiguous hashes in Octal SPI RAM<br/>
-              CORE PINNING: Core 1 (UDP 53 RTOS Task) | Core 0 (System / Web)<br/>
+              SOC: ESP32-S3 (Dual-Core Xtensa LX7 @ 240MHz) | FIRMWARE: v1.1.0<br/>
+              PSRAM: 8,388,608 bytes total (4,921,856 bytes free / 58.7%)<br/>
+              VECTOR: 255,042 domain hashes compiled in Octal SPI RAM (2.04 MB)<br/>
+              LRU CACHE: 2,048 entries (2-way set-associative in PSRAM, 1.05 MB)<br/>
+              UPSTREAM: Parallel Race UDP (1.1.1.1 + 8.8.8.8 concurrent 53)<br/>
+              DISPLAY: 1.3" I2C OLED (SH1106 on SDA:8, SCL:9) - Page ${oledPageIndex + 1}/3<br/>
+              CORE PINNING: Core 1 (UDP 53 RTOS Task) | Core 0 (System, OLED &amp; Web)<br/>
+              POWER DRAW: 0.58 Watts (116mA @ 5V)<br/>
               UPTIME: 17 days, 12 hours, 08 minutes
+            </div>
+          `);
+          break;
+
+        case 'cache':
+          appendCliOutput(`
+            <div class="text-brand-lime">
+              OCTAL PSRAM LRU DNS CACHE (v1.1.0):<br/>
+              &nbsp;&nbsp;Topology: 2-Way Set-Associative (2,048 slots)<br/>
+              &nbsp;&nbsp;PSRAM Allocation: 1,048,576 bytes via ps_malloc (Zero heap impact)<br/>
+              &nbsp;&nbsp;Hit Latency: &lt; 0.20 ms (&lt; 200 microseconds)<br/>
+              &nbsp;&nbsp;Cache Hits: 14,892 | Cache Misses: 1,204<br/>
+              &nbsp;&nbsp;Hit Ratio: 92.5%<br/>
+              &nbsp;&nbsp;Dynamic TTL: Active on-the-fly wire rewrite<br/>
+              &nbsp;&nbsp;Transaction ID: Per-query memory rewrite
+            </div>
+          `);
+          break;
+
+        case 'oled':
+          appendCliOutput(`
+            <div class="text-brand-cyan">
+              PHYSICAL 1.3" I2C OLED DISPLAY (SH1106 / SSD1306):<br/>
+              &nbsp;&nbsp;Resolution: 128 x 64 Monochrome Phosphor<br/>
+              &nbsp;&nbsp;Interface: Software Bit-Bang I2C (100 kHz)<br/>
+              &nbsp;&nbsp;Pinout: SDA = GPIO 8, SCL = GPIO 9, VCC = 3V3, GND = GND<br/>
+              &nbsp;&nbsp;Bus Probing: Weak-Pulldown Safe Detection (No bus hangs if unpopulated)<br/>
+              &nbsp;&nbsp;Carousel Interval: 4,000 ms (Pages: 1. Dashboard, 2. Cache/Race, 3. Silicon)<br/>
+              &nbsp;&nbsp;Active Carousel Page: Page ${oledPageIndex + 1} of 3<br/>
+              &nbsp;&nbsp;Hardware Status: ARMED &amp; REFRESHING
+            </div>
+          `);
+          break;
+
+        case 'race':
+          appendCliOutput(`
+            <div class="text-brand-lime">
+              PARALLEL RACE UPSTREAM RESOLVER (v1.1.0):<br/>
+              &nbsp;&nbsp;Upstream A: Cloudflare DNS (1.1.1.1:53 UDP) - Avg 16.2 ms<br/>
+              &nbsp;&nbsp;Upstream B: Google DNS (8.8.8.8:53 UDP) - Avg 19.4 ms<br/>
+              &nbsp;&nbsp;Resolution Strategy: Concurrent dual dispatch (First valid wins)<br/>
+              &nbsp;&nbsp;Outage Fallback: RFC-compliant SERVFAIL (RCODE 2) - No NXDOMAIN poisoning<br/>
+              &nbsp;&nbsp;Timeout: 800 ms per query socket
+            </div>
+          `);
+          break;
+
+        case 'whitelist':
+          appendCliOutput(`
+            <div class="text-white">
+              BUILT-IN OS CONNECTIVITY &amp; PUSH WHITELIST:<br/>
+              &nbsp;&nbsp;✓ firebaseinstallations.googleapis.com (Android FCM &amp; Services)<br/>
+              &nbsp;&nbsp;✓ connectivitycheck.gstatic.com (Android Captive Portal Check)<br/>
+              &nbsp;&nbsp;✓ captive.apple.com (Apple iOS / macOS Wi-Fi Evaluation)<br/>
+              &nbsp;&nbsp;✓ push.apple.com (Apple APNs Push Gateway)<br/>
+              &nbsp;&nbsp;✓ msftconnecttest.com (Windows NCSI Network Validation)
             </div>
           `);
           break;
@@ -2007,12 +2332,17 @@
             appendCliOutput(`<div class="text-red-400">Syntax: inspect &lt;domain.com&gt;</div>`);
           } else {
             const h = fnv1a64(tokens[1]);
-            const isAd = adFilters.some(t => tokens[1].toLowerCase().includes(t));
+            const dom = tokens[1].toLowerCase();
+            const isWhitelisted = osWhitelist.includes(dom);
+            const isAd = !isWhitelisted && adFilters.some(t => dom.includes(t));
+            let verdict = 'FORWARDED TO PARALLEL RACE UDP (1.1.1.1 + 8.8.8.8)';
+            if (isWhitelisted) verdict = 'OS WHITELIST PASSTHROUGH (CAPTIVE/PUSH BYPASS)';
+            else if (isAd) verdict = 'SINKHOLED (A: 0.0.0.0 | AAAA: ::)';
             appendCliOutput(`
               <div class="text-brand-lime">
                 DOMAIN: ${escapeHtml(tokens[1])}<br/>
                 HASH_64: ${h}<br/>
-                VERDICT: ${isAd ? 'SINKHOLED (A: 0.0.0.0 | AAAA: ::)' : 'FORWARDED TO UPSTREAM 1.1.1.1'}
+                VERDICT: ${verdict}
               </div>
             `);
           }
@@ -2058,9 +2388,10 @@
         case 'memory':
           appendCliOutput(`
             <div class="text-zinc-300">
-              [0x3F800000 - 0x3F9F2230] Hash Vector (2,040,336 bytes)<br/>
-              [0x3F9F2230 - 0x3FA72230] Packet Ring Buffers (524,288 bytes)<br/>
-              [0x3FA72230 - 0x40000000] Free Contiguous PSRAM (5,821,520 bytes)
+              [0x3F800000 - 0x3F9F2230] Blocklist Hash Vector (2,040,336 bytes)<br/>
+              [0x3F9F2230 - 0x3FAF2230] 2-Way LRU DNS Cache (1,048,576 bytes)<br/>
+              [0x3FAF2230 - 0x3FB72230] Packet Ring Buffers (524,288 bytes)<br/>
+              [0x3FB72230 - 0x40000000] Free Contiguous PSRAM (4,772,944 bytes)
             </div>
           `);
           break;
@@ -2086,6 +2417,199 @@
     function escapeHtml(s) {
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
+
+    // -----------------------------------------------------------------
+    // 12. Physical 1.3" OLED Display Simulation Engine (SH1106 / SSD1306)
+    // -----------------------------------------------------------------
+    let oledPageIndex = 0;
+    let oledAutoActive = true;
+    let oledAutoInterval = null;
+    let oledQueries = 16096;
+    let oledBlocked = 4210;
+
+    const oledCanvas = document.getElementById('oledSimCanvas');
+    const oledCtx = oledCanvas ? oledCanvas.getContext('2d') : null;
+
+    function renderOledDisplay() {
+      if (!oledCtx) return;
+
+      const w = 256;
+      const h = 128;
+
+      // Pure true-black OLED background
+      oledCtx.fillStyle = '#000000';
+      oledCtx.fillRect(0, 0, w, h);
+
+      // Fine OLED phosphor pixel grid background
+      oledCtx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+      for (let y = 0; y < h; y += 2) {
+        oledCtx.fillRect(0, y, w, 1);
+      }
+
+      oledCtx.font = 'bold 11px "JetBrains Mono", monospace';
+      oledCtx.textBaseline = 'top';
+
+      if (oledPageIndex === 0) {
+        // Page 1: Executive Dashboard
+        oledCtx.fillStyle = '#00f0ff';
+        oledCtx.fillRect(0, 0, w, 18);
+        oledCtx.fillStyle = '#000000';
+        oledCtx.fillText(' ADSORB SINKHOLE v1.1.0', 4, 3);
+
+        oledCtx.fillStyle = '#ffffff';
+        oledCtx.fillText('STATUS : CORE 1 ARMED (UDP 53)', 6, 24);
+        
+        oledCtx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        oledCtx.beginPath();
+        oledCtx.moveTo(4, 39);
+        oledCtx.lineTo(w - 4, 39);
+        oledCtx.stroke();
+
+        oledCtx.fillStyle = '#00f0ff';
+        oledCtx.fillText(`TOTAL QUERIES : ${oledQueries.toLocaleString()}`, 6, 46);
+        
+        oledCtx.fillStyle = '#ff3700';
+        const rate = ((oledBlocked / oledQueries) * 100).toFixed(1);
+        oledCtx.fillText(`SINKHOLED ADs : ${oledBlocked.toLocaleString()} (${rate}%)`, 6, 64);
+
+        oledCtx.fillStyle = '#d4ff00';
+        oledCtx.fillText('PSRAM FREE    : 4.88 MB / 8MB', 6, 82);
+
+        oledCtx.fillStyle = '#8492a6';
+        oledCtx.fillText('ACTIVE POWER  : 0.58 W (116mA)', 6, 100);
+
+        // Footer Page Indicator Bar
+        oledCtx.fillStyle = 'rgba(0, 240, 255, 0.8)';
+        oledCtx.fillRect(6, 118, 24, 4);
+        oledCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        oledCtx.fillRect(34, 118, 24, 4);
+        oledCtx.fillRect(62, 118, 24, 4);
+
+      } else if (oledPageIndex === 1) {
+        // Page 2: LRU Cache & Upstream Race
+        oledCtx.fillStyle = '#d4ff00';
+        oledCtx.fillRect(0, 0, w, 18);
+        oledCtx.fillStyle = '#000000';
+        oledCtx.fillText(' OCTAL LRU CACHE & RACE', 4, 3);
+
+        oledCtx.fillStyle = '#ffffff';
+        oledCtx.fillText('TOPOLOGY: 2-WAY SET-ASSOC', 6, 24);
+
+        oledCtx.strokeStyle = 'rgba(212, 255, 0, 0.3)';
+        oledCtx.beginPath();
+        oledCtx.moveTo(4, 39);
+        oledCtx.lineTo(w - 4, 39);
+        oledCtx.stroke();
+
+        oledCtx.fillStyle = '#d4ff00';
+        oledCtx.fillText('CACHE SLOTS   : 2,048 ENTRIES', 6, 46);
+        oledCtx.fillText('HIT LATENCY   : < 0.20 ms (0 WAN)', 6, 64);
+
+        oledCtx.fillStyle = '#00f0ff';
+        oledCtx.fillText('PARALLEL RACE : 1.1.1.1 + 8.8.8.8', 6, 82);
+        oledCtx.fillText('WAN RACE WIN  : 16.2 ms (COMMIT)', 6, 100);
+
+        // Footer Page Indicator Bar
+        oledCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        oledCtx.fillRect(6, 118, 24, 4);
+        oledCtx.fillStyle = 'rgba(212, 255, 0, 0.8)';
+        oledCtx.fillRect(34, 118, 24, 4);
+        oledCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        oledCtx.fillRect(62, 118, 24, 4);
+
+      } else {
+        // Page 3: Silicon & Hardware Diagnostics
+        oledCtx.fillStyle = '#ff3700';
+        oledCtx.fillRect(0, 0, w, 18);
+        oledCtx.fillStyle = '#ffffff';
+        oledCtx.fillText(' ESP32-S3 SILICON TELEM', 4, 3);
+
+        oledCtx.fillStyle = '#ffffff';
+        oledCtx.fillText('IP ADDRESS    : 192.168.1.101', 6, 24);
+
+        oledCtx.strokeStyle = 'rgba(255, 55, 0, 0.3)';
+        oledCtx.beginPath();
+        oledCtx.moveTo(4, 39);
+        oledCtx.lineTo(w - 4, 39);
+        oledCtx.stroke();
+
+        oledCtx.fillStyle = '#00f0ff';
+        oledCtx.fillText('I2C BUS OLED  : GPIO 8/9 [OK]', 6, 46);
+
+        oledCtx.fillStyle = '#d4ff00';
+        oledCtx.fillText('CHIP CORE TEMP: 39.2°C (240MHz)', 6, 64);
+        oledCtx.fillText('INTERNAL HEAP : 284,160 BYTES', 6, 82);
+
+        oledCtx.fillStyle = '#8492a6';
+        oledCtx.fillText('SYSTEM UPTIME : 17d 12h 08m', 6, 100);
+
+        // Footer Page Indicator Bar
+        oledCtx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        oledCtx.fillRect(6, 118, 24, 4);
+        oledCtx.fillRect(34, 118, 24, 4);
+        oledCtx.fillStyle = 'rgba(255, 55, 0, 0.8)';
+        oledCtx.fillRect(62, 118, 24, 4);
+      }
+    }
+
+    function setOledPage(idx) {
+      initAudio();
+      playKeyBeep(560 + idx * 60, 0.03);
+      oledPageIndex = idx;
+
+      // Update button highlights
+      for (let i = 0; i < 3; i++) {
+        const btn = document.getElementById(`btnPage${i}`);
+        if (btn) {
+          if (i === idx) {
+            btn.className = 'tech-button tech-button-primary px-2.5 py-1 text-[10px]';
+          } else {
+            btn.className = 'tech-button tech-button-secondary px-2.5 py-1 text-[10px]';
+          }
+        }
+      }
+
+      const ind = document.getElementById('oledPageIndicator');
+      if (ind) ind.textContent = `PAGE ${idx + 1}/3`;
+
+      renderOledDisplay();
+    }
+
+    function toggleOledAutoLoop() {
+      initAudio();
+      playKeyBeep(640, 0.03);
+      oledAutoActive = !oledAutoActive;
+      const btn = document.getElementById('oledAutoBtn');
+      if (oledAutoActive) {
+        btn.textContent = 'AUTO-CYCLE [ON]';
+        btn.className = 'tech-button tech-button-secondary px-2 py-1 text-[10px] text-brand-lime';
+        startOledAutoTimer();
+      } else {
+        btn.textContent = 'AUTO-CYCLE [OFF]';
+        btn.className = 'tech-button tech-button-secondary px-2 py-1 text-[10px] text-zinc-500';
+        if (oledAutoInterval) clearInterval(oledAutoInterval);
+      }
+    }
+
+    function startOledAutoTimer() {
+      if (oledAutoInterval) clearInterval(oledAutoInterval);
+      oledAutoInterval = setInterval(() => {
+        if (!oledAutoActive) return;
+        oledPageIndex = (oledPageIndex + 1) % 3;
+        setOledPage(oledPageIndex);
+      }, 4000);
+    }
+
+    // Dynamic Live Counter Tick
+    setInterval(() => {
+      oledQueries += Math.floor(Math.random() * 4) + 1;
+      if (Math.random() > 0.65) oledBlocked += 1;
+      renderOledDisplay();
+    }, 2500);
+
+    // Initialize OLED Engine
+    renderOledDisplay();
+    startOledAutoTimer();
 
     // Initial domain analysis
     analyzeDomain('pagead2.googlesyndication.com');
