@@ -24,6 +24,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <script src="https://gumroad.com/js/gumroad.js"></script>
+  <!-- ESP Web Tools for In-Browser Web Serial Flashing -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 
   <style>
     :root {
@@ -1071,6 +1073,19 @@
     /* Web Serial Flasher & Wi-Fi Provisioning */
     .flasher-section {
       background: var(--mint);
+    }
+    esp-web-install-button {
+      display: inline-block;
+    }
+    .flasher-unsupported-tag {
+      display: inline-block;
+      padding: 10px 16px;
+      background: var(--red);
+      color: #FFF;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 3px solid var(--border);
+      box-shadow: 4px 4px 0px var(--shadow);
     }
     .flasher-box {
       background: var(--surface);
@@ -2311,11 +2326,25 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-top:20px;">
           <div>
             <h3 style="font-size:1.3rem; margin-bottom:4px;">ESP32-S3 N16R8 FLASH ENGINE</h3>
-            <p style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">Baud Rate: 460,800 | Partitions: 16MB Quad SPI Flash</p>
+            <p style="font-size:0.85rem; color:var(--text-secondary); font-weight:700;">Engine: ESP Web Tools v10 | Baud: 460,800 | 16MB Quad SPI Flash</p>
           </div>
-          <button class="brutal-btn color-yellow btn-lg" id="btn-web-serial" onclick="initWebSerialFlash()">
-            ⚡ CONNECT &amp; FLASH ESP32-S3
-          </button>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <esp-web-install-button manifest="manifest.json" id="esp-installer">
+              <button slot="activate" class="brutal-btn color-yellow btn-lg" id="btn-web-serial" onclick="handlePreFlashClick(event)">
+                ⚡ CONNECT &amp; FLASH ESP32-S3
+              </button>
+              <span slot="unsupported" class="flasher-unsupported-tag">
+                ⚠️ Web Serial not supported in this browser. Use Chrome or Edge.
+              </span>
+              <span slot="not-allowed" class="flasher-unsupported-tag">
+                ⚠️ Web Serial requires HTTPS or localhost.
+              </span>
+            </esp-web-install-button>
+
+            <button class="brutal-btn color-mint btn-lg" id="btn-serial-monitor" onclick="toggleSerialMonitor()">
+              📡 LIVE SERIAL LOGS
+            </button>
+          </div>
         </div>
 
         <!-- Progress Bar -->
@@ -2326,15 +2355,16 @@
         <!-- Log Area -->
         <div class="flash-terminal-output" id="flash-log-area">
           <div>&gt; Web Serial Flasher standby. Enter Wi-Fi credentials above and connect ESP32-S3 via USB OTG cable.</div>
+          <div>&gt; Flashing Engine: ESP Web Tools (v10) with automatic ESP32-S3 ROM bootloader sync &amp; MD5 check.</div>
           <div>&gt; Supported Browsers: Google Chrome, Microsoft Edge, Opera, Brave (Desktop).</div>
         </div>
 
         <!-- Binary Download Grid -->
         <div class="download-bin-grid">
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 BOOTLOADER.BIN (0x0)</a>
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 PARTITIONS.BIN (0x8000)</a>
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 FIRMWARE.BIN (0x10000)</a>
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-white btn-small">📦 LITTLEFS.BIN (0x610000)</a>
+          <a href="bootloader.bin" download="bootloader.bin" class="brutal-btn color-white btn-small">📦 BOOTLOADER.BIN (0x0)</a>
+          <a href="partitions.bin" download="partitions.bin" class="brutal-btn color-white btn-small">📦 PARTITIONS.BIN (0x8000)</a>
+          <a href="firmware.bin" download="firmware.bin" class="brutal-btn color-white btn-small">📦 FIRMWARE.BIN (0x10000)</a>
+          <a href="littlefs.bin" download="littlefs.bin" class="brutal-btn color-white btn-small">📦 LITTLEFS.BIN (0x610000)</a>
           <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.1.0" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
         </div>
       </div>
@@ -3533,6 +3563,123 @@
         if (p) p.value = '';
       }
       playKeyBeep(480, 0.02);
+    };
+
+    window.handlePreFlashClick = function(e) {
+      const ssidInp = document.getElementById('wifi-ssid');
+      const passInp = document.getElementById('wifi-pass');
+      const skipAp = document.getElementById('wifi-skip-ap');
+
+      const isApMode = skipAp && skipAp.checked;
+      const ssid = (ssidInp ? ssidInp.value : '').trim();
+      const pass = (passInp ? passInp.value : '').trim();
+
+      if (!isApMode && !ssid) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        alert('⚠️ Please enter your 2.4GHz Wi-Fi Name (SSID) so your ESP32-S3 can connect to your network, or check "Skip Wi-Fi setup and use built-in AP Mode".');
+        if (ssidInp) {
+          ssidInp.focus();
+          ssidInp.style.borderColor = 'var(--red)';
+          setTimeout(() => { if (ssidInp) ssidInp.style.borderColor = ''; }, 2500);
+        }
+        playKeyBeep(320, 0.08);
+        return false;
+      }
+
+      try {
+        localStorage.setItem('adsorb_wifi_ssid', ssid);
+      } catch (err) {}
+      playKeyBeep(600, 0.04);
+      return true;
+    };
+
+    let serialMonitorPort = null;
+    let serialMonitorReader = null;
+    let isMonitoringSerial = false;
+
+    window.toggleSerialMonitor = async function() {
+      const btn = document.getElementById('btn-serial-monitor');
+      const logBox = document.getElementById('flash-log-area');
+
+      function log(msg) {
+        if (!logBox) return;
+        const row = document.createElement('div');
+        row.textContent = msg;
+        logBox.appendChild(row);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      if (isMonitoringSerial) {
+        isMonitoringSerial = false;
+        if (serialMonitorReader) {
+          try { await serialMonitorReader.cancel(); } catch (e) {}
+          serialMonitorReader = null;
+        }
+        if (serialMonitorPort) {
+          try { await serialMonitorPort.close(); } catch (e) {}
+          serialMonitorPort = null;
+        }
+        if (btn) {
+          btn.textContent = '📡 LIVE SERIAL LOGS';
+          btn.classList.remove('color-red');
+          btn.classList.add('color-mint');
+        }
+        log('> [SERIAL] Disconnected from USB serial monitor.');
+        playKeyBeep(440, 0.04);
+        return;
+      }
+
+      if (!('serial' in navigator)) {
+        alert('Web Serial API is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
+        return;
+      }
+
+      try {
+        playKeyBeep(580, 0.04);
+        log('> [SERIAL] Requesting USB Serial Port (115,200 baud)...');
+        serialMonitorPort = await navigator.serial.requestPort();
+        await serialMonitorPort.open({ baudRate: 115200 });
+
+        isMonitoringSerial = true;
+        if (btn) {
+          btn.textContent = '🛑 STOP SERIAL LOGS';
+          btn.classList.remove('color-mint');
+          btn.classList.add('color-red');
+        }
+
+        log('> [SERIAL] Connected to ESP32-S3 @ 115,200 baud. Streaming live hardware logs:');
+        const textDecoder = new TextDecoderStream();
+        serialMonitorPort.readable.pipeTo(textDecoder.writable).catch(() => {});
+        serialMonitorReader = textDecoder.readable.getReader();
+
+        let buffer = '';
+        while (isMonitoringSerial) {
+          const { value, done } = await serialMonitorReader.read();
+          if (done) break;
+          if (value) {
+            buffer += value;
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.replace('\r', '');
+              if (trimmed.length > 0) {
+                log(trimmed);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        log(`> [SERIAL ERROR] ${err.message || err}`);
+        if (btn) {
+          btn.textContent = '📡 LIVE SERIAL LOGS';
+          btn.classList.remove('color-red');
+          btn.classList.add('color-mint');
+        }
+        isMonitoringSerial = false;
+      }
     };
 
     window.initWebSerialFlash = async function() {
