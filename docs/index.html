@@ -1911,7 +1911,7 @@
       <div class="section-header">
         <span class="section-tag">HARDWARE TELEMETRY</span>
         <h2>PHYSICAL OLED &amp; OCTAL CACHE</h2>
-        <p>1.3-inch I2C SH1106 display on GPIO 8/9 with a 4-page cyber-minimalist executive dashboard and a 2,048-entry PSRAM LRU DNS cache.</p>
+        <p>1.3-inch I2C SH1106 display on GPIO 8/9 with high-contrast, large-font glanceable telemetry and a 2,048-entry PSRAM LRU DNS cache.</p>
       </div>
 
       <div class="oled-layout">
@@ -1919,14 +1919,12 @@
         <div class="oled-hardware-frame">
           <div class="oled-frame-header">
             <span>SH1106 128x64 MONO OLED</span>
-            <span id="oled-page-badge" style="color:var(--cyan); font-weight:900;">PAGE 1/4: DASHBOARD</span>
+            <span id="oled-page-badge" style="color:var(--cyan); font-weight:900;">PAGE 1/2: PROTECTION</span>
           </div>
           <canvas id="oled-canvas" class="oled-screen-canvas" width="256" height="128"></canvas>
           <div class="oled-controls">
-            <button class="oled-btn active" id="btn-oled-0" onclick="setOledPage(0)">1: DASHBOARD</button>
-            <button class="oled-btn" id="btn-oled-1" onclick="setOledPage(1)">2: TRAFFIC</button>
-            <button class="oled-btn" id="btn-oled-2" onclick="setOledPage(2)">3: SILICON</button>
-            <button class="oled-btn" id="btn-oled-3" onclick="setOledPage(3)">4: SECURITY</button>
+            <button class="oled-btn active" id="btn-oled-0" onclick="setOledPage(0)">1: PROTECTION</button>
+            <button class="oled-btn" id="btn-oled-1" onclick="setOledPage(1)">2: SYSTEM</button>
             <button class="oled-btn loop-btn" id="btn-oled-auto" onclick="toggleOledAutoLoop()">AUTO [ON]</button>
           </div>
         </div>
@@ -3268,121 +3266,113 @@
       }
 
       oledCtx.font = 'bold 11px "Space Mono", monospace';
-      oledCtx.textBaseline = 'top';
+      oledCtx.textBaseline = 'middle';
 
       if (oledPageIndex === 0) {
-        // Page 1: Dashboard
-        oledCtx.fillStyle = '#00F0FF';
-        oledCtx.fillRect(0, 0, w, 18);
-        oledCtx.fillStyle = '#000000';
-        oledCtx.fillText(' ADSORB SINKHOLE v1.2.0', 4, 3);
-
+        // --- SCREEN 0: AD PROTECTION DASHBOARD ---
+        // Header
+        oledCtx.font = '900 15px "Space Mono", monospace';
         oledCtx.fillStyle = '#FFFFFF';
-        oledCtx.fillText('STATUS : CORE 1 ARMED (UDP 53)', 6, 24);
+        oledCtx.fillText('ADSORB', 8, 14);
 
-        oledCtx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        // Online Pill Badge
+        oledCtx.fillStyle = '#00F0FF';
         oledCtx.beginPath();
-        oledCtx.moveTo(4, 39);
-        oledCtx.lineTo(w - 4, 39);
+        oledCtx.roundRect(162, 3, 86, 20, 4);
+        oledCtx.fill();
+        oledCtx.font = '900 12px "Space Mono", monospace';
+        oledCtx.fillStyle = '#000000';
+        oledCtx.fillText('ONLINE', 180, 14);
+
+        // Header Divider Line
+        oledCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        oledCtx.lineWidth = 1.5;
+        oledCtx.beginPath();
+        oledCtx.moveTo(8, 27);
+        oledCtx.lineTo(248, 27);
         oledCtx.stroke();
 
-        oledCtx.fillStyle = '#00F0FF';
-        oledCtx.fillText(`TOTAL QUERIES : ${oledQueries.toLocaleString()}`, 6, 46);
-
-        oledCtx.fillStyle = '#FF5A5F';
+        // Hero Metric: Block Percentage
         const rate = ((oledBlocked / oledQueries) * 100).toFixed(1);
-        oledCtx.fillText(`SINKHOLED ADs : ${oledBlocked.toLocaleString()} (${rate}%)`, 6, 64);
+        oledCtx.font = '900 24px "Space Mono", monospace';
+        oledCtx.fillStyle = '#FF5A5F';
+        oledCtx.fillText(`${rate}%`, 8, 50);
 
-        oledCtx.fillStyle = '#B2FF9E';
-        oledCtx.fillText('PSRAM FREE    : 4.88 MB / 8MB', 6, 82);
-
-        oledCtx.fillStyle = '#9AA0B2';
-        oledCtx.fillText('ACTIVE POWER  : 0.58 W (116mA)', 6, 100);
-
-        // Page indicators
-        oledCtx.fillStyle = '#00F0FF';
-        oledCtx.fillRect(6, 118, 24, 4);
-        oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
-        oledCtx.fillRect(34, 118, 24, 4);
-        oledCtx.fillRect(62, 118, 24, 4);
-
-      } else if (oledPageIndex === 1) {
-        // Page 2: Cache & Upstream Race
-        oledCtx.fillStyle = '#FFDE59';
-        oledCtx.fillRect(0, 0, w, 18);
-        oledCtx.fillStyle = '#000000';
-        oledCtx.fillText(' OCTAL LRU CACHE & RACE', 4, 3);
-
+        // "BLOCKED" Label
+        oledCtx.font = '900 15px "Space Mono", monospace';
         oledCtx.fillStyle = '#FFFFFF';
-        oledCtx.fillText('TOPOLOGY: 2-WAY SET-ASSOC', 6, 24);
+        oledCtx.fillText('BLOCKED', 114, 50);
 
-        oledCtx.strokeStyle = 'rgba(255, 222, 89, 0.3)';
+        // Wide Rounded Progress Bar
+        oledCtx.strokeStyle = '#FFFFFF';
+        oledCtx.lineWidth = 1.5;
         oledCtx.beginPath();
-        oledCtx.moveTo(4, 39);
-        oledCtx.lineTo(w - 4, 39);
+        oledCtx.roundRect(8, 64, 240, 12, 3);
         oledCtx.stroke();
 
-        oledCtx.fillStyle = '#FFDE59';
-        oledCtx.fillText('CACHE SLOTS   : 2,048 ENTRIES', 6, 46);
-        oledCtx.fillText('HIT LATENCY   : < 0.20 ms (0 WAN)', 6, 64);
-
+        const fillW = Math.min(234, Math.max(0, (rate / 100) * 234));
         oledCtx.fillStyle = '#00F0FF';
-        oledCtx.fillText('PARALLEL RACE : 1.1.1.1 + 8.8.8.8', 6, 82);
-        oledCtx.fillText('WAN RACE WIN  : 14.8 ms (COMMIT)', 6, 100);
+        oledCtx.fillRect(11, 67, fillW, 6);
 
-        // Page indicators
-        oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
-        oledCtx.fillRect(6, 118, 24, 4);
-        oledCtx.fillStyle = '#FFDE59';
-        oledCtx.fillRect(34, 118, 24, 4);
-        oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
-        oledCtx.fillRect(62, 118, 24, 4);
+        // Data Row 1: Blocked / Total Counts
+        oledCtx.font = 'bold 13px "Space Mono", monospace';
+        oledCtx.fillStyle = '#FFFFFF';
+        oledCtx.fillText(`Blocked: ${oledBlocked.toLocaleString()} / ${oledQueries.toLocaleString()}`, 8, 96);
+
+        // Data Row 2: IP Address
+        oledCtx.fillStyle = '#B2FF9E';
+        oledCtx.fillText('IP: 192.168.1.101', 8, 117);
 
       } else {
-        // Page 3: Silicon Diagnostics
-        oledCtx.fillStyle = '#FF90E8';
-        oledCtx.fillRect(0, 0, w, 18);
-        oledCtx.fillStyle = '#000000';
-        oledCtx.fillText(' ESP32-S3 SILICON TELEM', 4, 3);
-
+        // --- SCREEN 1: NETWORK & SYSTEM STATUS ---
+        // Header
+        oledCtx.font = '900 15px "Space Mono", monospace';
         oledCtx.fillStyle = '#FFFFFF';
-        oledCtx.fillText('IP ADDRESS    : 192.168.1.101', 6, 24);
+        oledCtx.fillText('ADSORB', 8, 14);
 
-        oledCtx.strokeStyle = 'rgba(255, 144, 232, 0.3)';
+        // System Pill Badge
+        oledCtx.fillStyle = '#FFDE59';
         oledCtx.beginPath();
-        oledCtx.moveTo(4, 39);
-        oledCtx.lineTo(w - 4, 39);
+        oledCtx.roundRect(162, 3, 86, 20, 4);
+        oledCtx.fill();
+        oledCtx.font = '900 12px "Space Mono", monospace';
+        oledCtx.fillStyle = '#000000';
+        oledCtx.fillText('SYSTEM', 180, 14);
+
+        // Header Divider Line
+        oledCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        oledCtx.lineWidth = 1.5;
+        oledCtx.beginPath();
+        oledCtx.moveTo(8, 27);
+        oledCtx.lineTo(248, 27);
         oledCtx.stroke();
 
+        // 4 Clean, Spacious Telemetry Lines
+        oledCtx.font = 'bold 13px "Space Mono", monospace';
+        oledCtx.fillStyle = '#FFFFFF';
+        oledCtx.fillText('IP   : 192.168.1.101', 8, 48);
+
         oledCtx.fillStyle = '#00F0FF';
-        oledCtx.fillText('I2C BUS OLED  : GPIO 8/9 [OK]', 6, 46);
+        oledCtx.fillText('Web  : adsorb.local', 8, 71);
 
         oledCtx.fillStyle = '#B2FF9E';
-        oledCtx.fillText('CHIP CORE TEMP: 39.2°C (240MHz)', 6, 64);
-        oledCtx.fillText('INTERNAL HEAP : 284,160 BYTES', 6, 82);
+        oledCtx.fillText('Rules: 255,042 ads', 8, 94);
 
-        oledCtx.fillStyle = '#9AA0B2';
-        oledCtx.fillText('SYSTEM UPTIME : 24d 14h 32m', 6, 100);
-
-        // Page indicators
-        oledCtx.fillStyle = 'rgba(255,255,255,0.2)';
-        oledCtx.fillRect(6, 118, 24, 4);
-        oledCtx.fillRect(34, 118, 24, 4);
         oledCtx.fillStyle = '#FF90E8';
-        oledCtx.fillRect(62, 118, 24, 4);
+        oledCtx.fillText('Up   : 3h 42m (OK)', 8, 117);
       }
     }
 
     window.setOledPage = function(idx) {
       oledPageIndex = idx;
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 2; i++) {
         const b = document.getElementById(`btn-oled-${i}`);
         if (b) b.classList.toggle('active', i === idx);
       }
       const badge = document.getElementById('oled-page-badge');
       if (badge) {
-        const titles = ['PAGE 1/4: DASHBOARD', 'PAGE 2/3: CACHE & RACE', 'PAGE 3/3: SILICON'];
-        badge.textContent = titles[idx];
+        const titles = ['PAGE 1/2: PROTECTION', 'PAGE 2/2: SYSTEM'];
+        badge.textContent = titles[idx] || '';
       }
       renderOled();
       playKeyBeep(540 + idx * 50, 0.03);
@@ -3392,7 +3382,7 @@
       oledAutoActive = !oledAutoActive;
       const b = document.getElementById('btn-oled-auto');
       if (b) {
-        b.textContent = oledAutoActive ? 'AUTO-CYCLE [ON]' : 'AUTO-CYCLE [OFF]';
+        b.textContent = oledAutoActive ? 'AUTO [ON]' : 'AUTO [OFF]';
         b.style.background = oledAutoActive ? 'var(--mint)' : '#333';
         b.style.color = oledAutoActive ? '#111' : '#FFF';
       }
@@ -3405,9 +3395,9 @@
       if (oledAutoTimer) clearInterval(oledAutoTimer);
       oledAutoTimer = setInterval(() => {
         if (!oledAutoActive) return;
-        oledPageIndex = (oledPageIndex + 1) % 4;
+        oledPageIndex = (oledPageIndex + 1) % 2;
         setOledPage(oledPageIndex);
-      }, 4000);
+      }, 5000);
     }
 
     setInterval(() => {
