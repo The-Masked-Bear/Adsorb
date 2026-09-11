@@ -1911,7 +1911,7 @@
       <div class="section-header">
         <span class="section-tag">HARDWARE TELEMETRY</span>
         <h2>PHYSICAL OLED &amp; OCTAL CACHE</h2>
-        <p>1.3-inch I2C SH1106 display on GPIO 8/9 with a 3-page real-time executive dashboard and a 2,048-entry PSRAM LRU DNS cache.</p>
+        <p>1.3-inch I2C SH1106 display on GPIO 8/9 with a 4-page cyber-minimalist executive dashboard and a 2,048-entry PSRAM LRU DNS cache.</p>
       </div>
 
       <div class="oled-layout">
@@ -1919,14 +1919,15 @@
         <div class="oled-hardware-frame">
           <div class="oled-frame-header">
             <span>SH1106 128x64 MONO OLED</span>
-            <span id="oled-page-badge" style="color:var(--cyan); font-weight:900;">PAGE 1/3: DASHBOARD</span>
+            <span id="oled-page-badge" style="color:var(--cyan); font-weight:900;">PAGE 1/4: DASHBOARD</span>
           </div>
           <canvas id="oled-canvas" class="oled-screen-canvas" width="256" height="128"></canvas>
           <div class="oled-controls">
             <button class="oled-btn active" id="btn-oled-0" onclick="setOledPage(0)">1: DASHBOARD</button>
-            <button class="oled-btn" id="btn-oled-1" onclick="setOledPage(1)">2: CACHE &amp; RACE</button>
+            <button class="oled-btn" id="btn-oled-1" onclick="setOledPage(1)">2: TRAFFIC</button>
             <button class="oled-btn" id="btn-oled-2" onclick="setOledPage(2)">3: SILICON</button>
-            <button class="oled-btn loop-btn" id="btn-oled-auto" onclick="toggleOledAutoLoop()">AUTO-CYCLE [ON]</button>
+            <button class="oled-btn" id="btn-oled-3" onclick="setOledPage(3)">4: SECURITY</button>
+            <button class="oled-btn loop-btn" id="btn-oled-auto" onclick="toggleOledAutoLoop()">AUTO [ON]</button>
           </div>
         </div>
 
@@ -2156,7 +2157,7 @@
         <div class="brutal-card feature-card" style="background:var(--yellow);">
           <svg class="feature-icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 15h10M7 11h10M7 7h4"/></svg>
           <h3>PHYSICAL 1.3" OLED</h3>
-          <p>Software I2C bit-banged on SDA (GPIO 8) and SCL (GPIO 9). 3-page real-time executive dashboard with safe weak-pulldown auto-detection.</p>
+          <p>Software I2C bit-banged on SDA (GPIO 8) and SCL (GPIO 9). 4-page cyber-minimalist executive dashboard with safe weak-pulldown auto-detection.</p>
           <span class="feature-tag">SH1106 / SSD1306</span>
         </div>
 
@@ -3374,13 +3375,13 @@
 
     window.setOledPage = function(idx) {
       oledPageIndex = idx;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         const b = document.getElementById(`btn-oled-${i}`);
         if (b) b.classList.toggle('active', i === idx);
       }
       const badge = document.getElementById('oled-page-badge');
       if (badge) {
-        const titles = ['PAGE 1/3: DASHBOARD', 'PAGE 2/3: CACHE & RACE', 'PAGE 3/3: SILICON'];
+        const titles = ['PAGE 1/4: DASHBOARD', 'PAGE 2/3: CACHE & RACE', 'PAGE 3/3: SILICON'];
         badge.textContent = titles[idx];
       }
       renderOled();
@@ -3404,7 +3405,7 @@
       if (oledAutoTimer) clearInterval(oledAutoTimer);
       oledAutoTimer = setInterval(() => {
         if (!oledAutoActive) return;
-        oledPageIndex = (oledPageIndex + 1) % 3;
+        oledPageIndex = (oledPageIndex + 1) % 4;
         setOledPage(oledPageIndex);
       }, 4000);
     }
