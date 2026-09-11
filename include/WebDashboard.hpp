@@ -36,6 +36,10 @@ public:
         _server.on("/api/blacklist", HTTP_POST, [this]() { _handlePostBlacklist(); });
         _server.on("/api/blacklist", HTTP_DELETE, [this]() { _handleDeleteBlacklist(); });
 
+        // RFC 8484 DNS-over-HTTPS (DoH) Inbound Endpoints (POST & GET)
+        _server.on(Config::PATH_DOH_ENDPOINT, HTTP_POST, [this]() { _handleDohPost(); }, [this]() { _handleDohRaw(); });
+        _server.on(Config::PATH_DOH_ENDPOINT, HTTP_GET, [this]() { _handleDohGet(); });
+
         // Captive Portal Probe Redirections for iOS, Android, and Windows
         _server.on("/hotspot-detect.html", HTTP_GET, [this]() {
             _server.sendHeader("Location", "http://adsorb.local/", true);
@@ -75,6 +79,98 @@ private:
     EncryptedDns* _doh = nullptr;
     OledDisplay* _oled = nullptr;
 
+    uint8_t _dohRawBuf[Config::DNS_MAX_PACKET_SIZE];
+    size_t _dohRawLen = 0;
+
+    void _addSecurityHeaders() {
+        _server.sendHeader("X-Content-Type-Options", "nosniff");
+        _server.sendHeader("X-Frame-Options", "DENY");
+        _server.sendHeader("Referrer-Policy", "no-referrer");
+    }
+
+    static inline int _b64Val(char c) {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+        if (c >= '0' && c <= '9') return c - '0' + 52;
+        if (c == '-' || c == '+') return 62;
+        if (c == '_' || c == '/') return 63;
+        return -1;
+    }
+
+    int _decodeBase64Url(const String& input, uint8_t* out, size_t maxOut) {
+        size_t inLen = input.length();
+        size_t outIdx = 0;
+        uint32_t val = 0;
+        int valBits = 0;
+
+        for (size_t i = 0; i < inLen; i++) {
+            char c = input[i];
+            if (c == '=' || c == ' ' || c == '\r' || c == '\n') break;
+            int d = _b64Val(c);
+            if (d < 0) return -1;
+            val = (val << 6) | (uint32_t)d;
+            valBits += 6;
+            if (valBits >= 8) {
+                valBits -= 8;
+                if (outIdx >= maxOut) return -1;
+                out[outIdx++] = (uint8_t)((val >> valBits) & 0xFF);
+            }
+        }
+        return (int)outIdx;
+    }
+
+    void _handleDohRaw() {
+        HTTPRaw& r = _server.raw();
+        if (r.status == RAW_START) {
+            _dohRawLen = 0;
+        } else if (r.status == RAW_WRITE) {
+            if (_dohRawLen + r.currentSize <= sizeof(_dohRawBuf)) {
+                memcpy(_dohRawBuf + _dohRawLen, r.buf, r.currentSize);
+                _dohRawLen += r.currentSize;
+            }
+        }
+    }
+
+    void _handleDohPost() {
+        _addSecurityHeaders();
+        if (_dohRawLen == 0) {
+            _server.send(400, "text/plain", "Bad Request: Empty DNS Query");
+            return;
+        }
+        uint8_t respBuf[Config::DNS_MAX_PACKET_SIZE];
+        int respLen = _dns->processDohPacket(_dohRawBuf, _dohRawLen, _server.client().remoteIP(), respBuf, sizeof(respBuf));
+        _dohRawLen = 0;
+        if (respLen <= 0) {
+            _server.send(500, "text/plain", "Internal Server Error");
+            return;
+        }
+        _server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        _server.send_P(200, "application/dns-message", (const char*)respBuf, (size_t)respLen);
+    }
+
+    void _handleDohGet() {
+        _addSecurityHeaders();
+        if (!_server.hasArg("dns")) {
+            _server.send(400, "text/plain", "Bad Request: Missing 'dns' parameter");
+            return;
+        }
+        String b64 = _server.arg("dns");
+        uint8_t queryBuf[Config::DNS_MAX_PACKET_SIZE];
+        int queryLen = _decodeBase64Url(b64, queryBuf, sizeof(queryBuf));
+        if (queryLen <= 0) {
+            _server.send(400, "text/plain", "Bad Request: Invalid Base64URL encoding");
+            return;
+        }
+        uint8_t respBuf[Config::DNS_MAX_PACKET_SIZE];
+        int respLen = _dns->processDohPacket(queryBuf, (size_t)queryLen, _server.client().remoteIP(), respBuf, sizeof(respBuf));
+        if (respLen <= 0) {
+            _server.send(500, "text/plain", "Internal Server Error");
+            return;
+        }
+        _server.sendHeader("Cache-Control", "max-age=60");
+        _server.send_P(200, "application/dns-message", (const char*)respBuf, (size_t)respLen);
+    }
+
     String _formatUptime() {
         uint32_t sec = millis() / 1000;
         uint32_t d = sec / 86400;
@@ -94,6 +190,7 @@ private:
     // GET /api/test?domain=... — Real-Time Interactive Test Tool
     // -----------------------------------------------------------------------
     void _handleApiTest() {
+        _addSecurityHeaders();
         if (!_server.hasArg("domain")) {
             _server.send(400, "application/json", "{\"error\":\"Missing domain parameter\"}");
             return;
@@ -113,6 +210,7 @@ private:
     // GET / — Ultimate Interactive Neo-Brutalist Dashboard
     // -----------------------------------------------------------------------
     void _handleRoot() {
+        _addSecurityHeaders();
         if (_server.method() == HTTP_HEAD) {
             _server.sendHeader("Content-Length", "35000");
             _server.send(200, "text/html", "");
@@ -524,11 +622,12 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <div class="brand-icon" id="shield-logo" title="Click 5 times to enter Ad Slaughter Arcade!">&#x1F525;</div>
       <div class="brand-text">
         <h1>Adsorb: The Untouchable Ad Obliterator</h1>
-        <div class="sub">Zero Ads Allowed. Deal With It. &bull; ESP32-S3 Dual-Core LX7 @ 240MHz &bull; 8MB Octal PSRAM &bull; v1.2.0 (128b SIMD &amp; HW TRNG)</div>
+        <div class="sub">Zero Ads Allowed. Deal With It. &bull; ESP32-S3 Dual-Core LX7 @ 240MHz &bull; 8MB Octal PSRAM &bull; v1.2.0 &bull; HW TRNG Parallel UDP &bull; RFC 8484 DoH</div>
       </div>
     </div>
     <div class="toolbar">
       <button class="btn-tool" id="btn-sound" title="Toggle 8-bit Audio">&#x1F50A; SFX: ON</button>
+      <div class="btn-tool" style="background: #a7f3d0;" title="Encrypted RFC 8484 Inbound DoH Endpoint active at /dns-query">&#x1F512; RFC 8484 DoH ACTIVE</div>
       <div class="btn-tool" style="cursor: default;" title="Active and annihilating 100% of unwanted surveillance traffic">
         <span class="pulse-dot"></span>
         <span>ZERO ADS ALLOWED</span>
@@ -685,7 +784,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
   <!-- FOOTER WITH HARDWARE SWAGGER -->
   <footer class="footer" id="footer-trigger" title="Double click to reveal hardware supremacy!">
-    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; Adsorb v2.0-ARROGANT
+    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED
   </footer>
 
 </div>
@@ -1072,6 +1171,7 @@ if (cryingCardEl) {
     // GET /api/stats — JSON Stats Endpoint
     // -----------------------------------------------------------------------
     void _handleApiStats() {
+        _addSecurityHeaders();
         uint32_t total = _dns->totalQueries;
         uint32_t blocked = _dns->blockedQueries;
         float rate = (total > 0) ? (100.0f * blocked / total) : 0.0f;
@@ -1083,10 +1183,10 @@ if (cryingCardEl) {
         uint32_t cacheMisses = _cache ? _cache->getTotalMisses() : 0;
         uint32_t cacheEntries = _cache ? _cache->getActiveCount() : 0;
         float cacheRate = _cache ? _cache->getHitRatePercent() : 0.0f;
-        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DoH (1.1.1.1)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8)";
+        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DNS-over-HTTPS (RFC 8484 TLS 1.3)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8) [HW TRNG]";
         bool oledConnected = _oled ? _oled->isConnected() : false;
 
-        char json[900];
+        char json[1024];
         snprintf(json, sizeof(json),
                  "{\"total\":%u,\"blocked\":%u,\"percentage\":%.2f,\"rate\":%.2f,"
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
@@ -1097,6 +1197,7 @@ if (cryingCardEl) {
                  "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
                  "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
                  "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
+                 "\"encrypted\":true,\"tls_version\":\"TLS 1.3\",\"doh_endpoint\":\"/dns-query\","
                  "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
                  total, blocked, rate, rate,
                  freeHeap, freeHeap, freePsram, freePsram,
@@ -1115,6 +1216,7 @@ if (cryingCardEl) {
     // GET /api/queries — Query Log JSON Endpoint
     // -----------------------------------------------------------------------
     void _handleApiQueries() {
+        _addSecurityHeaders();
         size_t count = 0;
         const QueryLogEntry* log = _dns->getQueryLog(count);
         size_t logIndex = _dns->getLogIndex();
@@ -1150,6 +1252,7 @@ if (cryingCardEl) {
     // GET /api/whitelist
     // -----------------------------------------------------------------------
     void _handleGetWhitelist() {
+        _addSecurityHeaders();
         String json = "[";
         bool first = true;
         for (const auto& d : _blocklist->getWhitelist()) {
@@ -1217,6 +1320,7 @@ if (cryingCardEl) {
     // GET /api/blacklist
     // -----------------------------------------------------------------------
     void _handleGetBlacklist() {
+        _addSecurityHeaders();
         String json = "[";
         bool first = true;
         for (const auto& d : _blocklist->getCustomBlacklist()) {
@@ -1284,6 +1388,7 @@ if (cryingCardEl) {
     // 404 / 405 Handler
     // -----------------------------------------------------------------------
     void _handleNotFound() {
+        _addSecurityHeaders();
         if (_server.method() == HTTP_POST && _server.uri() == "/api/stats") {
             _server.send(405, "application/json", "{\"error\":\"Method Not Allowed\"}");
             return;

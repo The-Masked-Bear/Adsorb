@@ -45,11 +45,11 @@ No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. J
 * **⚡ Sub-Millisecond PSRAM LRU DNS Cache (< 0.2 ms)**  
   High-speed **2-way set-associative cache** (2,048 entries, ~1.05 MB) residing entirely in Octal PSRAM. Repeat queries are answered in under **200 microseconds** directly from memory without touching the network. Dynamically recalculates remaining TTL and rewrites DNS Transaction IDs on every hit.
 
-* **🏎️ Ultra-Fast Parallel Race Upstream UDP & Encrypted DoH (RFC 8484)**  
-  When an uncached domain is queried, Adsorb queries **both Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) concurrently** over UDP 53. The fastest response (12–25ms) wins, gets forwarded to the client, and is instantly cached in PSRAM. Also supports RFC 8484 binary DNS-over-HTTPS with automatic fast fallback.
+* **🏎️ Ultra-Fast Parallel Race Upstream UDP & Inbound DoH (RFC 8484)**  
+  When an uncached domain is queried over standard UDP 53, Adsorb queries **both Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) concurrently** with Hardware TRNG transaction IDs. The fastest response (10–25ms) wins and is cached in PSRAM. Also hosts an inbound RFC 8484 DNS-over-HTTPS endpoint (`/dns-query`) supporting both binary wire format `POST` and Base64URL `GET` queries.
 
 * **📟 Physical 1.3" I2C OLED Telemetry Display (SH1106 / SSD1306)**  
-  Real-time 128x64 physical status display running a 3-page diagnostic carousel on Core 0 (Executive Dashboard, Cache & DoH metrics, and Silicon Telemetry). Features non-blocking software I2C and safe weak-pulldown bus detection—if the display is unplugged, the engine idles gracefully with zero bus locks.
+  Real-time 128x64 physical status display running a high-contrast 2-page diagnostic carousel on Core 0 with safe 4px margins (Ad Protection hero metrics and Network & System telemetry). Features non-blocking software I2C and safe weak-pulldown bus detection.
 
 * **🛡️ Built-in OS Connectivity & Push Whitelist**  
   Hardened against false positives for Android captive portal checks, Google Play Services / Firebase Cloud Messaging (`firebaseinstallations.googleapis.com`), Apple APNs, and Windows NCSI, ensuring zero "Connected, no internet" warnings across household devices.

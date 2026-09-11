@@ -43,6 +43,7 @@ constexpr uint8_t     AP_MAX_CLIENTS   = 4;
 // Network Services
 constexpr uint16_t    DNS_PORT         = 53;
 constexpr uint16_t    WEB_PORT         = 80;
+constexpr size_t      DNS_MAX_PACKET_SIZE = 512;
 constexpr const char* UPSTREAM_DNS_PRIMARY   = "1.1.1.1";
 constexpr const char* UPSTREAM_DNS_SECONDARY = "8.8.8.8";
 
@@ -71,14 +72,15 @@ constexpr uint32_t    DNS_CACHE_MAX_TTL    = 86400; // Maximum TTL 24h
 
 // Encrypted & High-Speed Upstream DNS Configuration
 enum UpstreamMode {
-    UPSTREAM_MODE_PARALLEL_UDP, // Ultra-Fast Parallel UDP 53 (1.1.1.1 + 8.8.8.8) [Default - Highest Speed & Reliability]
-    UPSTREAM_MODE_DOH           // Encrypted DNS-over-HTTPS (RFC 8484) with fast parallel fallback
+    UPSTREAM_MODE_PARALLEL_UDP, // Ultra-Fast Parallel UDP 53 (1.1.1.1 + 8.8.8.8) with HW TRNG [Ultra-Low Latency]
+    UPSTREAM_MODE_DOH           // Encrypted DNS-over-HTTPS (RFC 8484 TLS 1.3)
 };
 constexpr UpstreamMode UPSTREAM_MODE          = UPSTREAM_MODE_PARALLEL_UDP;
-constexpr uint32_t     UPSTREAM_UDP_TIMEOUT_MS = 800;  // 800ms parallel race timeout (prevents Wi-Fi packet drop)
+constexpr uint32_t     UPSTREAM_UDP_TIMEOUT_MS = 800;  // 800ms parallel race timeout fallback
 constexpr const char*  DOH_PRIMARY_URL         = "https://1.1.1.1/dns-query";
 constexpr const char*  DOH_SECONDARY_URL       = "https://8.8.8.8/dns-query";
-constexpr uint32_t     DOH_TIMEOUT_MS          = 400;  // 400ms max before fast UDP fallback
+constexpr uint32_t     DOH_TIMEOUT_MS          = 1200; // 1200ms TLS 1.3 handshake & query timeout
+constexpr const char*  PATH_DOH_ENDPOINT       = "/dns-query"; // Inbound DoH Server Endpoint
 
 // Physical 1.3" I2C OLED Display Configuration (SH1106 / SSD1306 128x64)
 constexpr int         OLED_SDA_PIN         = 8;  // Default ESP32-S3 I2C SDA

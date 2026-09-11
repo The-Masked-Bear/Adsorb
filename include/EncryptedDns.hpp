@@ -106,9 +106,15 @@ private:
                 }
                 if (bytesRead >= 12) resultLen = bytesRead;
             }
+        } else {
+            // Non-200 response or connection dropped -> reset client socket
+            _client.stop();
         }
 
         http.end();
+        if (resultLen < 12) {
+            _client.stop(); // Cleanly close socket on partial or broken read
+        }
         return resultLen;
     }
 };

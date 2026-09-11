@@ -191,18 +191,10 @@ private:
         // Line 2: Zero-Config Web Portal
         _u8g2.drawStr(4, 38, "Web  : adsorb.local");
 
-        // Line 3: Active Rule Count
-        _u8g2.drawStr(4, 50, "Rules: 255,042 ads");
+        // Line 3: Inbound RFC 8484 DoH Endpoint
+        _u8g2.drawStr(4, 50, "DoH  : /dns-query");
 
-        // Line 4: System Uptime & Status
-        uint32_t secs = millis() / 1000;
-        uint32_t mins = (secs / 60) % 60;
-        uint32_t hours = secs / 3600;
-        if (hours > 0) {
-            snprintf(buf, sizeof(buf), "Up   : %uh %um (OK)", hours, mins);
-        } else {
-            snprintf(buf, sizeof(buf), "Up   : %um %us (OK)", mins, secs % 60);
-        }
-        _u8g2.drawStr(4, 62, buf);
+        // Line 4: Upstream DNS Status
+        _u8g2.drawStr(4, 62, "DNS  : 1.1.1.1 (Race)");
     }
 };
