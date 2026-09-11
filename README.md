@@ -159,28 +159,38 @@ pio device monitor
 
 ---
 
-## 🌐 Router Configuration
+## 🌐 Network & Router Setup (Assigning a Static IP)
 
+Out-of-the-box, Adsorb requests an IP from your router via standard DHCP (`USE_STATIC_IP = false`), ensuring plug-and-play compatibility on any subnet (`192.168.1.x`, `192.168.0.x`, `10.0.0.x`, etc.).
+
+### Step 1: Assign a Permanent IP via Router DHCP Reservation (Recommended)
+Because Adsorb serves as your network's DNS authority, its IP address should remain fixed:
+1. Open your router's administrative portal (usually `192.168.1.1` or `192.168.0.1`).
+2. Check your router's connected client list, or read the assigned IP directly from the physical 1.3" OLED screen or via `http://adsorb.local/`.
+3. Navigate to **DHCP Server -> Address Reservation / Static Lease**.
+4. Bind Adsorb's MAC address to your desired fixed IP (e.g. `192.168.1.101` or `192.168.0.100`).
+
+*(Optional: If you prefer hardcoding a static IP in the firmware itself rather than using your router's reservation, set `USE_STATIC_IP = true` in `include/Config.hpp` and configure your subnet's IP, Gateway, and Subnet Mask).*
+
+### Step 2: Point Router DNS to Adsorb
 To protect every phone, smart TV, console, and computer in your home automatically:
 
-1. Open your router's administrative page (usually `192.168.1.1` or `192.168.0.1`).
-2. Navigate to **DHCP / LAN Settings -> DNS Server**.
-3. Set **Primary DNS** to your ESP32-S3's IP address:
+1. In your router's **DHCP / LAN Settings -> DNS Server**, enter your Adsorb IP:
    ```text
-   Primary DNS:   192.168.1.101
-   Secondary DNS: 192.168.1.101
+   Primary DNS:   <YOUR_ADSORB_IP>  (e.g. 192.168.1.101)
+   Secondary DNS: <YOUR_ADSORB_IP>  (e.g. 192.168.1.101)
    ```
-   > ⚠️ **Important:** Set **both** Primary and Secondary DNS to your ESP32's IP. Operating systems like Windows, iOS, and Android query primary and secondary DNS concurrently; if you leave a public fallback like `1.1.1.1` or `8.8.8.8`, devices will leak queries around the ad-blocker!
+   > ⚠️ **Important:** Set **both** Primary and Secondary DNS to your Adsorb IP. Operating systems like Windows, iOS, and Android query primary and secondary DNS concurrently; if you leave a public fallback like `1.1.1.1` or `8.8.8.8`, devices will leak queries around the ad-blocker!
 
-4. Renew DHCP leases across your devices by reconnecting Wi-Fi or running:
+2. Renew DHCP leases across your devices by reconnecting Wi-Fi or running:
    ```cmd
    ipconfig /renew
    ipconfig /flushdns
    ```
 
-5. Open your browser and navigate to:
+3. Open your browser and navigate to:
    ```text
-   http://adsorb.local/  (or http://192.168.1.101/)
+   http://adsorb.local/
    ```
    Enjoy your clean, arrogant, ad-free internet!
 

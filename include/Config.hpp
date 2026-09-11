@@ -23,8 +23,16 @@ constexpr const char* WIFI_PASSWORD    = "YOUR_WIFI_PASSWORD";
 #endif
 constexpr uint32_t    WIFI_CONNECT_TIMEOUT_MS = 10000; // 10s connection timeout before fallback
 
-// Static IP Configuration (Guarantees zero DNS interruptions at 192.168.1.101)
-constexpr bool        USE_STATIC_IP          = true;
+// Static IP Configuration
+// By default, USE_STATIC_IP is false (Dynamic DHCP) so Adsorb works out-of-the-box on
+// any home subnet (192.168.0.x, 192.168.1.x, 10.0.0.x, etc.).
+// To assign a static IP: configure a DHCP Reservation in your router settings (Recommended),
+// or set USE_STATIC_IP to true below and configure your subnet.
+#ifdef LOCAL_USER_STATIC_IP
+constexpr bool        USE_STATIC_IP          = true;  // Local developer override
+#else
+constexpr bool        USE_STATIC_IP          = false; // Default: DHCP for universal compatibility
+#endif
 const IPAddress       STATIC_IP(192, 168, 1, 101);
 const IPAddress       STATIC_GATEWAY(192, 168, 1, 1);
 const IPAddress       STATIC_SUBNET(255, 255, 255, 0);
