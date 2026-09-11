@@ -622,7 +622,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <div class="brand-icon" id="shield-logo" title="Click 5 times to enter Ad Slaughter Arcade!">&#x1F525;</div>
       <div class="brand-text">
         <h1>Adsorb: The Untouchable Ad Obliterator</h1>
-        <div class="sub">Zero Ads Allowed. Deal With It. &bull; ESP32-S3 Dual-Core LX7 @ 240MHz &bull; 8MB Octal PSRAM &bull; v1.2.0 &bull; HW TRNG Parallel UDP &bull; RFC 8484 DoH</div>
+        <div class="sub">Zero Ads Allowed. Deal With It. &bull; ESP32-S3 Dual-Core LX7 @ 240MHz &bull; 8MB Octal PSRAM &bull; v1.3.0 &bull; HW TRNG Parallel UDP &bull; RFC 8484 DoH</div>
       </div>
     </div>
     <div class="toolbar">
