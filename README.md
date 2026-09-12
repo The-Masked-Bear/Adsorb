@@ -15,7 +15,12 @@
   <img src="docs/badges/badge-power.svg" alt="Power Draw: ~0.58W" height="28" />
   <a href="https://the-masked-bear.github.io/Adsorb/"><img src="docs/badges/badge-site.svg" alt="Live Site: Online" height="28" /></a>
   <a href="https://adblock.turtlecute.org/"><img src="docs/badges/badge-adblock.svg" alt="Adblock Test: 100% Verified" height="28" /></a>
-  <a href="https://github.com/sponsors/The-Masked-Bear"><img src="docs/badges/badge-sponsor.svg" alt="Sponsor on GitHub" height="28" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/sponsors/The-Masked-Bear">
+    <img src="docs/badges/sponsor-button.svg" alt="Sponsor on GitHub" height="44" />
+  </a>
 </p>
 
 </div>
@@ -201,9 +206,9 @@ To protect every phone, smart TV, console, and computer in your home automatical
 
 If Adsorb keeps your network clean, eliminates ad tracking across your devices, and saves you power, consider sponsoring the project on GitHub:
 
-<p align="left">
+<p align="center">
   <a href="https://github.com/sponsors/The-Masked-Bear">
-    <img src="docs/badges/badge-sponsor.svg" alt="Sponsor on GitHub" height="32" />
+    <img src="docs/badges/sponsor-banner.svg" alt="Sponsor Adsorb on GitHub" width="100%" />
   </a>
 </p>
 

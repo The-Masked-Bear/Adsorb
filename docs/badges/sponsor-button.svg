@@ -1,0 +1,20 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="280" height="48" viewBox="0 0 280 48" fill="none">
+  <style>
+    .btn-text {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', Monaco, Menlo, Consolas, monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .btn-shadow { fill: #000000; }
+      .btn-box { stroke: #FFFFFF; }
+    }
+  </style>
+  <rect class="btn-shadow" x="4" y="4" width="272" height="40" fill="#111111"/>
+  <rect class="btn-box" x="1.5" y="1.5" width="272" height="40" fill="#FF90E8" stroke="#111111" stroke-width="3"/>
+  <g transform="translate(28, 11)">
+    <path class="btn-heart" d="M10 17.5l-1.45-1.32C3.4 11.5 0 8.4 0 4.6 0 1.5 2.4 0 5.5 0c1.74 0 3.41.81 4.5 2.09C11.09.81 12.76 0 14.5 0 17.6 0 20 1.5 20 4.6c0 3.8-3.4 6.9-8.55 11.58L10 17.5z" fill="#111111"/>
+  </g>
+  <text class="btn-text" x="150" y="26.5" fill="#111111" text-anchor="middle">SPONSOR ON GITHUB</text>
+</svg>
