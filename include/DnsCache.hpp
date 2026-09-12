@@ -94,6 +94,8 @@ public:
     // Cache Insertion with LRU Eviction Policy
     // -----------------------------------------------------------------------
     void insert(const String& domain, uint16_t qtype, const uint8_t* packet, int packetLen, uint32_t ttl) {
+        // RFC 1035 §3.2.1 / RFC 2181 §8: TTL == 0 MUST NOT be cached
+        if (ttl == 0) return;
         if (!_entries || packetLen < 12 || packetLen > 512) return;
 
         // Verify response is valid (QR=1, RCODE=0 NoError or RCODE=3 NXDomain)
@@ -101,8 +103,7 @@ public:
         uint8_t rcode = packet[3] & 0x0F;
         if (rcode != 0 && rcode != 3) return; // Only cache NoError and NXDomain
 
-        // Clamp TTL within configured boundaries
-        if (ttl < Config::DNS_CACHE_MIN_TTL) ttl = Config::DNS_CACHE_MIN_TTL;
+        // Respect authoritative TTL; only enforce upper boundary
         if (ttl > Config::DNS_CACHE_MAX_TTL) ttl = Config::DNS_CACHE_MAX_TTL;
 
         uint64_t h = _computeHash(domain, qtype);
@@ -153,11 +154,11 @@ public:
     // Helper: Extract Minimum TTL from DNS Response Packet Answers
     // -----------------------------------------------------------------------
     static uint32_t extractMinTtl(const uint8_t* buf, int len) {
-        if (len < 12) return Config::DNS_CACHE_MIN_TTL;
+        if (len < 12) return 0;
 
         uint16_t qdcount = (buf[4] << 8) | buf[5];
         uint16_t ancount = (buf[6] << 8) | buf[7];
-        if (ancount == 0) return Config::DNS_CACHE_MIN_TTL;
+        if (ancount == 0) return 0;
 
         // Skip Question Section
         int pos = 12;
@@ -172,6 +173,7 @@ public:
         }
 
         uint32_t minTtl = 0xFFFFFFFF;
+        bool foundAnswer = false;
 
         // Parse Answer Section RRs
         for (int a = 0; a < ancount && pos < len; ++a) {
@@ -191,13 +193,14 @@ public:
             uint16_t rdlength = (buf[pos + 8] << 8) | buf[pos + 9];
             pos += 10 + rdlength;
 
-            if (rrTtl < minTtl && rrTtl > 0) {
+            foundAnswer = true;
+            if (rrTtl < minTtl) {
                 minTtl = rrTtl;
             }
         }
 
-        if (minTtl == 0xFFFFFFFF || minTtl < Config::DNS_CACHE_MIN_TTL) {
-            minTtl = Config::DNS_CACHE_MIN_TTL;
+        if (!foundAnswer || minTtl == 0xFFFFFFFF) {
+            return 0;
         }
         return minTtl;
     }

@@ -28,6 +28,10 @@ class DnsEngine {
 public:
     volatile uint32_t totalQueries  = 0;
     volatile uint32_t blockedQueries = 0;
+    volatile uint32_t malformedQueries = 0;
+    volatile uint32_t parseFailures = 0;
+    volatile uint32_t upstreamTimeouts = 0;
+    volatile uint32_t upstreamValidationErrors = 0;
 
     bool begin(Blocklist& blocklist, DnsCache* cache = nullptr, EncryptedDns* doh = nullptr) {
         _blocklist = &blocklist;
@@ -108,7 +112,7 @@ public:
         if (domain.equalsIgnoreCase("adsorb.local") || domain.equalsIgnoreCase("adsorb") || domain.equalsIgnoreCase("esp32-adblocker")) {
             totalQueries++;
             IPAddress myIP = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
-            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, myIP);
+            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, qtype, myIP);
             _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
             return true;
         }
@@ -116,7 +120,7 @@ public:
         // 0b. Captive Portal Redirection for SoftAP setup clients (192.168.4.x)
         if (clientIP[0] == 192 && clientIP[1] == 168 && clientIP[2] == 4 && _isCaptiveProbe(domain)) {
             totalQueries++;
-            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, WiFi.softAPIP());
+            _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, qtype, WiFi.softAPIP());
             _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
             return true;
         }
@@ -203,7 +207,7 @@ public:
         if (domain.equalsIgnoreCase("adsorb.local") || domain.equalsIgnoreCase("adsorb") || domain.equalsIgnoreCase("esp32-adblocker")) {
             totalQueries++;
             IPAddress myIP = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
-            int respLen = _buildAuthoritativeIpResponse(queryPacket, queryLen, txnId, qnameEnd, myIP, outBuf, maxOutLen);
+            int respLen = _buildAuthoritativeIpResponse(queryPacket, queryLen, txnId, qnameEnd, qtype, myIP, outBuf, maxOutLen);
             _logQuery(domain.c_str(), clientIP, 443, false, 1);
             return respLen;
         }
@@ -256,7 +260,7 @@ public:
 
         if (respLen < 12) {
             if (isWhitelisted) {
-                respLen = _buildAuthoritativeIpResponse(queryPacket, queryLen, txnId, qnameEnd, IPAddress(192, 0, 2, 1), outBuf, maxOutLen);
+                respLen = _buildAuthoritativeIpResponse(queryPacket, queryLen, txnId, qnameEnd, qtype, IPAddress(192, 0, 2, 1), outBuf, maxOutLen);
             } else {
                 respLen = _buildErrorResponse(queryPacket, queryLen, txnId, 2, outBuf, maxOutLen);
             }
@@ -290,56 +294,110 @@ private:
     size_t _logCount = 0;
 
     // -----------------------------------------------------------------------
-    // Parse domain name from DNS packet (RFC 1035 label format)
+    // Hardened Iterative RFC 1035 Domain Name Parser with Cycle & Loop Defense
+    // Bounded jump counter (<=8), visited offset cycle detection, strict bounds checks
     // -----------------------------------------------------------------------
-    String _parseDomainName(const uint8_t* buf, int len, int offset) {
-        String domain;
+    bool _parseDomainNameIterative(const uint8_t* buf, int len, int offset, String& outDomain) {
+        outDomain = "";
+        if (!buf || offset < 12 || offset >= len) {
+            malformedQueries++;
+            return false;
+        }
+
         int pos = offset;
         bool first = true;
         int jumps = 0;
+        uint16_t visited[8];
+        size_t totalLen = 0;
 
         while (pos < len) {
             uint8_t labelLen = buf[pos];
-            if (labelLen == 0) break; // End of name
+            if (labelLen == 0) {
+                return (totalLen > 0 && totalLen <= 253);
+            }
 
             // Pointer compression (bits 7,6 set = 0xC0)
             if ((labelLen & 0xC0) == 0xC0) {
-                if (pos + 1 >= len) break;
-                if (++jumps > 5) break; // Prevent loop recursion
+                if (pos + 1 >= len) {
+                    malformedQueries++;
+                    return false; // Truncated pointer
+                }
+                if (jumps >= 8) {
+                    parseFailures++;
+                    return false; // Exceeded maximum pointer jump limit
+                }
+
                 int ptr = ((labelLen & 0x3F) << 8) | buf[pos + 1];
-                String rest = _parseDomainName(buf, len, ptr);
-                if (!first && rest.length() > 0) domain += ".";
-                domain += rest;
-                return domain;
+                if (ptr < 12 || ptr >= len) {
+                    malformedQueries++;
+                    return false; // Pointer out of packet bounds or into 12-byte DNS header
+                }
+
+                // Cycle detection: check if ptr was already visited in this query chain
+                for (int j = 0; j < jumps; j++) {
+                    if (visited[j] == (uint16_t)ptr) {
+                        parseFailures++;
+                        return false; // Pointer cycle/loop detected!
+                    }
+                }
+                visited[jumps++] = (uint16_t)ptr;
+                pos = ptr;
+                continue;
             }
 
-            if (labelLen > 63) break; // Invalid label length
-            if (pos + 1 + labelLen > len) break;
+            // Standard label (upper 2 bits must be 00)
+            if ((labelLen & 0xC0) != 0) {
+                malformedQueries++;
+                return false; // Unsupported/reserved label type
+            }
+            if (labelLen > 63 || pos + 1 + labelLen > len) {
+                malformedQueries++;
+                return false; // Label length overflow or extends beyond packet
+            }
 
-            if (!first) domain += ".";
+            if (!first) {
+                if (totalLen + 1 > 253) return false;
+                outDomain += '.';
+                totalLen++;
+            }
             first = false;
 
+            if (totalLen + labelLen > 253) return false;
             for (int i = 0; i < labelLen; i++) {
-                domain += (char)tolower(buf[pos + 1 + i]);
+                outDomain += (char)tolower(buf[pos + 1 + i]);
             }
+            totalLen += labelLen;
             pos += 1 + labelLen;
+        }
+
+        malformedQueries++;
+        return false; // Reached end of packet without terminating null
+    }
+
+    String _parseDomainName(const uint8_t* buf, int len, int offset) {
+        String domain;
+        if (!_parseDomainNameIterative(buf, len, offset, domain)) {
+            return "";
         }
         return domain;
     }
 
     // -----------------------------------------------------------------------
-    // Find end of QNAME in the question section (returns offset past null)
+    // Find end of QNAME in question section with strict bounds checking
     // -----------------------------------------------------------------------
     int _findQNameEnd(const uint8_t* buf, int len, int offset) {
+        if (!buf || offset < 12 || offset >= len) return -1;
         int pos = offset;
         while (pos < len) {
             uint8_t labelLen = buf[pos];
             if (labelLen == 0) return pos + 1; // Past the null terminator
             if ((labelLen & 0xC0) == 0xC0) {
                 if (pos + 1 >= len) return -1;
-                return pos + 2; // Past the pointer
+                return pos + 2; // Past pointer in question section
             }
-            if (labelLen > 63 || pos + 1 + labelLen > len) return -1;
+            if ((labelLen & 0xC0) != 0 || labelLen > 63 || pos + 1 + labelLen > len) {
+                return -1;
+            }
             pos += 1 + labelLen;
         }
         return -1;
@@ -376,27 +434,37 @@ private:
         return respLen;
     }
 
+    // Authoritative IP response with correct RFC QTYPE/QCLASS handling
     static int _buildAuthoritativeIpResponse(const uint8_t* query, int queryLen, uint16_t txnId, int qnameEnd,
-                                            IPAddress ip, uint8_t* outBuf, size_t maxOutLen) {
+                                            uint16_t qtype, IPAddress ip, uint8_t* outBuf, size_t maxOutLen) {
         int questionEnd = qnameEnd + 4;
         if (questionEnd > queryLen || questionEnd > (int)maxOutLen - 32) return -1;
         memcpy(outBuf, query, questionEnd);
         int respLen = questionEnd;
-        outBuf[2] = 0x84 | (query[2] & 0x01);
+        outBuf[0] = (uint8_t)(txnId >> 8);
+        outBuf[1] = (uint8_t)(txnId & 0xFF);
+        outBuf[2] = 0x84 | (query[2] & 0x01); // QR=1, AA=1, preserve RD
         outBuf[3] = 0x80; // RA=1, RCODE=0
-        outBuf[6] = 0x00; outBuf[7] = 0x01;
-        outBuf[8] = 0; outBuf[9] = 0;
-        outBuf[10] = 0; outBuf[11] = 0;
-        outBuf[respLen++] = 0xC0; outBuf[respLen++] = 0x0C;
-        outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x01; // TYPE A
-        outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x01; // CLASS IN
-        outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x00;
-        outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x3C; // TTL 60s
-        outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x04;
-        outBuf[respLen++] = ip[0];
-        outBuf[respLen++] = ip[1];
-        outBuf[respLen++] = ip[2];
-        outBuf[respLen++] = ip[3];
+        outBuf[4] = 0; outBuf[5] = 1; // QDCOUNT = 1
+        outBuf[8] = 0; outBuf[9] = 0; // NSCOUNT = 0
+        outBuf[10] = 0; outBuf[11] = 0; // ARCOUNT = 0
+
+        if (qtype == 1) { // Type A (IPv4)
+            outBuf[6] = 0x00; outBuf[7] = 0x01; // ANCOUNT = 1
+            outBuf[respLen++] = 0xC0; outBuf[respLen++] = 0x0C; // Pointer to QNAME
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x01; // TYPE A
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x01; // CLASS IN
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x00;
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x3C; // TTL 60s
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x04; // RDLENGTH = 4
+            outBuf[respLen++] = ip[0];
+            outBuf[respLen++] = ip[1];
+            outBuf[respLen++] = ip[2];
+            outBuf[respLen++] = ip[3];
+        } else {
+            // Type AAAA or other: RFC authoritative NODATA response (NOERROR, ANCOUNT = 0)
+            outBuf[6] = 0x00; outBuf[7] = 0x00; // ANCOUNT = 0
+        }
         return respLen;
     }
 
@@ -424,9 +492,9 @@ private:
 
     void _sendAuthoritativeIpResponse(IPAddress clientIP, uint16_t clientPort,
                                       const uint8_t* query, int queryLen,
-                                      uint16_t txnId, int qnameEnd, IPAddress ip) {
+                                      uint16_t txnId, int qnameEnd, uint16_t qtype, IPAddress ip) {
         uint8_t resp[512];
-        int len = _buildAuthoritativeIpResponse(query, queryLen, txnId, qnameEnd, ip, resp, sizeof(resp));
+        int len = _buildAuthoritativeIpResponse(query, queryLen, txnId, qnameEnd, qtype, ip, resp, sizeof(resp));
         if (len > 0) {
             _udp.beginPacket(clientIP, clientPort);
             _udp.write(resp, len);
@@ -621,19 +689,62 @@ private:
         while (millis() - start < Config::UPSTREAM_UDP_TIMEOUT_MS) {
             int replySize = _fwdUdp.parsePacket();
             if (replySize >= 12 && replySize <= (int)maxOutLen) {
+                IPAddress senderIP = _fwdUdp.remoteIP();
+                uint16_t senderPort = _fwdUdp.remotePort();
+
+                // Validate Source IP: must originate strictly from primary or secondary upstream resolver
+                if (senderIP != primaryIP && senderIP != secondaryIP) {
+                    upstreamValidationErrors++;
+                    _fwdUdp.flush();
+                    continue;
+                }
+
+                // Validate Source Port: must be standard DNS port 53
+                if (senderPort != 53) {
+                    upstreamValidationErrors++;
+                    _fwdUdp.flush();
+                    continue;
+                }
+
                 int replyLen = _fwdUdp.read(outBuf, maxOutLen);
                 _fwdUdp.flush();
+
                 if (replyLen >= 12) {
+                    // 1. Transaction ID matching
                     uint16_t replyTxnId = (outBuf[0] << 8) | outBuf[1];
-                    if (replyTxnId == cryptoTxnId) {
-                        outBuf[0] = (uint8_t)(txnId >> 8);
-                        outBuf[1] = (uint8_t)(txnId & 0xFF);
-                        return replyLen;
+                    if (replyTxnId != cryptoTxnId) {
+                        upstreamValidationErrors++;
+                        continue;
                     }
+
+                    // 2. Validate QR bit: bit 7 of byte 2 must be 1 (Response)
+                    if ((outBuf[2] & 0x80) == 0) {
+                        upstreamValidationErrors++;
+                        continue;
+                    }
+
+                    // 3. Validate Opcode: bits 6..3 of byte 2 must be 0 (Standard query)
+                    if ((outBuf[2] & 0x78) != 0) {
+                        upstreamValidationErrors++;
+                        continue;
+                    }
+
+                    // 4. Validate QDCOUNT: response question count must match (1)
+                    uint16_t respQdCount = (outBuf[4] << 8) | outBuf[5];
+                    if (respQdCount != 1) {
+                        upstreamValidationErrors++;
+                        continue;
+                    }
+
+                    // Rewrite Transaction ID to match client's query
+                    outBuf[0] = (uint8_t)(txnId >> 8);
+                    outBuf[1] = (uint8_t)(txnId & 0xFF);
+                    return replyLen;
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(1));
         }
+        upstreamTimeouts++;
         return -1;
     }
 
@@ -725,4 +836,10 @@ private:
         _logIndex = (_logIndex + 1) % Config::RING_BUFFER_CAPACITY;
         _logCount++;
     }
+
+public:
+    uint32_t getMalformedQueries() const { return malformedQueries; }
+    uint32_t getParseFailures() const { return parseFailures; }
+    uint32_t getUpstreamTimeouts() const { return upstreamTimeouts; }
+    uint32_t getUpstreamValidationErrors() const { return upstreamValidationErrors; }
 };

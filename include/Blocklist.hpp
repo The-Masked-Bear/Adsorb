@@ -11,6 +11,21 @@
 
 #include "Config.hpp"
 #include "VectorWildcard.hpp"
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
+// ============================================================================
+// FreeRTOS Mutex RAII Lock Helper
+// ============================================================================
+struct RuleLock {
+    SemaphoreHandle_t m;
+    explicit RuleLock(SemaphoreHandle_t mutex) : m(mutex) {
+        if (m) xSemaphoreTake(m, portMAX_DELAY);
+    }
+    ~RuleLock() {
+        if (m) xSemaphoreGive(m);
+    }
+};
 
 // ============================================================================
 // PSRAM Allocator — forces std containers to allocate in external SPIRAM
@@ -75,6 +90,16 @@ using HashVector = std::vector<uint64_t, PsramAllocator<uint64_t>>;
 // ============================================================================
 class Blocklist {
 public:
+    Blocklist() {
+        _ruleMutex = xSemaphoreCreateMutex();
+    }
+    ~Blocklist() {
+        if (_ruleMutex) {
+            vSemaphoreDelete(_ruleMutex);
+            _ruleMutex = nullptr;
+        }
+    }
+
     static inline uint64_t hash64(const char* s, size_t len) {
         uint64_t hash = 14695981039346656037ULL;
         for (size_t i = 0; i < len; ++i) {
@@ -106,15 +131,18 @@ public:
             _blockedHashes.shrink_to_fit();
         }
 
-        // 4. Load custom blacklist and whitelist sets
-        _loadSetFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist, "custom blacklist");
-        _loadSetFile(Config::PATH_CUSTOM_WHITELIST, _whitelist, "whitelist");
+        // 4. Load custom blacklist and whitelist sets with mutex protection
+        {
+            RuleLock lock(_ruleMutex);
+            _loadSetFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist, "custom blacklist");
+            _loadSetFile(Config::PATH_CUSTOM_WHITELIST, _whitelist, "whitelist");
 
-        // 5. Initialize Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator
-        _simd.init();
-        for (const auto& d : _customBlacklist) {
-            if (d.find('*') != PsramString::npos) {
-                _simd.addPattern(d.c_str());
+            // 5. Initialize Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator
+            _simd.init();
+            for (const auto& d : _customBlacklist) {
+                if (d.find('*') != PsramString::npos) {
+                    _simd.addPattern(d.c_str());
+                }
             }
         }
 
@@ -173,13 +201,15 @@ public:
     }
 
     bool isBlocked(const String& rawDomain) const {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, false);
         if (domain.empty()) return false;
 
         // 0. Essential OS Connectivity & Push Notification Whitelist
         if (_isEssentialSystemDomain(domain)) {
             return false;
         }
+
+        RuleLock lock(_ruleMutex);
 
         // 1. Whitelist override (progressive check from full domain up to TLD)
         if (_checkHierarchy(domain, [this](const PsramString& d) {
@@ -214,47 +244,88 @@ public:
     }
 
     bool addToWhitelist(const String& rawDomain) {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, false);
         if (domain.empty()) return false;
+        RuleLock lock(_ruleMutex);
         _whitelist.insert(domain);
         return _appendToFile(Config::PATH_CUSTOM_WHITELIST, String(domain.c_str()));
     }
 
     bool addToBlacklist(const String& rawDomain) {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, true);
         if (domain.empty()) return false;
+        RuleLock lock(_ruleMutex);
         _customBlacklist.insert(domain);
-        if (rawDomain.indexOf('*') >= 0) {
-            _simd.addPattern(rawDomain.c_str());
+        if (domain.find('*') != PsramString::npos) {
+            _simd.addPattern(domain.c_str());
         }
         return _appendToFile(Config::PATH_CUSTOM_BLACKLIST, String(domain.c_str()));
     }
 
     bool removeFromWhitelist(const String& rawDomain) {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, false);
         if (domain.empty()) return false;
+        RuleLock lock(_ruleMutex);
         _whitelist.erase(domain);
         return _rewriteFile(Config::PATH_CUSTOM_WHITELIST, _whitelist);
     }
 
     bool removeFromBlacklist(const String& rawDomain) {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, true);
         if (domain.empty()) return false;
+        RuleLock lock(_ruleMutex);
         _customBlacklist.erase(domain);
+
+        // Rebuild SIMD accelerator patterns so deleted wildcard rules cease blocking immediately
+        _simd.init();
+        for (const auto& d : _customBlacklist) {
+            if (d.find('*') != PsramString::npos) {
+                _simd.addPattern(d.c_str());
+            }
+        }
         return _rewriteFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist);
     }
 
     size_t blockedCount() const { return _blockedHashes.size(); }
-    size_t customBlacklistCount() const { return _customBlacklist.size(); }
-    size_t whitelistCount() const { return _whitelist.size(); }
-    size_t simdPatternCount() const { return _simd.patternCount(); }
+    size_t customBlacklistCount() const { RuleLock lock(_ruleMutex); return _customBlacklist.size(); }
+    size_t whitelistCount() const { RuleLock lock(_ruleMutex); return _whitelist.size(); }
+    size_t simdPatternCount() const { RuleLock lock(_ruleMutex); return _simd.patternCount(); }
 
     bool isWhitelisted(const String& rawDomain) const {
-        PsramString domain = _cleanDomain(rawDomain);
+        PsramString domain = _cleanDomain(rawDomain, false);
         if (domain.empty()) return false;
+        RuleLock lock(_ruleMutex);
         return _checkHierarchy(domain, [this](const PsramString& d) {
             return _whitelist.count(d) > 0;
         });
+    }
+
+    void getWhitelistAsJson(String& json) const {
+        RuleLock lock(_ruleMutex);
+        json = "[";
+        bool first = true;
+        for (const auto& d : _whitelist) {
+            if (!first) json += ",";
+            first = false;
+            json += "\"";
+            json += d.c_str();
+            json += "\"";
+        }
+        json += "]";
+    }
+
+    void getCustomBlacklistAsJson(String& json) const {
+        RuleLock lock(_ruleMutex);
+        json = "[";
+        bool first = true;
+        for (const auto& d : _customBlacklist) {
+            if (!first) json += ",";
+            first = false;
+            json += "\"";
+            json += d.c_str();
+            json += "\"";
+        }
+        json += "]";
     }
 
     const DomainSet& getWhitelist() const { return _whitelist; }
@@ -266,6 +337,7 @@ private:
     DomainSet _customBlacklist;
     DomainSet _whitelist;
     VectorWildcardAccelerator _simd;
+    mutable SemaphoreHandle_t _ruleMutex = nullptr;
 
     bool _checkHierarchyHash(const PsramString& domain) const {
         if (_blockedHashes.empty()) return false;
@@ -353,27 +425,63 @@ private:
         return false;
     }
 
-    static PsramString _cleanDomain(const char* s, size_t len) {
+    static bool isValidDomain(const char* s, size_t len, bool allowWildcard = true) {
+        if (!s || len == 0 || len > 253) return false;
+
+        size_t labelLen = 0;
+        for (size_t i = 0; i < len; i++) {
+            char c = s[i];
+            if (c == '.') {
+                if (labelLen == 0 || labelLen > 63) return false;
+                labelLen = 0;
+            } else {
+                bool valid = (c >= 'a' && c <= 'z') ||
+                             (c >= '0' && c <= '9') ||
+                             c == '-' || c == '_' ||
+                             (allowWildcard && c == '*');
+                if (!valid) return false;
+                labelLen++;
+                if (labelLen > 63) return false;
+            }
+        }
+        if (labelLen == 0 || labelLen > 63) return false;
+        return true;
+    }
+
+    static PsramString _cleanDomain(const char* s, size_t len, bool allowWildcard = true) {
+        if (!s || len == 0) return PsramString();
+
         size_t start = 0;
         size_t end = len;
-        while (start < end && (s[start] == ' ' || s[start] == '\t' || s[start] == '\r' || s[start] == '\n' || s[start] == '.')) {
+        while (start < end && ((unsigned char)s[start] <= ' ' || s[start] == 127)) {
             start++;
         }
-        while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' || s[end - 1] == '\r' || s[end - 1] == '\n' || s[end - 1] == '.')) {
+        while (end > start && ((unsigned char)s[end - 1] <= ' ' || s[end - 1] == 127)) {
             end--;
         }
+        while (start < end && s[start] == '.') {
+            start++;
+        }
+        while (end > start && s[end - 1] == '.') {
+            end--;
+        }
+
+        if (start >= end) return PsramString();
+
         PsramString result;
-        if (start < end) {
-            result.reserve(end - start);
-            for (size_t i = start; i < end; i++) {
-                result += (char)tolower((unsigned char)s[i]);
-            }
+        result.reserve(end - start);
+        for (size_t i = start; i < end; i++) {
+            result += (char)tolower((unsigned char)s[i]);
+        }
+
+        if (!isValidDomain(result.c_str(), result.length(), allowWildcard)) {
+            return PsramString();
         }
         return result;
     }
 
-    static PsramString _cleanDomain(const String& s) {
-        return _cleanDomain(s.c_str(), s.length());
+    static PsramString _cleanDomain(const String& s, bool allowWildcard = true) {
+        return _cleanDomain(s.c_str(), s.length(), allowWildcard);
     }
 
     template <typename Predicate>
@@ -531,7 +639,7 @@ private:
             line[end] = '\0';
             if (strcmp(line + start, "localhost") == 0) return;
 
-            PsramString domain = _cleanDomain(line + start, end - start);
+            PsramString domain = _cleanDomain(line + start, end - start, true);
             if (!domain.empty()) {
                 target.insert(domain);
                 count++;

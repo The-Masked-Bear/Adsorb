@@ -5,19 +5,21 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include "Config.hpp"
+#include "TrustedCaRoots.hpp"
 
 // ============================================================================
 // Encrypted DNS Client (RFC 8484 DNS-over-HTTPS)
 // Uses Hardware-Accelerated TLS (AES-256 / SHA-256) to Upstream Providers
+// Cryptographically verified against Cloudflare & Google trusted Root CAs
 // ============================================================================
 class EncryptedDns {
 public:
     EncryptedDns() = default;
 
     bool begin() {
-        _client.setInsecure(); // Skip certificate chain verification to maximize throughput
+        _client.setCACert(DOH_ROOT_CA_PEM); // Strict cryptographic Root CA verification
         _client.setTimeout(Config::DOH_TIMEOUT_MS);
-        Serial.printf("[DoH] Initialized Encrypted DNS Engine. Primary: %s | Fallback: %s\n",
+        Serial.printf("[DoH] Initialized Encrypted DNS Engine (CA Verified). Primary: %s | Fallback: %s\n",
                       Config::DOH_PRIMARY_URL, Config::DOH_SECONDARY_URL);
         return true;
     }

@@ -12,6 +12,7 @@ class VectorWildcardAccelerator {
 public:
     bool init() {
         Serial.println("[SIMD] Initializing Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator...");
+        _patterns.clear();
         static const char* const patterns[] = {
             "telemetry",
             "doubleclick",

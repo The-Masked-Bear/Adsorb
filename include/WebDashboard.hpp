@@ -24,6 +24,10 @@ public:
         _doh = doh;
         _oled = oled;
 
+        const char* headers[] = {"X-API-Key", "Authorization"};
+        _server.collectHeaders(headers, 2);
+        _initApiKey();
+
         _server.on("/", HTTP_GET, [this]() { _handleRoot(); });
         _server.on("/", HTTP_HEAD, [this]() { _handleRoot(); });
         _server.on("/api/stats", HTTP_GET, [this]() { _handleApiStats(); });
@@ -71,6 +75,10 @@ public:
         _server.handleClient();
     }
 
+    String getApiKey() const {
+        return _adminApiKey;
+    }
+
 private:
     WebServer _server{Config::WEB_PORT};
     DnsEngine* _dns = nullptr;
@@ -78,6 +86,57 @@ private:
     DnsCache* _cache = nullptr;
     EncryptedDns* _doh = nullptr;
     OledDisplay* _oled = nullptr;
+    String _adminApiKey;
+
+    void _initApiKey() {
+        const char* keyPath = "/admin_key.txt";
+        if (LittleFS.exists(keyPath)) {
+            File f = LittleFS.open(keyPath, "r");
+            if (f) {
+                _adminApiKey = f.readStringUntil('\n');
+                _adminApiKey.trim();
+                f.close();
+            }
+        }
+        if (_adminApiKey.length() < 16) {
+            _adminApiKey = "";
+            char buf[9];
+            for (int i = 0; i < 4; i++) {
+                uint32_t r = esp_random();
+                snprintf(buf, sizeof(buf), "%08x", (unsigned int)r);
+                _adminApiKey += buf;
+            }
+            File f = LittleFS.open(keyPath, "w");
+            if (f) {
+                f.println(_adminApiKey);
+                f.close();
+            }
+        }
+        Serial.printf("[Security] Admin API Key active: %s\n", _adminApiKey.c_str());
+    }
+
+    bool _isAuthorized() {
+        if (_adminApiKey.isEmpty()) return true;
+        if (_server.hasHeader("X-API-Key") && _server.header("X-API-Key") == _adminApiKey) {
+            return true;
+        }
+        if (_server.hasHeader("Authorization")) {
+            String auth = _server.header("Authorization");
+            if (auth.startsWith("Bearer ") && auth.substring(7) == _adminApiKey) {
+                return true;
+            }
+            if (auth == _adminApiKey) {
+                return true;
+            }
+        }
+        if (_server.hasArg("key") && _server.arg("key") == _adminApiKey) {
+            return true;
+        }
+        if (_server.hasArg("api_key") && _server.arg("api_key") == _adminApiKey) {
+            return true;
+        }
+        return false;
+    }
 
     uint8_t _dohRawBuf[Config::DNS_MAX_PACKET_SIZE];
     size_t _dohRawLen = 0;
@@ -767,6 +826,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <h3 style="color: #121212;"><span>&#x1F54A;</span> PARDON DOMAIN (WHITELIST)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Grant mercy to a false positive if you truly trust it.</p>
       <form class="form-row" id="form-whitelist" action="/api/whitelist" method="POST">
+        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
         <input type="text" name="domain" placeholder="e.g. allowed-site.com" required>
         <button type="submit" class="btn-action green">GRANT MERCY</button>
       </form>
@@ -776,6 +836,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <h3 style="color: #121212;"><span>&#x26A1;</span> BANISH DOMAIN (CUSTOM BLACKLIST)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Target a specific rogue tracker for unconditional eradication.</p>
       <form class="form-row" id="form-blacklist" action="/api/blacklist" method="POST">
+        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
         <input type="text" name="domain" placeholder="e.g. annoying-tracker.com" required>
         <button type="submit" class="btn-action red">BANISH FOREVER</button>
       </form>
@@ -784,7 +845,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
   <!-- FOOTER WITH HARDWARE SWAGGER -->
   <footer class="footer" id="footer-trigger" title="Double click to reveal hardware supremacy!">
-    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED
+    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED &bull; API Key: <code style="user-select: all; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">%ADMIN_API_KEY%</code>
   </footer>
 
 </div>
@@ -815,6 +876,8 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
 <!-- CLIENT JAVASCRIPT: SOUND FX, REAL-TIME POLLING, AND EASTER EGGS -->
 <script>
+const ADMIN_API_KEY = "%ADMIN_API_KEY%";
+
 // --- Web Audio Synthesizer (8-bit sound fx) ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -984,14 +1047,14 @@ document.getElementById('modal-btn-close').addEventListener('click', () => {
 });
 
 document.getElementById('modal-btn-white').addEventListener('click', async () => {
-  await fetch('/api/whitelist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({domain: selectedDomain}) });
+  await fetch('/api/whitelist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': ADMIN_API_KEY}, body: JSON.stringify({domain: selectedDomain}) });
   modal.classList.remove('open');
   sfxAllowed();
   updateTelemetry();
 });
 
 document.getElementById('modal-btn-black').addEventListener('click', async () => {
-  await fetch('/api/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({domain: selectedDomain}) });
+  await fetch('/api/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': ADMIN_API_KEY}, body: JSON.stringify({domain: selectedDomain}) });
   modal.classList.remove('open');
   sfxBlocked();
   updateTelemetry();
@@ -1164,6 +1227,7 @@ if (cryingCardEl) {
 </body>
 </html>)rawhtml";
 
+        html.replace("%ADMIN_API_KEY%", _adminApiKey);
         _server.send(200, "text/html", html);
     }
 
@@ -1186,7 +1250,7 @@ if (cryingCardEl) {
         const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DNS-over-HTTPS (RFC 8484 TLS 1.3)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8) [HW TRNG]";
         bool oledConnected = _oled ? _oled->isConnected() : false;
 
-        char json[1024];
+        char json[1200];
         snprintf(json, sizeof(json),
                  "{\"total\":%u,\"blocked\":%u,\"percentage\":%.2f,\"rate\":%.2f,"
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
@@ -1197,7 +1261,9 @@ if (cryingCardEl) {
                  "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
                  "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
                  "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
-                 "\"encrypted\":true,\"tls_version\":\"TLS 1.3\",\"doh_endpoint\":\"/dns-query\","
+                 "\"encrypted\":true,\"tls_version\":\"TLS 1.3\","
+                 "\"http_dns_endpoint\":\"/dns-query\",\"doh_endpoint\":\"/dns-query\",\"doh_tls_verified\":true,"
+                 "\"malformed_queries\":%u,\"parse_failures\":%u,\"upstream_timeouts\":%u,\"upstream_validation_errors\":%u,"
                  "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
                  total, blocked, rate, rate,
                  freeHeap, freeHeap, freePsram, freePsram,
@@ -1207,9 +1273,39 @@ if (cryingCardEl) {
                  (unsigned)_blocklist->customBlacklistCount(),
                  cacheHits, cacheMisses, cacheEntries, cacheRate,
                  (unsigned)_blocklist->simdPatternCount(),
+                 _dns->getMalformedQueries(), _dns->getParseFailures(),
+                 _dns->getUpstreamTimeouts(), _dns->getUpstreamValidationErrors(),
                  upstreamStr, oledConnected ? "true" : "false");
 
         _server.send(200, "application/json", json);
+    }
+
+    static String _escapeJsonString(const char* s) {
+        if (!s) return "";
+        String out;
+        out.reserve(strlen(s) + 8);
+        for (size_t i = 0; s[i] != '\0'; i++) {
+            char c = s[i];
+            switch (c) {
+                case '\"': out += "\\\""; break;
+                case '\\': out += "\\\\"; break;
+                case '\b': out += "\\b"; break;
+                case '\f': out += "\\f"; break;
+                case '\n': out += "\\n"; break;
+                case '\r': out += "\\r"; break;
+                case '\t': out += "\\t"; break;
+                default:
+                    if ((unsigned char)c < 0x20) {
+                        char buf[8];
+                        snprintf(buf, sizeof(buf), "\\u%04x", (unsigned char)c);
+                        out += buf;
+                    } else {
+                        out += c;
+                    }
+                    break;
+            }
+        }
+        return out;
     }
 
     // -----------------------------------------------------------------------
@@ -1233,9 +1329,9 @@ if (cryingCardEl) {
             first = false;
 
             json += "{\"domain\":\"";
-            json += e.domain;
+            json += _escapeJsonString(e.domain);
             json += "\",\"client_ip\":\"";
-            json += e.clientIP;
+            json += _escapeJsonString(e.clientIP);
             json += "\",\"blocked\":";
             json += e.blocked ? "true" : "false";
             json += ",\"timestamp\":";
@@ -1253,16 +1349,8 @@ if (cryingCardEl) {
     // -----------------------------------------------------------------------
     void _handleGetWhitelist() {
         _addSecurityHeaders();
-        String json = "[";
-        bool first = true;
-        for (const auto& d : _blocklist->getWhitelist()) {
-            if (!first) json += ",";
-            first = false;
-            json += "\"";
-            json += d.c_str();
-            json += "\"";
-        }
-        json += "]";
+        String json;
+        _blocklist->getWhitelistAsJson(json);
         _server.send(200, "application/json", json);
     }
 
@@ -1270,6 +1358,12 @@ if (cryingCardEl) {
     // POST /api/whitelist
     // -----------------------------------------------------------------------
     void _handlePostWhitelist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
         if (_server.hasArg("domain") && !_server.hasArg("plain")) {
             String domain = _server.arg("domain");
             domain.trim();
@@ -1294,7 +1388,10 @@ if (cryingCardEl) {
             return;
         }
 
-        _blocklist->addToWhitelist(domain);
+        if (!_blocklist->addToWhitelist(domain)) {
+            _server.send(400, "application/json", "{\"error\":\"Invalid domain name\"}");
+            return;
+        }
         String resp = "{\"status\":\"ok\",\"domain\":\"" + domain + "\"}";
         _server.send(200, "application/json", resp);
     }
@@ -1303,6 +1400,12 @@ if (cryingCardEl) {
     // DELETE /api/whitelist
     // -----------------------------------------------------------------------
     void _handleDeleteWhitelist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
         String domain;
         if (_server.hasArg("domain")) {
             domain = _server.arg("domain");
@@ -1321,16 +1424,8 @@ if (cryingCardEl) {
     // -----------------------------------------------------------------------
     void _handleGetBlacklist() {
         _addSecurityHeaders();
-        String json = "[";
-        bool first = true;
-        for (const auto& d : _blocklist->getCustomBlacklist()) {
-            if (!first) json += ",";
-            first = false;
-            json += "\"";
-            json += d.c_str();
-            json += "\"";
-        }
-        json += "]";
+        String json;
+        _blocklist->getCustomBlacklistAsJson(json);
         _server.send(200, "application/json", json);
     }
 
@@ -1338,6 +1433,12 @@ if (cryingCardEl) {
     // POST /api/blacklist
     // -----------------------------------------------------------------------
     void _handlePostBlacklist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
         if (_server.hasArg("domain") && !_server.hasArg("plain")) {
             String domain = _server.arg("domain");
             domain.trim();
@@ -1362,7 +1463,10 @@ if (cryingCardEl) {
             return;
         }
 
-        _blocklist->addToBlacklist(domain);
+        if (!_blocklist->addToBlacklist(domain)) {
+            _server.send(400, "application/json", "{\"error\":\"Invalid domain name\"}");
+            return;
+        }
         String resp = "{\"status\":\"ok\",\"domain\":\"" + domain + "\"}";
         _server.send(200, "application/json", resp);
     }
@@ -1371,6 +1475,12 @@ if (cryingCardEl) {
     // DELETE /api/blacklist
     // -----------------------------------------------------------------------
     void _handleDeleteBlacklist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
         String domain;
         if (_server.hasArg("domain")) {
             domain = _server.arg("domain");
@@ -1397,31 +1507,58 @@ if (cryingCardEl) {
     }
 
     // -----------------------------------------------------------------------
-    // Minimal JSON domain extractor
+    // Robust JSON domain extractor with unescaping and key validation
     // -----------------------------------------------------------------------
-    bool _extractDomainFromJson(const String& body, String& outDomain) {
-        String b = body;
-        b.trim();
-        if (!b.startsWith("{") || !b.endsWith("}")) {
-            return false;
+    static bool _extractDomainFromJson(const String& body, String& outDomain) {
+        const char* p = body.c_str();
+        size_t len = body.length();
+        if (len < 10) return false;
+
+        // Locate "domain" key
+        const char* key = "\"domain\"";
+        const char* kpos = strstr(p, key);
+        while (kpos) {
+            const char* check = kpos - 1;
+            while (check >= p && ((unsigned char)*check <= ' ' || *check == 127)) {
+                check--;
+            }
+            if (check >= p && (*check == '{' || *check == ',')) {
+                break; // Valid JSON key position
+            }
+            kpos = strstr(kpos + 8, key);
         }
-        int keyIdx = b.indexOf("\"domain\"");
-        if (keyIdx < 0) {
-            return false;
+
+        if (!kpos) return false;
+
+        const char* cur = kpos + 8;
+        while (*cur && ((unsigned char)*cur <= ' ' || *cur == 127)) cur++;
+        if (*cur != ':') return false;
+        cur++;
+        while (*cur && ((unsigned char)*cur <= ' ' || *cur == 127)) cur++;
+        if (*cur != '\"') return false;
+        cur++; // Start of string value
+
+        outDomain = "";
+        outDomain.reserve(64);
+        while (*cur && *cur != '\"') {
+            if (*cur == '\\') {
+                cur++;
+                if (!*cur) return false;
+                if (*cur == '\"') outDomain += '\"';
+                else if (*cur == '\\') outDomain += '\\';
+                else if (*cur == '/') outDomain += '/';
+                else if (*cur == 'b') outDomain += '\b';
+                else if (*cur == 'f') outDomain += '\f';
+                else if (*cur == 'n') outDomain += '\n';
+                else if (*cur == 'r') outDomain += '\r';
+                else if (*cur == 't') outDomain += '\t';
+                else outDomain += *cur;
+            } else {
+                outDomain += *cur;
+            }
+            cur++;
         }
-        int colonIdx = b.indexOf(':', keyIdx + 8);
-        if (colonIdx < 0) {
-            return false;
-        }
-        int quoteStart = b.indexOf('\"', colonIdx + 1);
-        if (quoteStart < 0) {
-            return false;
-        }
-        int quoteEnd = b.indexOf('\"', quoteStart + 1);
-        if (quoteEnd < 0) {
-            return false;
-        }
-        outDomain = b.substring(quoteStart + 1, quoteEnd);
+        if (*cur != '\"') return false;
         return true;
     }
 };
