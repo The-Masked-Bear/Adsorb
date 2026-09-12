@@ -15,6 +15,7 @@
   <img src="docs/badges/badge-power.svg" alt="Power Draw: ~0.58W" height="28" />
   <a href="https://the-masked-bear.github.io/Adsorb/"><img src="docs/badges/badge-site.svg" alt="Live Site: Online" height="28" /></a>
   <a href="https://adblock.turtlecute.org/"><img src="docs/badges/badge-adblock.svg" alt="Adblock Test: 100% Verified" height="28" /></a>
+  <a href="https://github.com/sponsors/The-Masked-Bear"><img src="docs/badges/badge-sponsor.svg" alt="Sponsor on GitHub" height="28" /></a>
 </p>
 
 </div>
@@ -193,6 +194,20 @@ To protect every phone, smart TV, console, and computer in your home automatical
    http://adsorb.local/
    ```
    Enjoy your clean, arrogant, ad-free internet!
+
+---
+
+## 💖 Support the Project
+
+If Adsorb keeps your network clean, eliminates ad tracking across your devices, and saves you power, consider sponsoring the project on GitHub:
+
+<p align="left">
+  <a href="https://github.com/sponsors/The-Masked-Bear">
+    <img src="docs/badges/badge-sponsor.svg" alt="Sponsor on GitHub" height="32" />
+  </a>
+</p>
+
+Your support directly funds ESP32 hardware testing units, oscilloscopes, upstream test infrastructure, and ongoing zero-day telemetry filter research.
 
 ---
 

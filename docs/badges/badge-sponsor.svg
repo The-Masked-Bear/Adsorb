@@ -1,0 +1,21 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="206" height="32" viewBox="0 0 206 32" fill="none">
+  <style>
+    .badge-text {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', Monaco, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .badge-shadow { fill: #000000; }
+      .badge-main { stroke: #FFFFFF; }
+      .badge-left { fill: #181B22; stroke: #FFFFFF; }
+      .badge-left-text { fill: #F4F4F0; }
+    }
+  </style>
+  <rect class="badge-shadow" x="3" y="3" width="200" height="26" fill="#111111"/>
+  <rect class="badge-main" x="0.5" y="0.5" width="200" height="26" fill="#FF90E8" stroke="#111111" stroke-width="2.5"/>
+  <rect class="badge-left" x="0.5" y="0.5" width="76" height="26" fill="#111111" stroke="#111111" stroke-width="2.5"/>
+  <text class="badge-text badge-left-text" x="38" y="17.5" fill="#FFFFFF" text-anchor="middle">SPONSOR</text>
+  <text class="badge-text" x="138" y="17.5" fill="#111111" text-anchor="middle">GITHUB SPONSORS</text>
+</svg>
