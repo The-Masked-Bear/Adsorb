@@ -6,8 +6,8 @@
 
   <!-- Outer Silicon / Bear Chassis -->
   <path d="M 28 14 L 38 6 L 50 14 L 70 14 L 82 6 L 92 14 L 108 30 L 108 90 L 92 106 L 28 106 L 12 90 L 12 30 Z" 
-        fill="#D4FF00" 
-        stroke="#000000" 
+        fill="#FFDE59" 
+        stroke="#111111" 
         stroke-width="3.5" 
         stroke-linejoin="miter" />
 
@@ -40,9 +40,9 @@
         stroke="#000000" 
         stroke-width="1.5" />
   <!-- Visor Cyber Optics Slit -->
-  <line x1="32" y1="43" x2="52" y2="43" stroke="#00F0FF" stroke-width="3.5" stroke-linecap="square" />
-  <line x1="68" y1="43" x2="88" y2="43" stroke="#00F0FF" stroke-width="3.5" stroke-linecap="square" />
-  <circle cx="60" cy="43" r="2.5" fill="#FF3700" />
+  <line x1="32" y1="43" x2="52" y2="43" stroke="#8CFFFB" stroke-width="3.5" stroke-linecap="square" />
+  <line x1="68" y1="43" x2="88" y2="43" stroke="#8CFFFB" stroke-width="3.5" stroke-linecap="square" />
+  <circle cx="60" cy="43" r="2.5" fill="#FF5A5F" />
 
   <!-- The Architectural 'A' Monogram -->
   <!-- Left Leg of A -->
@@ -52,17 +52,17 @@
 
   <!-- Central Sinkhole Obliteration Core -->
   <circle cx="60" cy="72" r="16" fill="#000000" stroke="#000000" stroke-width="2" />
-  <circle cx="60" cy="72" r="13" fill="#090A0C" stroke="#D4FF00" stroke-width="2" />
-  <circle cx="60" cy="72" r="7" fill="#000000" stroke="#00F0FF" stroke-width="1.5" />
+  <circle cx="60" cy="72" r="13" fill="#090A0C" stroke="#FFDE59" stroke-width="2" />
+  <circle cx="60" cy="72" r="7" fill="#000000" stroke="#8CFFFB" stroke-width="1.5" />
   
   <!-- Null Routing Zero Symbol (0.0.0.0 / ::) -->
-  <ellipse cx="60" cy="72" rx="3.5" ry="4.5" fill="none" stroke="#FF3700" stroke-width="1.5" />
+  <ellipse cx="60" cy="72" rx="3.5" ry="4.5" fill="none" stroke="#FF5A5F" stroke-width="1.5" />
 
   <!-- Ingestion Quantum Chevrons -->
-  <path d="M 60 58 L 60 62" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
-  <path d="M 50 72 L 54 72" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
-  <path d="M 70 72 L 66 72" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
-  <path d="M 60 86 L 60 82" stroke="#D4FF00" stroke-width="2" stroke-linecap="square" />
+  <path d="M 60 58 L 60 62" stroke="#FFDE59" stroke-width="2" stroke-linecap="square" />
+  <path d="M 50 72 L 54 72" stroke="#FFDE59" stroke-width="2" stroke-linecap="square" />
+  <path d="M 70 72 L 66 72" stroke="#FFDE59" stroke-width="2" stroke-linecap="square" />
+  <path d="M 60 86 L 60 82" stroke="#FFDE59" stroke-width="2" stroke-linecap="square" />
 
   <!-- Circuit Micro-traces on Bottom Flanks -->
   <path d="M 22 68 L 30 68 L 36 74 L 36 86" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="square" />

@@ -1,7 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="244" height="32" viewBox="0 0 244 32" fill="none">
-  <rect x="3" y="3" width="238" height="26" fill="#000000"/>
-  <rect x="0.5" y="0.5" width="238" height="26" fill="#D4FF00" stroke="#000000" stroke-width="2.5"/>
-  <rect x="0.5" y="0.5" width="94" height="26" fill="#000000" stroke="#000000" stroke-width="2.5"/>
-  <text x="47" y="18" font-family="'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace" font-size="10" font-weight="900" fill="#D4FF00" text-anchor="middle" letter-spacing="0.5">POWER DRAW</text>
-  <text x="166" y="18" font-family="'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace" font-size="10" font-weight="900" fill="#000000" text-anchor="middle" letter-spacing="0.5">~0.58W (&lt;$0.50/YR)</text>
+  <style>
+    .badge-text {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', Monaco, Menlo, Consolas, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .badge-shadow { fill: #000000; }
+      .badge-main { stroke: #FFFFFF; }
+      .badge-left { fill: #181B22; stroke: #FFFFFF; }
+      .badge-left-text { fill: #F4F4F0; }
+    }
+  </style>
+  <rect class="badge-shadow" x="3" y="3" width="238" height="26" fill="#111111"/>
+  <rect class="badge-main" x="0.5" y="0.5" width="238" height="26" fill="#B2FF9E" stroke="#111111" stroke-width="2.5"/>
+  <rect class="badge-left" x="0.5" y="0.5" width="94" height="26" fill="#111111" stroke="#111111" stroke-width="2.5"/>
+  <text class="badge-text badge-left-text" x="47" y="17.5" fill="#FFFFFF" text-anchor="middle">POWER DRAW</text>
+  <text class="badge-text" x="166" y="17.5" fill="#111111" text-anchor="middle">~0.58W (&lt;$0.50/YR)</text>
 </svg>
