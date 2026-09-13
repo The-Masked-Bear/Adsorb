@@ -78,6 +78,11 @@
       cursor: none !important;
     }
 
+    html {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
     body {
       font-family: 'Space Mono', monospace;
       background-color: var(--bg);
@@ -169,6 +174,9 @@
       pointer-events: none;
       z-index: 0;
       overflow: hidden;
+      contain: strict;
+      max-width: 100vw;
+      max-height: 100vh;
     }
     .shape {
       position: absolute;
@@ -288,14 +296,15 @@
 
     nav#main-nav {
       display: flex;
-      gap: 24px;
+      gap: 14px;
       align-items: center;
     }
     nav a.nav-link {
       font-family: 'Archivo Black', sans-serif;
       color: var(--text-primary);
       text-decoration: none;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
       position: relative;
       transition: color 0.2s;
     }
@@ -396,7 +405,7 @@
 
     /* Hero */
     .hero {
-      padding: 80px 5% 70px;
+      padding: 50px 5% 50px;
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
       gap: 50px;
@@ -416,13 +425,13 @@
       padding: 8px 16px;
       font-family: 'Archivo Black', sans-serif;
       font-size: 0.8rem;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       animation: shake 4s ease-in-out infinite;
     }
     .hero h1 {
-      font-size: 4.2rem;
+      font-size: 3.8rem;
       line-height: 1.05;
-      margin-bottom: 24px;
+      margin-bottom: 18px;
       letter-spacing: -1px;
       color: var(--text-primary);
     }
@@ -440,7 +449,7 @@
       color: var(--text-secondary);
       font-weight: 700;
       line-height: 1.7;
-      margin-bottom: 35px;
+      margin-bottom: 24px;
       max-width: 600px;
     }
     .hero-actions {
@@ -1643,7 +1652,8 @@
       nav#main-nav {
         position: fixed;
         top: 0;
-        right: -100%;
+        right: 0;
+        transform: translateX(105%);
         width: 80%;
         max-width: 340px;
         height: 100vh;
@@ -1654,10 +1664,16 @@
         align-items: center;
         gap: 26px;
         z-index: 1000;
-        transition: right 0.35s cubic-bezier(.175,.885,.32,1.275);
+        transition: transform 0.35s cubic-bezier(.175,.885,.32,1.275), visibility 0.35s;
         box-shadow: -10px 0 0 var(--shadow);
+        visibility: hidden;
+        pointer-events: none;
       }
-      nav#main-nav.open { right: 0; }
+      nav#main-nav.open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+      }
       nav a.nav-link { font-size: 1.25rem; }
       .hero h1 { font-size: 2.5rem; }
       .giant-text { font-size: 3.8rem; }

@@ -1,0 +1,38 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="700" height="68" viewBox="0 0 700 68" fill="none">
+  <style>
+    .b-title {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .b-sub {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      opacity: 0.8;
+    }
+    .b-btn {
+      font-family: 'Space Mono', 'JetBrains Mono', 'SF Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .b-shadow { fill: #000000; }
+      .b-box { stroke: #FFFFFF; }
+      .b-btn-box { stroke: #FFFFFF; }
+    }
+  </style>
+  <rect class="b-shadow" x="5" y="5" width="690" height="58" fill="#111111"/>
+  <rect class="b-box" x="1.5" y="1.5" width="690" height="58" fill="#8CFFFB" stroke="#111111" stroke-width="3"/>
+  <g transform="translate(22, 16)">
+    <circle cx="18" cy="18" r="16" stroke="#111111" stroke-width="2.8" fill="none"/>
+    <ellipse cx="18" cy="18" rx="8" ry="16" stroke="#111111" stroke-width="2.2" fill="none"/>
+    <line x1="2" y1="18" x2="34" y2="18" stroke="#111111" stroke-width="2.2"/>
+  </g>
+  <text class="b-title" x="72" y="29" fill="#111111">EXPERIENCE ADSORB ONLINE</text>
+  <text class="b-sub" x="72" y="47" fill="#222222">Web Serial ESP32 Flasher, Live OLED Telemetry &amp; Silicon Dissector</text>
+  <rect class="b-btn-box" x="500" y="12" width="176" height="38" fill="#FFDE59" stroke="#111111" stroke-width="2.5"/>
+  <text class="b-btn" x="588" y="36" fill="#111111" text-anchor="middle">LAUNCH SITE ⚡</text>
+</svg>

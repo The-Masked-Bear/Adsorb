@@ -13,13 +13,22 @@
   <a href="https://www.espressif.com/"><img src="docs/badges/badge-hardware.svg" alt="Hardware: ESP32-S3 N16R8" height="28" /></a>
   <img src="docs/badges/badge-memory.svg" alt="Memory: 8MB Octal PSRAM" height="28" />
   <img src="docs/badges/badge-power.svg" alt="Power Draw: ~0.58W" height="28" />
-  <a href="https://the-masked-bear.github.io/Adsorb/"><img src="docs/badges/badge-site.svg" alt="Live Site: Online" height="28" /></a>
   <a href="https://adblock.turtlecute.org/"><img src="docs/badges/badge-adblock.svg" alt="Adblock Test: 100% Verified" height="28" /></a>
 </p>
 
 <p align="center">
+  <a href="https://the-masked-bear.github.io/Adsorb/">
+    <img src="docs/badges/website-button.svg" alt="Official Live Site & Web Flasher" height="44" />
+  </a>
+  &nbsp;&nbsp;
   <a href="https://github.com/sponsors/The-Masked-Bear">
     <img src="docs/badges/sponsor-button.svg" alt="Sponsor on GitHub" height="44" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://the-masked-bear.github.io/Adsorb/">
+    <img src="docs/badges/website-banner.svg" alt="Launch Adsorb Live Site & Web Flasher" width="100%" />
   </a>
 </p>
 
