@@ -17,13 +17,8 @@
 </p>
 
 <p align="center">
-  <a href="https://the-masked-bear.github.io/Adsorb/">
-    <img src="docs/badges/website-button.svg" alt="Official Live Site & Web Flasher" height="44" />
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://github.com/sponsors/The-Masked-Bear">
-    <img src="docs/badges/sponsor-button.svg" alt="Sponsor on GitHub" height="44" />
-  </a>
+  <a href="https://the-masked-bear.github.io/Adsorb/"><img src="docs/badges/website-button.svg" alt="Official Live Site & Web Flasher" height="44" /></a>
+  <a href="https://github.com/sponsors/The-Masked-Bear"><img src="docs/badges/sponsor-button.svg" alt="Sponsor on GitHub" height="44" /></a>
 </p>
 
 <p align="center">
