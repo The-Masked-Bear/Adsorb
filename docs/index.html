@@ -805,6 +805,39 @@
     .brutal-table tr:last-child td { border-bottom: none; }
     .brutal-table td:last-child, .brutal-table th:last-child { border-right: none; }
 
+    /* Responsive Table Scroll Wrapper */
+    .table-scroll-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x pan-y;
+      margin-top: 14px;
+      padding-bottom: 14px;
+      padding-right: 8px;
+      box-sizing: border-box;
+    }
+    .table-scroll-wrapper::-webkit-scrollbar {
+      height: 8px;
+    }
+    .table-scroll-wrapper::-webkit-scrollbar-track {
+      background: var(--surface);
+      border: 2px solid var(--border);
+    }
+    .table-scroll-wrapper::-webkit-scrollbar-thumb {
+      background: var(--yellow);
+      border: 1px solid var(--border);
+    }
+    .table-scroll-wrapper .brutal-table {
+      min-width: 580px;
+      margin-top: 0;
+    }
+    @media (min-width: 768px) {
+      .table-scroll-hint {
+        display: none !important;
+      }
+    }
+
     /* Wire Packet Dissector */
     .workbench-section {
       background: var(--cyan);
@@ -1977,48 +2010,53 @@
 
       <!-- Hardware Wiring Pinout Matrix -->
       <div style="margin-top:50px;">
-        <h3 style="font-size:1.4rem; margin-bottom:14px; text-shadow:2px 2px 0px var(--yellow);">1.3" I2C OLED HARDWARE PINOUT MATRIX</h3>
-        <table class="brutal-table">
-          <thead>
-            <tr>
-              <th>OLED PIN</th>
-              <th>ESP32-S3 GPIO</th>
-              <th>BUS FUNCTION</th>
-              <th>WIRE COLOR</th>
-              <th>HARDWARE SPECIFICATION</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="color:var(--red);">VCC</td>
-              <td>3V3</td>
-              <td>Power Delivery</td>
-              <td>Red Wire</td>
-              <td>3.3V System Rail (Draws &lt; 20mA during full scanlines)</td>
-            </tr>
-            <tr>
-              <td style="color:#555;">GND</td>
-              <td>GND</td>
-              <td>Common Ground</td>
-              <td>Black Wire</td>
-              <td>System Ground Plane return</td>
-            </tr>
-            <tr>
-              <td style="color:var(--cyan);">SCL</td>
-              <td>GPIO 9</td>
-              <td>I2C Clock Line</td>
-              <td>Yellow Wire</td>
-              <td>Software Bit-Bang 100 kHz (Core 0 background task)</td>
-            </tr>
-            <tr>
-              <td style="color:var(--mint);">SDA</td>
-              <td>GPIO 8</td>
-              <td>I2C Data Line</td>
-              <td>Blue Wire</td>
-              <td>Weak Pulldown auto-detected (prevents bus lockup if unplugged)</td>
-            </tr>
-          </tbody>
-        </table>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <h3 style="font-size:1.4rem; margin-bottom:0; text-shadow:2px 2px 0px var(--yellow);">1.3" I2C OLED HARDWARE PINOUT MATRIX</h3>
+          <span class="table-scroll-hint" style="font-size:0.75rem; font-weight:800; background:var(--yellow); color:var(--black); border:2px solid var(--border); padding:2px 8px; box-shadow:2px 2px 0px var(--shadow);">⇄ SWIPE TO SCROLL</span>
+        </div>
+        <div class="table-scroll-wrapper">
+          <table class="brutal-table">
+            <thead>
+              <tr>
+                <th>OLED PIN</th>
+                <th>ESP32-S3 GPIO</th>
+                <th>BUS FUNCTION</th>
+                <th>WIRE COLOR</th>
+                <th>HARDWARE SPECIFICATION</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--red);">VCC</td>
+                <td>3V3</td>
+                <td>Power Delivery</td>
+                <td>Red Wire</td>
+                <td>3.3V System Rail (Draws &lt; 20mA during full scanlines)</td>
+              </tr>
+              <tr>
+                <td style="color:#555;">GND</td>
+                <td>GND</td>
+                <td>Common Ground</td>
+                <td>Black Wire</td>
+                <td>System Ground Plane return</td>
+              </tr>
+              <tr>
+                <td style="color:var(--cyan);">SCL</td>
+                <td>GPIO 9</td>
+                <td>I2C Clock Line</td>
+                <td>Yellow Wire</td>
+                <td>Software Bit-Bang 100 kHz (Core 0 background task)</td>
+              </tr>
+              <tr>
+                <td style="color:var(--mint);">SDA</td>
+                <td>GPIO 8</td>
+                <td>I2C Data Line</td>
+                <td>Blue Wire</td>
+                <td>Weak Pulldown auto-detected (prevents bus lockup if unplugged)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -2235,7 +2273,10 @@
       </div>
 
       <!-- Comparison Matrix Table -->
-      <div style="overflow-x:auto;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <span class="table-scroll-hint" style="font-size:0.75rem; font-weight:800; background:var(--yellow); color:var(--black); border:2px solid var(--border); padding:2px 8px; box-shadow:2px 2px 0px var(--shadow);">⇄ SWIPE TO SCROLL</span>
+      </div>
+      <div class="table-scroll-wrapper">
         <table class="brutal-table">
           <thead>
             <tr>
@@ -2641,9 +2682,8 @@
     <p class="footer-subtitle">If Adsorb protected your network, consider supporting continuous open-source hardware engineering.</p>
     <a href="https://github.com/sponsors/The-Masked-Bear" target="_blank" class="brutal-btn color-yellow btn-lg">💖 SPONSOR ON GITHUB</a>
     <div class="footer-links-row">
-      <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" class="brutal-btn color-white btn-small">ADSORB GITHUB REPO</a>
-      <a href="https://github.com/The-Masked-Bear" target="_blank" class="brutal-btn color-cyan btn-small">THE-MASKED-BEAR PROFILE</a>
       <a href="https://instagram.com/the_masked_bear_" target="_blank" class="brutal-btn color-pink btn-small">INSTAGRAM</a>
+      <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" class="brutal-btn color-white btn-small">ADSORB GITHUB REPO</a>
     </div>
     <p class="footer-copyright">BUILT BY THE-MASKED-BEAR. MIT LICENSE. 2026.</p>
   </footer>
