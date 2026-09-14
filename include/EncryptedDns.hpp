@@ -19,6 +19,7 @@ public:
     bool begin() {
         _client.setCACert(DOH_ROOT_CA_PEM); // Strict cryptographic Root CA verification
         _client.setTimeout(Config::DOH_TIMEOUT_MS);
+        if (!_tlsMutex) _tlsMutex = xSemaphoreCreateMutex();
         Serial.printf("[DoH] Initialized Encrypted DNS Engine (CA Verified). Primary: %s | Fallback: %s\n",
                       Config::DOH_PRIMARY_URL, Config::DOH_SECONDARY_URL);
         return true;
@@ -32,15 +33,18 @@ public:
 
         _totalQueries++;
 
+        if (_tlsMutex) xSemaphoreTake(_tlsMutex, portMAX_DELAY);
+
         // 1. Try Primary DoH (Cloudflare 1.1.1.1)
         int len = _doHttpPost(Config::DOH_PRIMARY_URL, "cloudflare-dns.com", queryPacket, queryLen, outBuf, maxOutLen);
-        if (len >= 12) {
-            _successfulQueries++;
-            return len;
+        
+        // 2. Try Secondary DoH (Google 8.8.8.8) on primary failure
+        if (len < 12) {
+            len = _doHttpPost(Config::DOH_SECONDARY_URL, "dns.google", queryPacket, queryLen, outBuf, maxOutLen);
         }
 
-        // 2. Try Secondary DoH (Google 8.8.8.8)
-        len = _doHttpPost(Config::DOH_SECONDARY_URL, "dns.google", queryPacket, queryLen, outBuf, maxOutLen);
+        if (_tlsMutex) xSemaphoreGive(_tlsMutex);
+
         if (len >= 12) {
             _successfulQueries++;
             return len;
@@ -62,6 +66,7 @@ public:
 
 private:
     WiFiClientSecure _client;
+    SemaphoreHandle_t _tlsMutex          = nullptr;
     volatile uint32_t _totalQueries      = 0;
     volatile uint32_t _successfulQueries = 0;
     volatile uint32_t _failedQueries     = 0;

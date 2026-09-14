@@ -37,6 +37,7 @@ public:
         }
 
         _numSets = Config::DNS_CACHE_CAPACITY / 2; // 2-way associative (1024 sets)
+        if (!_mutex) _mutex = xSemaphoreCreateMutex();
         Serial.printf("[DNS Cache] Initialized %u entries (%.2f MB) in Octal PSRAM. 2-way associative.\n",
                       (unsigned)Config::DNS_CACHE_CAPACITY,
                       totalBytes / (1024.0f * 1024.0f));
@@ -55,7 +56,7 @@ public:
         uint32_t baseIdx = setIdx * 2;
         uint32_t now = millis() / 1000;
 
-        portENTER_CRITICAL(&_mux);
+        if (_mutex) xSemaphoreTake(_mutex, portMAX_DELAY);
         for (uint32_t way = 0; way < 2; ++way) {
             CacheEntry& entry = _entries[baseIdx + way];
             if (entry.hash == h && entry.qtype == qtype) {
@@ -68,7 +69,7 @@ public:
 
                     outLen = entry.packetLen;
                     memcpy(outBuf, entry.packet, outLen);
-                    portEXIT_CRITICAL(&_mux);
+                    if (_mutex) xSemaphoreGive(_mutex);
 
                     // Rewrite Transaction ID to match client's query
                     outBuf[0] = (uint8_t)(txnId >> 8);
@@ -81,12 +82,12 @@ public:
                     // Entry has expired
                     entry.hash = 0; // Invalidate
                     if (_activeEntries > 0) _activeEntries--;
-                    break;
+                    continue;
                 }
             }
         }
         _totalMisses++;
-        portEXIT_CRITICAL(&_mux);
+        if (_mutex) xSemaphoreGive(_mutex);
         return false;
     }
 
@@ -111,7 +112,7 @@ public:
         uint32_t baseIdx = setIdx * 2;
         uint32_t now = millis() / 1000;
 
-        portENTER_CRITICAL(&_mux);
+        if (_mutex) xSemaphoreTake(_mutex, portMAX_DELAY);
 
         // Select which way to replace:
         // 1. Existing matching hash
@@ -147,7 +148,7 @@ public:
         dst.hits = 0;
         memcpy(dst.packet, packet, packetLen);
 
-        portEXIT_CRITICAL(&_mux);
+        if (_mutex) xSemaphoreGive(_mutex);
     }
 
     // -----------------------------------------------------------------------
@@ -222,7 +223,7 @@ public:
 private:
     CacheEntry* _entries = nullptr;
     uint32_t _numSets = 0;
-    portMUX_TYPE _mux = portMUX_INITIALIZER_UNLOCKED;
+    SemaphoreHandle_t _mutex = nullptr;
 
     volatile uint32_t _totalLookups   = 0;
     volatile uint32_t _totalHits      = 0;

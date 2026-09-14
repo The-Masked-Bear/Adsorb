@@ -225,12 +225,13 @@ class MockFirmwareServer:
             return header + question_section + answer
 
         elif blocked and qtype == 28:  # Type AAAA (IPv6)
-            # Empty NOERROR response for blocked AAAA
-            resp_flags = 0x8580
-            header = struct.pack("!HHHHHH", tx_id, resp_flags, 1, 0, 0, 0)
+            # Synthesize :: (unspecified IPv6) AAAA-record answer with TTL=300 and ANCOUNT=1 to match hardware firmware
+            resp_flags = 0x8580  # QR=1, AA=1, RD=1, RA=1, NOERROR
+            header = struct.pack("!HHHHHH", tx_id, resp_flags, 1, 1, 0, 0)
+            answer = struct.pack("!HHHIH", 0xC00C, 28, 1, 300, 16) + (b"\x00" * 16)
             latency_ms = max(1, int((time.perf_counter() - t0) * 1000))
             self.record_query(domain, client_ip, True, latency_ms)
-            return header + question_section
+            return header + question_section + answer
 
         else:
             # Legitimate query -> Forward to upstream resolver or simulate upstream resolution

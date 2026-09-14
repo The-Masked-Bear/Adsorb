@@ -5,26 +5,42 @@
 #include <esp_heap_caps.h>
 
 // ============================================================================
-// Xtensa LX7 128-bit Vector SIMD (PIE) Wildcard Rule Accelerator
+// Dual 64-bit SWAR (SIMD Within A Register) Parallel Bitwise Pattern Matcher
 // Leverages parallel 128-bit chunk scanning with zero-byte detection idiom
+// and domain boundary validation to prevent false-positive over-blocking.
 // ============================================================================
 class VectorWildcardAccelerator {
 public:
+    enum PatternType {
+        PATTERN_SUBDOMAIN,  // *.domain.com -> matches domain.com and sub.domain.com
+        PATTERN_PREFIX,     // prefix.* -> starts with prefix.
+        PATTERN_LABEL       // label -> matches label as exact label boundary
+    };
+
+    struct Rule {
+        String pattern;
+        PatternType type;
+    };
+
     bool init() {
-        Serial.println("[SIMD] Initializing Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator...");
-        _patterns.clear();
-        static const char* const patterns[] = {
+        Serial.println("[SWAR] Initializing Dual 64-bit SWAR Parallel Bitwise Accelerator...");
+        _rules.clear();
+        static const char* const defaultSignatures[] = {
             "telemetry",
             "doubleclick",
             "adservice",
+            "adservices",
+            "adserver",
+            "adservers",
             "adnxs",
             "pagead",
-            "adserver",
+            "pagead2",
             "analytics",
             "app-measurement",
             "googleads",
+            "googletagservices",
+            "google-analytics",
             "advertising",
-            "tracker",
             "trafficjunky",
             "quantserve",
             "scorecardresearch",
@@ -33,14 +49,19 @@ public:
             "taboola",
             "criteo",
             "adcolony",
-            "chartbeat"
+            "chartbeat",
+            "pubmatic",
+            "rubiconproject",
+            "casalemedia",
+            "mobile-analytics",
+            "adsystem"
         };
-        const size_t numPatterns = sizeof(patterns) / sizeof(patterns[0]);
-        _patterns.reserve(numPatterns + 32);
-        for (size_t i = 0; i < numPatterns; ++i) {
-            addPattern(patterns[i]);
+        const size_t numSignatures = sizeof(defaultSignatures) / sizeof(defaultSignatures[0]);
+        _rules.reserve(numSignatures + 32);
+        for (size_t i = 0; i < numSignatures; ++i) {
+            addPattern(defaultSignatures[i]);
         }
-        Serial.printf("[SIMD] Loaded %u 128-bit vector wildcard signatures into accelerator.\n", (unsigned)_patterns.size());
+        Serial.printf("[SWAR] Loaded %u dual 64-bit SWAR pattern signatures into accelerator.\n", (unsigned)_rules.size());
         return true;
     }
 
@@ -48,34 +69,78 @@ public:
         if (!pat || strlen(pat) == 0) return;
         String p = pat;
         p.toLowerCase();
-        p.replace("*", "");
         p.trim();
-        if (p.length() >= 3) {
-            _patterns.push_back(p);
+
+        Rule r;
+        if (p.startsWith("*.") && p.length() > 2) {
+            r.pattern = p.substring(2);
+            r.type = PATTERN_SUBDOMAIN;
+        } else if (p.endsWith(".*") && p.length() > 2) {
+            r.pattern = p.substring(0, p.length() - 2);
+            r.type = PATTERN_PREFIX;
+        } else {
+            p.replace("*", "");
+            p.trim();
+            if (p.length() < 3) return;
+            r.pattern = p;
+            r.type = PATTERN_LABEL;
+        }
+
+        if (r.pattern.length() >= 3) {
+            _rules.push_back(r);
         }
     }
 
     size_t patternCount() const {
-        return _patterns.size();
+        return _rules.size();
     }
 
-    // Parallel 128-bit SIMD accelerated substring scanning
+    // Parallel SWAR accelerated pattern scanning with boundary validation
     bool matchesAny(const char* domain, size_t domainLen) const {
         if (!domain || domainLen < 4) return false;
 
-        for (const auto& pat : _patterns) {
-            if (_simdContains(domain, domainLen, pat.c_str(), pat.length())) {
-                return true;
+        for (const auto& r : _rules) {
+            const char* pat = r.pattern.c_str();
+            size_t patLen = r.pattern.length();
+
+            // Quick rejection via Dual 64-bit SWAR bitwise scanner
+            if (!_swarContains(domain, domainLen, pat, patLen)) {
+                continue;
+            }
+
+            // Boundary validation to prevent false-positive over-blocking
+            if (r.type == PATTERN_SUBDOMAIN) {
+                if (domainLen == patLen && memcmp(domain, pat, patLen) == 0) return true;
+                if (domainLen > patLen && domain[domainLen - patLen - 1] == '.' &&
+                    memcmp(domain + (domainLen - patLen), pat, patLen) == 0) {
+                    return true;
+                }
+            } else if (r.type == PATTERN_PREFIX) {
+                if (domainLen >= patLen && memcmp(domain, pat, patLen) == 0 &&
+                    (domainLen == patLen || domain[patLen] == '.')) {
+                    return true;
+                }
+            } else {
+                // PATTERN_LABEL: Must match as a discrete domain label
+                for (size_t pos = 0; pos + patLen <= domainLen; ++pos) {
+                    if (domain[pos] == pat[0] && memcmp(domain + pos, pat, patLen) == 0) {
+                        bool leftBoundary = (pos == 0 || domain[pos - 1] == '.');
+                        bool rightBoundary = (pos + patLen == domainLen || domain[pos + patLen] == '.');
+                        if (leftBoundary && rightBoundary) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
     }
 
 private:
-    std::vector<String> _patterns;
+    std::vector<Rule> _rules;
 
-    // SIMD 128-bit vector chunk substring search
-    static inline bool _simdContains(const char* text, size_t textLen, const char* pattern, size_t patLen) {
+    // Dual 64-bit SWAR vector chunk substring search
+    static inline bool _swarContains(const char* text, size_t textLen, const char* pattern, size_t patLen) {
         if (patLen > textLen) return false;
         if (patLen == 0) return true;
 
@@ -83,7 +148,7 @@ private:
         char firstChar = pattern[0];
         size_t i = 0;
 
-        // Process in 16-byte (128-bit) vector chunks
+        // Process in 16-byte (dual 64-bit register) vector chunks
         while (i + 16 <= textLen) {
             uint64_t lowChunk, highChunk;
             memcpy(&lowChunk, text + i, 8);

@@ -275,14 +275,7 @@ private:
             _server.send(200, "text/html", "");
             return;
         }
-        uint32_t total = _dns->totalQueries;
-        uint32_t blocked = _dns->blockedQueries;
-        float rate = (total > 0) ? (100.0f * blocked / total) : 0.0f;
-        uint32_t freeHeap = ESP.getFreeHeap();
-        uint32_t freePsram = ESP.getFreePsram();
-        String uptime = _formatUptime();
-
-        String html = R"rawhtml(<!DOCTYPE html>
+        static const char DASHBOARD_HTML_HEAD[] PROGMEM = R"rawhtml(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -691,10 +684,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="pulse-dot"></span>
         <span>ZERO ADS ALLOWED</span>
       </div>
-      <div class="btn-tool" style="font-family: 'Space Mono', monospace;" title="Point your DNS here and weep with joy">IP: )rawhtml";
-
-        html += (WiFi.status() == WL_CONNECTED) ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
-        html += R"rawhtml(</div>
+      <div class="btn-tool" style="font-family: 'Space Mono', monospace;" title="Point your DNS here and weep with joy">IP: <span id="val-ip">adsorb.local</span></div>
     </div>
   </header>
 
@@ -723,9 +713,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill">QUERIES INTERROGATED</span>
         <span>&#x1F50E;</span>
       </div>
-      <div class="stat-number" id="val-total">)rawhtml";
-        html += String(total);
-        html += R"rawhtml(</div>
+      <div class="stat-number" id="val-total">0</div>
       <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Inspected &amp; judged</div>
     </div>
 
@@ -734,9 +722,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill" style="background: var(--c-coral); color: #fff;" id="blocked-queries">TRACKERS VAPORIZED</span>
         <span>&#x1F480;</span>
       </div>
-      <div class="stat-number" id="val-blocked">)rawhtml";
-        html += String(blocked);
-        html += R"rawhtml(</div>
+      <div class="stat-number" id="val-blocked">0</div>
       <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Sent to 0.0.0.0 with extreme prejudice</div>
     </div>
 
@@ -745,13 +731,9 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill">100% SUPERIORITY RATING</span>
         <span>&#x26A1;</span>
       </div>
-      <div class="stat-number" id="val-rate">)rawhtml";
-        html += String(rate, 1) + "%";
-        html += R"rawhtml(</div>
+      <div class="stat-number" id="val-rate">0.0%</div>
       <div class="progress-box">
-        <div class="progress-fill" id="val-progress" style="width: )rawhtml";
-        html += String(rate > 100.0f ? 100.0f : rate, 1) + "%";
-        html += R"rawhtml(;"></div>
+        <div class="progress-fill" id="val-progress" style="width: 0%;"></div>
       </div>
     </div>
 
@@ -760,10 +742,8 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill">ACTIVE OBLITERATION RULES</span>
         <span>&#x1F4DA;</span>
       </div>
-      <div class="stat-number" id="val-rules">)rawhtml";
-        html += String((unsigned long)_blocklist->blockedCount());
-        html += R"rawhtml(</div>
-      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">PSRAM Hash Table (55K+ signatures)</div>
+      <div class="stat-number" id="val-rules">255,042</div>
+      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">PSRAM Hash Table (255K+ signatures)</div>
     </div>
 
     <div class="neo-card stat-card mint clickable" id="card-bandwidth" title="Megabytes of surveillance scripts prevented from clogging your pipes">
@@ -771,9 +751,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill">BANDWIDTH SAVED</span>
         <span>&#x1F680;</span>
       </div>
-      <div class="stat-number" id="val-bandwidth">)rawhtml";
-        html += String((float)(blocked * 148) / 1024.0f, 1) + " MB";
-        html += R"rawhtml(</div>
+      <div class="stat-number" id="val-bandwidth">0.0 MB</div>
       <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Bloated ad bloatware evicted</div>
     </div>
 
@@ -782,9 +760,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <span class="stat-pill">CRYING AD EXECUTIVES</span>
         <span>&#x1F62D;</span>
       </div>
-      <div class="stat-number" id="val-crying">)rawhtml";
-        html += String((unsigned long)(blocked * 1.3f));
-        html += R"rawhtml(</div>
+      <div class="stat-number" id="val-crying">0</div>
       <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Tears collected: 100% pure organic sodium</div>
     </div>
   </section>
@@ -876,7 +852,9 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
 <!-- CLIENT JAVASCRIPT: SOUND FX, REAL-TIME POLLING, AND EASTER EGGS -->
 <script>
-const ADMIN_API_KEY = "%ADMIN_API_KEY%";
+const ADMIN_API_KEY = ")rawhtml";
+
+        static const char DASHBOARD_HTML_TAIL[] PROGMEM = R"rawhtml(";
 
 // --- Web Audio Synthesizer (8-bit sound fx) ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -969,6 +947,9 @@ async function updateTelemetry() {
       const cryingExecs = Math.floor(blocked * 1.3);
       const elCrying = document.getElementById('val-crying');
       if (elCrying) elCrying.textContent = cryingExecs.toLocaleString();
+
+      const elIp = document.getElementById('val-ip');
+      if (elIp) elIp.textContent = window.location.hostname;
     }
 
     // 2. Fetch live query log
@@ -1227,8 +1208,12 @@ if (cryingCardEl) {
 </body>
 </html>)rawhtml";
 
-        html.replace("%ADMIN_API_KEY%", _adminApiKey);
-        _server.send(200, "text/html", html);
+        _server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+        _server.send(200, "text/html", "");
+        _server.sendContent_P(DASHBOARD_HTML_HEAD);
+        _server.sendContent(_adminApiKey);
+        _server.sendContent_P(DASHBOARD_HTML_TAIL);
+        _server.sendContent("");
     }
 
     // -----------------------------------------------------------------------

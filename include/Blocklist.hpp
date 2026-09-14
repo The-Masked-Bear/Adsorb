@@ -137,7 +137,7 @@ public:
             _loadSetFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist, "custom blacklist");
             _loadSetFile(Config::PATH_CUSTOM_WHITELIST, _whitelist, "whitelist");
 
-            // 5. Initialize Xtensa LX7 128-bit Vector SIMD Wildcard Accelerator
+            // 5. Initialize Dual 64-bit SWAR Parallel Bitwise Accelerator
             _simd.init();
             for (const auto& d : _customBlacklist) {
                 if (d.find('*') != PsramString::npos) {
@@ -276,7 +276,7 @@ public:
         RuleLock lock(_ruleMutex);
         _customBlacklist.erase(domain);
 
-        // Rebuild SIMD accelerator patterns so deleted wildcard rules cease blocking immediately
+        // Rebuild SWAR accelerator patterns so deleted wildcard rules cease blocking immediately
         _simd.init();
         for (const auto& d : _customBlacklist) {
             if (d.find('*') != PsramString::npos) {

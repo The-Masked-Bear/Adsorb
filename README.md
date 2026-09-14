@@ -43,8 +43,8 @@ No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. J
 
 ## 🚀 Key Highlights
 
-* **🧬 Xtensa LX7 128-bit Vector SIMD (PIE) Wildcard Accelerator**  
-  Leverages the ESP32-S3's Xtensa LX7 Processor Instruction Extension (PIE) SIMD vector engine to scan wildcard and ad-tracker patterns in dual 64-bit vector lanes. Byte-broadcast masks and zero-detection bitwise parallelism match malicious subdomains at wire speed with zero CPU branch overhead.
+* **🧬 Dual 64-bit SWAR Parallel Bitwise Wildcard Accelerator**  
+  Leverages SIMD Within A Register (SWAR) parallel algorithms to scan wildcard and ad-tracker patterns across dual 64-bit word lanes. Byte-broadcast masks, label boundary validation, and zero-detection bitwise parallelism match malicious subdomains at wire speed with zero CPU branch overhead.
 
 * **🎲 Hardware TRNG Cryptographic DNS Transaction ID Randomizer**  
   Upstream DNS queries are assigned cryptographically unpredictable 16-bit Transaction IDs seeded directly from on-chip physical RF receiver thermal noise (`esp_random()`). Completely neutralizes Dan Kaminsky DNS cache poisoning and blind transaction spoofing attacks.
@@ -89,7 +89,7 @@ Empirical benchmarks verified against live hardware (ESP32-S3 N16R8 @ 240MHz):
 | :--- | :---: | :--- |
 | **Octal PSRAM LRU Cache Hit** | **< 0.2 ms** | 2-Way Set Associative (2,048 entries) |
 | **Ad / Tracker Sinkhole** | **< 0.2 ms** | 64-Bit FNV-1a Binary Search Index |
-| **Vector SIMD Wildcard Scan** | **< 0.05 ms** | Xtensa LX7 128-Bit PIE SIMD Vector Lanes |
+| **SWAR Bitwise Wildcard Scan** | **< 0.05 ms** | Dual 64-bit SWAR Parallel Word Matcher |
 | **DNS Transaction ID Entropy** | **16-Bit Crypto** | Hardware TRNG RF Thermal Noise (`esp_random()`) |
 | **Zero-Config Local Portal** | **Instant** | mDNS Responder (`http://adsorb.local/`) |
 | **Uncached Query (Parallel Race)** | **12 – 40 ms** | Simultaneous Cloudflare & Google UDP 53 |
@@ -101,7 +101,7 @@ Empirical benchmarks verified against live hardware (ESP32-S3 N16R8 @ 240MHz):
 
 ## 🛠️ Hardware Requirements & OLED Pinout
 
-* **Board:** ESP32-S3 DevKit with **N16R8** (16MB Quad SPI Flash + 8MB Octal PSRAM).
+* **Board:** ESP32-S3 DevKit with **N16R8** (16MB Quad SPI Flash + 8MB Octal PSRAM). Supports ~255,000 rules with 2.2MB reserved for FreeRTOS, DNS cache, and network buffers.
 * **Display (Optional):** 1.3" I2C OLED Display (SH1106 or SSD1306 128x64).
 * **Power:** Standard 5V USB-C cable and 5W USB wall adapter.
 * **Network:** 2.4GHz 802.11 b/g/n Wi-Fi network.
@@ -129,11 +129,12 @@ Adsorb/
 │   ├── DnsServer.hpp      # Dual-stack UDP DNS engine, TRNG randomizer & Parallel Race
 │   ├── EncryptedDns.hpp   # RFC 8484 DNS-over-HTTPS (DoH) engine
 │   ├── OledDisplay.hpp    # 1.3" I2C OLED multi-page telemetry carousel
-│   ├── VectorWildcard.hpp # Xtensa LX7 128-bit PIE SIMD wildcard rule accelerator
+│   ├── VectorWildcard.hpp # Dual 64-bit SWAR parallel bitwise wildcard accelerator
 │   └── WebDashboard.hpp   # Asynchronous Neo-Brutalist status UI, Captive Portal & REST API
 ├── src/
 │   └── main.cpp           # System orchestrator, FreeRTOS core pinning & watchdog
-├── ad-domains2.0.txt      # Curated blocklist of 255,042 domain rules
+├── data/
+│   └── ad-domains2.0.txt  # Curated blocklist of 200,000+ domain rules (LittleFS)
 ├── partitions_16MB.csv    # Custom flash partitioning (3MB app, SPIFFS/LittleFS)
 ├── platformio.ini         # PlatformIO build configuration with -O3 optimizations
 ├── LICENSE                # Apache License 2.0

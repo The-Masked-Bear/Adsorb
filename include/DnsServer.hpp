@@ -619,42 +619,6 @@ private:
     }
 
     // -----------------------------------------------------------------------
-    // Craft public fallback response (for whitelisted test domains)
-    // -----------------------------------------------------------------------
-    void _sendPublicFallbackResponse(IPAddress clientIP, uint16_t clientPort,
-                                      const uint8_t* query, int queryLen,
-                                      uint16_t txnId, int qnameEnd) {
-        uint8_t resp[512];
-        int questionEnd = qnameEnd + 4;
-        if (questionEnd > queryLen || questionEnd > (int)sizeof(resp) - 32) return;
-
-        memcpy(resp, query, questionEnd);
-        int respLen = questionEnd;
-
-        // Flags: QR=1 (response), RD=1, RA=1, RCODE=0 (NoError)
-        resp[2] = 0x81;
-        resp[3] = 0x80;
-
-        // ANCOUNT = 1
-        resp[6] = 0x00; resp[7] = 0x01;
-        resp[8] = 0; resp[9] = 0;
-        resp[10] = 0; resp[11] = 0;
-
-        // A record: pointer to QNAME (0xC00C) + TYPE A (1) + CLASS IN (1) + TTL 60 + RDLENGTH 4 + 192.0.2.1
-        resp[respLen++] = 0xC0; resp[respLen++] = 0x0C;
-        resp[respLen++] = 0x00; resp[respLen++] = 0x01;
-        resp[respLen++] = 0x00; resp[respLen++] = 0x01;
-        resp[respLen++] = 0x00; resp[respLen++] = 0x00;
-        resp[respLen++] = 0x00; resp[respLen++] = 0x3C; // TTL = 60s
-        resp[respLen++] = 0x00; resp[respLen++] = 0x04;
-        resp[respLen++] = 192; resp[respLen++] = 0; resp[respLen++] = 2; resp[respLen++] = 1;
-
-        _udp.beginPacket(clientIP, clientPort);
-        _udp.write(resp, respLen);
-        _udp.endPacket();
-    }
-
-    // -----------------------------------------------------------------------
     // Ultra-Fast Parallel Upstream UDP Race (Cloudflare 1.1.1.1 & Google 8.8.8.8)
     // Protected by Hardware TRNG Cryptographic Transaction ID Randomization
     // -----------------------------------------------------------------------
@@ -764,17 +728,13 @@ private:
                 _fwdBuf[0] = (uint8_t)(txnId >> 8);
                 _fwdBuf[1] = (uint8_t)(txnId & 0xFF);
 
-                if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
-                    _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-                } else {
-                    _udp.beginPacket(clientIP, clientPort);
-                    _udp.write(_fwdBuf, dohLen);
-                    _udp.endPacket();
+                _udp.beginPacket(clientIP, clientPort);
+                _udp.write(_fwdBuf, dohLen);
+                _udp.endPacket();
 
-                    if (_cache) {
-                        uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, dohLen);
-                        _cache->insert(domain, qtype, _fwdBuf, dohLen, minTtl);
-                    }
+                if (_cache) {
+                    uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, dohLen);
+                    _cache->insert(domain, qtype, _fwdBuf, dohLen, minTtl);
                 }
                 resolved = true;
             }
@@ -784,17 +744,13 @@ private:
         if (!resolved) {
             int replyLen = _resolveUpstreamUdp(query, queryLen, txnId, _fwdBuf, sizeof(_fwdBuf));
             if (replyLen >= 12) {
-                if (isWhitelisted && (_fwdBuf[3] & 0x0F) == 3) {
-                    _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-                } else {
-                    _udp.beginPacket(clientIP, clientPort);
-                    _udp.write(_fwdBuf, replyLen);
-                    _udp.endPacket();
+                _udp.beginPacket(clientIP, clientPort);
+                _udp.write(_fwdBuf, replyLen);
+                _udp.endPacket();
 
-                    if (_cache) {
-                        uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
-                        _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
-                    }
+                if (_cache) {
+                    uint32_t minTtl = DnsCache::extractMinTtl(_fwdBuf, replyLen);
+                    _cache->insert(domain, qtype, _fwdBuf, replyLen, minTtl);
                 }
                 resolved = true;
             }
@@ -802,14 +758,10 @@ private:
 
         // 3. Fallback on complete upstream failure
         if (!resolved) {
-            if (isWhitelisted) {
-                _sendPublicFallbackResponse(clientIP, clientPort, query, queryLen, txnId, qnameEnd);
-            } else {
-                // Return SERVFAIL (RCODE 2) — NEVER NXDOMAIN (RCODE 3)!
-                // SERVFAIL notifies client OS of temporary upstream failure so it immediately
-                // fails over to secondary DNS (e.g. 1.1.1.1) instead of corrupting client DNS cache!
-                _sendErrorResponse(clientIP, clientPort, txnId, 2);
-            }
+            // Return SERVFAIL (RCODE 2) — NEVER NXDOMAIN (RCODE 3)!
+            // SERVFAIL notifies client OS of temporary upstream failure so it immediately
+            // fails over to secondary DNS (e.g. 1.1.1.1) instead of corrupting client DNS cache!
+            _sendErrorResponse(clientIP, clientPort, txnId, 2);
         }
     }
 

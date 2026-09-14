@@ -73,9 +73,19 @@
       padding: 0;
     }
 
-    /* By default custom cursor is enabled on desktop */
-    body.custom-cursor-active * {
-      cursor: none !important;
+    /* By default custom cursor is enabled on desktop with fine pointing devices */
+    @media (hover: hover) and (pointer: fine) {
+      body.custom-cursor-active * {
+        cursor: none !important;
+      }
+    }
+    @media (hover: none) or (pointer: coarse) {
+      #cursor-dot, #cursor-ring, #trail-canvas {
+        display: none !important;
+      }
+      body.custom-cursor-active * {
+        cursor: auto !important;
+      }
     }
 
     html {
@@ -1723,6 +1733,12 @@
     }
 
     @media (max-width: 480px) {
+      nav#main-nav {
+        width: 100%;
+        max-width: 100vw;
+        border-left: none;
+        overflow-y: auto;
+      }
       .hero h1 { font-size: 2rem; }
       .stats-grid { grid-template-columns: 1fr; }
       .stat-item { border-right: none; }
@@ -1791,6 +1807,7 @@
 
   <div class="nav-overlay" id="nav-overlay"></div>
 
+  <main id="main-content">
   <!-- Marquee Ticker Strip -->
   <div class="brutal-marquee-container">
     <div class="brutal-marquee" id="marquee-content">
@@ -1863,39 +1880,39 @@
       <!-- Tab 2: Silicon Anatomy Inspector -->
       <div class="silicon-view" id="silicon-view">
         <div class="silicon-grid">
-          <button class="silicon-chip-btn active" onclick="inspectSiliconChip('soc')">
+          <button class="silicon-chip-btn active" data-chip="soc" onclick="inspectSiliconChip('soc', event)">
             XTENSA LX7
             <span class="chip-freq">240 MHz Dual</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('psram')">
+          <button class="silicon-chip-btn" data-chip="psram" onclick="inspectSiliconChip('psram', event)">
             OCTAL PSRAM
             <span class="chip-freq">8MB @ 80MHz</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('oled')">
+          <button class="silicon-chip-btn" data-chip="oled" onclick="inspectSiliconChip('oled', event)">
             I2C OLED 1.3"
             <span class="chip-freq">GPIO 8 / 9</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('flash')">
+          <button class="silicon-chip-btn" data-chip="flash" onclick="inspectSiliconChip('flash', event)">
             QUAD FLASH
             <span class="chip-freq">16MB LittleFS</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('wifi')">
+          <button class="silicon-chip-btn" data-chip="wifi" onclick="inspectSiliconChip('wifi', event)">
             2.4GHz Wi-Fi
             <span class="chip-freq">802.11 b/g/n</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('usb')">
+          <button class="silicon-chip-btn" data-chip="usb" onclick="inspectSiliconChip('usb', event)">
             USB-OTG LDO
             <span class="chip-freq">0.58W continuous</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('simd')">
-            128b PIE SIMD
-            <span class="chip-freq">LX7 Vector</span>
+          <button class="silicon-chip-btn" data-chip="simd" onclick="inspectSiliconChip('simd', event)">
+            64-BIT SWAR
+            <span class="chip-freq">Bitwise Match</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('trng')">
+          <button class="silicon-chip-btn" data-chip="trng" onclick="inspectSiliconChip('trng', event)">
             HARDWARE TRNG
             <span class="chip-freq">RF Entropy</span>
           </button>
-          <button class="silicon-chip-btn" onclick="inspectSiliconChip('mdns')">
+          <button class="silicon-chip-btn" data-chip="mdns" onclick="inspectSiliconChip('mdns', event)">
             mDNS WIZARD
             <span class="chip-freq">adsorb.local</span>
           </button>
@@ -2141,8 +2158,8 @@
 
         <div class="scope-controls-grid">
           <div>
-            <label style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">TRAFFIC GENERATOR LOAD: <span id="scope-load-text" style="color:var(--yellow);">1,200 QPS</span></label>
-            <input type="range" id="scope-load-slider" min="500" max="25000" step="500" value="1200" oninput="updateScopeTraffic(this.value)">
+            <label for="scope-load-slider" style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">TRAFFIC GENERATOR LOAD: <span id="scope-load-text" style="color:var(--yellow);">1,200 QPS</span></label>
+            <input type="range" id="scope-load-slider" aria-label="Traffic Generator Load in queries per second" min="500" max="25000" step="500" value="1200" oninput="updateScopeTraffic(this.value)">
           </div>
           <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
             <button class="brutal-btn color-yellow btn-small" onclick="setScopeWaveMode('carrier')">CARRIER 80MHz</button>
@@ -2369,12 +2386,12 @@
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
           <div>
-            <label style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">CONNECTED DEVICES: <span id="tco-dev-val" style="color:var(--pink);">25 Devices</span></label>
-            <input type="range" id="tco-dev-slider" min="5" max="100" value="25" oninput="updateTcoCalc()">
+            <label for="tco-dev-slider" style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">CONNECTED DEVICES: <span id="tco-dev-val" style="color:var(--pink);">25 Devices</span></label>
+            <input type="range" id="tco-dev-slider" aria-label="Connected Devices" min="5" max="100" value="25" oninput="updateTcoCalc()">
           </div>
           <div>
-            <label style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">ELECTRICITY TARIFF: <span id="tco-tariff-val" style="color:var(--cyan);">$0.20 / kWh</span></label>
-            <input type="range" id="tco-tariff-slider" min="0.05" max="0.60" step="0.01" value="0.20" oninput="updateTcoCalc()">
+            <label for="tco-tariff-slider" style="font-weight:900; font-size:0.85rem; display:block; margin-bottom:8px;">ELECTRICITY TARIFF: <span id="tco-tariff-val" style="color:var(--cyan);">$0.20 / kWh</span></label>
+            <input type="range" id="tco-tariff-slider" aria-label="Electricity Tariff per kWh" min="0.05" max="0.60" step="0.01" value="0.20" oninput="updateTcoCalc()">
           </div>
         </div>
 
@@ -2402,33 +2419,27 @@
       </div>
 
       <div class="flasher-box">
-        <!-- Wi-Fi Provisioning Card (Step 1) -->
+        <!-- Wi-Fi Provisioning & Zero-Config Onboarding Guide -->
         <div class="wifi-provision-card">
           <div class="wifi-card-header">
-            <span class="wifi-badge">⚡ STEP 1: CONFIGURE NETWORK CREDENTIALS</span>
-            <h4 class="wifi-title">ENTER YOUR 2.4GHz WI-FI NAME &amp; PASSWORD</h4>
-            <p class="wifi-desc">Adsorb requires 2.4GHz Wi-Fi. Provide your Wi-Fi credentials below so the Web Flasher can automatically provision your ESP32-S3 to join your home/office Wi-Fi upon boot.</p>
+            <span class="wifi-badge">⚡ ZERO-CONFIG PLUG &amp; PLAY ONBOARDING</span>
+            <h4 class="wifi-title">HOW WI-FI PROVISIONING WORKS</h4>
+            <p class="wifi-desc">Adsorb features an autonomous RFC-compliant captive portal and mDNS responder. You never need to hardcode Wi-Fi credentials into binaries before flashing!</p>
           </div>
 
-          <div class="wifi-inputs-grid">
-            <div class="wifi-input-group">
-              <label for="wifi-ssid">2.4GHz WI-FI NAME (SSID) *</label>
-              <input type="text" id="wifi-ssid" class="brutal-input" placeholder="e.g. Home_Network_2.4G" autocomplete="wifi-ssid">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:14px;">
+            <div style="background:var(--surface); border:2px solid var(--border); padding:14px; box-shadow:3px 3px 0 var(--shadow);">
+              <div style="font-weight:900; font-size:0.85rem; color:var(--text-primary); margin-bottom:4px;">1. FLASH FIRMWARE</div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">Click the button below to flash Adsorb to your ESP32-S3 via Chrome/Edge Web Serial.</p>
             </div>
-            <div class="wifi-input-group">
-              <label for="wifi-pass">WI-FI PASSWORD *</label>
-              <div class="pass-wrapper">
-                <input type="password" id="wifi-pass" class="brutal-input" placeholder="••••••••••••" autocomplete="wifi-password">
-                <button type="button" class="pass-toggle-btn" onclick="togglePassVisibility()" title="Show/Hide Password">👁</button>
-              </div>
+            <div style="background:var(--surface); border:2px solid var(--border); padding:14px; box-shadow:3px 3px 0 var(--shadow);">
+              <div style="font-weight:900; font-size:0.85rem; color:var(--text-primary); margin-bottom:4px;">2. CONNECT TO SETUP AP</div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">On first boot, connect your phone or laptop to setup Wi-Fi: <code>ESP32-DNS-AdBlocker</code> (Pass: <code>admin1234</code>).</p>
             </div>
-          </div>
-
-          <div class="wifi-options-row">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-              <input type="checkbox" id="wifi-skip-ap" onchange="toggleApSkip(this.checked)">
-              <span>Skip Wi-Fi setup and use built-in Fallback AP Mode (SSID: <code>ESP32-DNS-AdBlocker</code> | Pass: <code>admin1234</code>)</span>
-            </label>
+            <div style="background:var(--surface); border:2px solid var(--border); padding:14px; box-shadow:3px 3px 0 var(--shadow);">
+              <div style="font-weight:900; font-size:0.85rem; color:var(--text-primary); margin-bottom:4px;">3. SET WI-FI IN PORTAL</div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin:0;">Navigate to <code>http://adsorb.local/</code> (or <code>192.168.4.1</code>) to select your home Wi-Fi with one click!</p>
+            </div>
           </div>
         </div>
 
@@ -2675,6 +2686,7 @@
       <div style="font-size:0.8rem; margin-top:14px; font-weight:700; opacity:0.75;">Join 300+ network engineers and self-hosters.</div>
     </div>
   </section>
+  </main>
 
   <!-- Footer -->
   <footer class="brutal-footer">
@@ -3218,11 +3230,11 @@
         util: "116mA @ 5.0V (0.58 W)"
       },
       simd: {
-        title: "XTENSA LX7 128-BIT PIE VECTOR SIMD",
-        badge: "128-Bit SIMD",
-        desc: "Hardware vector acceleration registers execute dual 64-bit parallel chunk evaluations for wildcard matching, ad-tracker pattern discovery, and zero-detection bitwise parallelism.",
-        reg: "XTENSA_PIE_Q0_Q7 (0x4000_1000)",
-        util: "20 SIGNATURES (WIRE SPEED)"
+        title: "DUAL 64-BIT SWAR PARALLEL BITWISE ACCELERATOR",
+        badge: "64-Bit SWAR",
+        desc: "Dual 64-bit SIMD-Within-A-Register bitwise parallelism executes 16-byte chunk evaluation with zero-byte detection idiom for wildcard matching and ad-tracker pattern discovery.",
+        reg: "XTENSA_ALU_SWAR (0x4000_1000)",
+        util: "29 SIGNATURES (WIRE SPEED)"
       },
       trng: {
         title: "HARDWARE TRNG CRYPTOGRAPHIC RANDOMIZER",
@@ -3240,7 +3252,7 @@
       }
     };
 
-    window.inspectSiliconChip = function(key) {
+    window.inspectSiliconChip = function(key, ev) {
       const data = siliconInfo[key];
       if (!data) return;
       document.getElementById('silicon-title').textContent = data.title;
@@ -3250,7 +3262,13 @@
       document.getElementById('silicon-util').textContent = data.util;
 
       document.querySelectorAll('.silicon-chip-btn').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      const currentEv = ev || (typeof event !== 'undefined' ? event : null);
+      if (currentEv && currentEv.currentTarget) {
+        currentEv.currentTarget.classList.add('active');
+      } else {
+        const btn = document.querySelector(`.silicon-chip-btn[data-chip="${key}"]`);
+        if (btn) btn.classList.add('active');
+      }
       playKeyBeep(640, 0.03);
     };
 
@@ -3500,7 +3518,7 @@
       hex.push(`<span style="color:#8CFFFB; font-weight:900;" title="TXID">8A 4F</span>`);
       hex.push(`<span style="color:#8CFFFB; font-weight:900;" title="Flags QR=1, AA=1">81 ${rcode.toString(16).toUpperCase()}</span>`);
       hex.push(`<span style="color:#8CFFFB;" title="QDCOUNT=1">00 01</span>`);
-      hex.push(`<span style="color:#8CFFFB;" title="ANCOUNT=${isBlocked?2:1}">00 ${isBlocked ? '02' : '01'}</span>`);
+      hex.push(`<span style="color:#8CFFFB;" title="ANCOUNT=1">00 01</span>`);
       hex.push(`<span style="color:#555;">00 00 00 00</span>`);
 
       const labels = domain.split('.');
@@ -3714,45 +3732,7 @@
       playKeyBeep(520, 0.02);
     };
 
-    window.toggleApSkip = function(checked) {
-      const s = document.getElementById('wifi-ssid');
-      const p = document.getElementById('wifi-pass');
-      if (s) s.disabled = checked;
-      if (p) p.disabled = checked;
-      if (checked) {
-        if (s) s.value = '';
-        if (p) p.value = '';
-      }
-      playKeyBeep(480, 0.02);
-    };
-
     window.handlePreFlashClick = function(e) {
-      const ssidInp = document.getElementById('wifi-ssid');
-      const passInp = document.getElementById('wifi-pass');
-      const skipAp = document.getElementById('wifi-skip-ap');
-
-      const isApMode = skipAp && skipAp.checked;
-      const ssid = (ssidInp ? ssidInp.value : '').trim();
-      const pass = (passInp ? passInp.value : '').trim();
-
-      if (!isApMode && !ssid) {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        alert('⚠️ Please enter your 2.4GHz Wi-Fi Name (SSID) so your ESP32-S3 can connect to your network, or check "Skip Wi-Fi setup and use built-in AP Mode".');
-        if (ssidInp) {
-          ssidInp.focus();
-          ssidInp.style.borderColor = 'var(--red)';
-          setTimeout(() => { if (ssidInp) ssidInp.style.borderColor = ''; }, 2500);
-        }
-        playKeyBeep(320, 0.08);
-        return false;
-      }
-
-      try {
-        localStorage.setItem('adsorb_wifi_ssid', ssid);
-      } catch (err) {}
       playKeyBeep(600, 0.04);
       return true;
     };
