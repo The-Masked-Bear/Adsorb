@@ -1831,17 +1831,17 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
-      <div class="hero-badge">⚡ FIRMWARE v1.3.0 — RFC 8484 DoH &amp; UNIVERSAL DHCP ARMED</div>
+      <div class="hero-badge">⚡ FIRMWARE v1.3.1 — PER-CLIENT IP BYPASS &amp; RFC 8484 DoH ARMED</div>
       <h1 id="hero-title"></h1>
       <p class="hero-subtitle">
         Ultra-high performance, bare-metal DNS sinkhole for ESP32-S3 N16R8. 
         255,000+ domain rules in Octal PSRAM. 128-bit Xtensa SIMD wildcard acceleration, 
-        hardware TRNG cryptographic transaction ID randomizer, and zero-config mDNS at 
+        hardware TRNG cryptographic transaction ID randomizer, per-client IP bypass for OTT/Smart TVs, and zero-config mDNS at 
         <code style="color:var(--yellow); font-weight:700;">http://adsorb.local/</code>. 
         Zero Linux. Zero SD cards. Zero cloud.
       </p>
       <div class="hero-actions">
-        <a href="#install" class="brutal-btn color-pink btn-lg" id="open-install-btn">DOWNLOAD v1.3.0</a>
+        <a href="#install" class="brutal-btn color-pink btn-lg" id="open-install-btn">DOWNLOAD v1.3.1</a>
         <a href="#flasher" class="brutal-btn color-yellow btn-lg">⚡ WEB SERIAL FLASH</a>
         <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" class="brutal-btn color-white btn-lg">VIEW GITHUB</a>
       </div>
@@ -1864,13 +1864,14 @@
 
       <!-- Tab 1: Terminal Body -->
       <div class="terminal-body" id="term-body">
-        <div class="terminal-line" style="color:var(--yellow);">Adsorb Kernel v1.3.0 (ESP32-S3 Dual-Core @ 240MHz)</div>
+        <div class="terminal-line" style="color:var(--yellow);">Adsorb Kernel v1.3.1 (ESP32-S3 Dual-Core @ 240MHz)</div>
         <div class="terminal-line">Octal PSRAM: 255,042 domain hashes loaded (2.04 MB)</div>
         <div class="terminal-line">SIMD Engine: Xtensa LX7 128-bit PIE Wildcard Accelerator [ACTIVE]</div>
         <div class="terminal-line">TRNG Security: Hardware RF Cryptographic Randomizer [ENABLED]</div>
+        <div class="terminal-line">Client IP Bypass: Zero-Disruption OTT Whitelist Engine [ARMED]</div>
         <div class="terminal-line">mDNS Responder: http://adsorb.local/ (Auto DHCP / Static Lease)</div>
         <div class="terminal-line">Display: SH1106 1.3" OLED on SDA:8, SCL:9 [ACTIVE]</div>
-        <div class="terminal-line" style="color:var(--cyan);">Type 'help', 'status', 'simd', 'trng', 'mdns', 'cache' below:</div>
+        <div class="terminal-line" style="color:var(--cyan);">Type 'help', 'status', 'bypass', 'api', 'simd', 'trng', 'cache' below:</div>
         <div class="terminal-input-line">
           <span class="terminal-prompt">&gt;</span>
           <input type="text" class="terminal-input" id="term-input" autocomplete="off" spellcheck="false" placeholder="try 'status', 'cache', 'race', 'inspect doubleclick.net'...">
@@ -2276,6 +2277,22 @@
           <p>Works out-of-the-box on any router subnet with dynamic DHCP, 802.11 modem sleep disabled, and auto-reconnect watchdog. Easily assign a static IP via your router's DHCP reservation.</p>
           <span class="feature-tag">UNIVERSAL COMPATIBILITY</span>
         </div>
+
+        <!-- Feature 13: Per-Client IP Ad-Blocking Bypass -->
+        <div class="brutal-card feature-card" style="background:var(--pink);">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <h3>PER-CLIENT IP BYPASS</h3>
+          <p>Zero-disruption streaming bypass for Smart TVs, Jio STB, Apple TV, or consoles running strict OTT apps (like ZEE5). Whitelisted IPs bypass sinkholes via Web Dashboard or REST API with LittleFS persistence.</p>
+          <span class="feature-tag">ZERO OTT DISRUPTION</span>
+        </div>
+
+        <!-- Feature 14: Asynchronous REST API -->
+        <div class="brutal-card feature-card" style="background:var(--yellow);">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <h3>REST API &amp; HOME AUTOMATION</h3>
+          <p>Asynchronous JSON endpoints (/api/stats, /api/bypass, /api/whitelist, /dns-query) enable real-time telemetry integration with Home Assistant and programmatic control with zero cloud dependencies.</p>
+          <span class="feature-tag">REST API &amp; DoH RFC 8484</span>
+        </div>
       </div>
     </div>
   </section>
@@ -2485,7 +2502,7 @@
           <a href="partitions.bin" download="partitions.bin" class="brutal-btn color-white btn-small">📦 PARTITIONS.BIN (0x8000)</a>
           <a href="firmware.bin" download="firmware.bin" class="brutal-btn color-white btn-small">📦 FIRMWARE.BIN (0x10000)</a>
           <a href="littlefs.bin" download="littlefs.bin" class="brutal-btn color-white btn-small">📦 LITTLEFS.BIN (0x610000)</a>
-          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.3.0" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
+          <a href="https://github.com/The-Masked-Bear/Adsorb/releases/tag/v1.3.1" target="_blank" class="brutal-btn color-yellow btn-small">⚡ FULL BUNDLE (.ZIP)</a>
         </div>
       </div>
 
@@ -2494,7 +2511,7 @@
         <div class="after-guide-header">
           <span class="section-tag" style="background:var(--pink); color:#111;">3-MINUTE INTEGRATION</span>
           <h3>WHAT TO DO AFTER FLASHING</h3>
-          <p>Follow these 4 simple steps to route all household ad queries through your ESP32-S3 hardware sinkhole.</p>
+          <p>Follow these simple steps to route household ad queries through your ESP32-S3 hardware sinkhole and manage client bypass.</p>
         </div>
 
         <div class="guide-steps-grid">
@@ -2568,6 +2585,18 @@
               Watch the physical 1.3" OLED display query counter tick up in real time!
             </p>
           </div>
+
+          <!-- Step 5 -->
+          <div class="guide-step-card" style="border-color:var(--black); box-shadow:8px 8px 0px var(--pink); grid-column: 1 / -1;">
+            <div class="step-badge" style="background:var(--pink); color:#111;">STEP 5 (OPTIONAL)</div>
+            <h4>EXEMPT TEMPERAMENTAL SMART TVs &amp; STREAMING BOXES (ZEE5 / JIO STB)</h4>
+            <p>
+              Got a Smart TV, Apple TV, Fire Stick, or Jio Set-Top Box where strict DRM streaming apps (like ZEE5 or SonyLIV) refuse to play videos?
+            </p>
+            <p style="margin-top:8px;">
+              Simply navigate to <strong>http://adsorb.local/</strong>, scroll down to <strong>"Bypass Client IP from Ad-Blocking"</strong>, type your TV's IP (e.g. <code>192.168.1.103</code>), and click <strong>Bypass IP</strong>. That specific device immediately receives unfiltered upstream DNS with zero disruption, while every phone and laptop on your Wi-Fi stays 100% ad-blocked! You can unbypass devices at any time with a single red <strong>✕</strong> click or via <code>DELETE /api/bypass</code>.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -2612,7 +2641,7 @@
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            In firmware v1.3.0, Adsorb features a Parallel Race UDP engine with Hardware TRNG randomization and an inbound RFC 8484 DNS-over-HTTPS (DoH) endpoint. When a query is not in the blocklist or the local PSRAM cache, Adsorb queries both Cloudflare (1.1.1.1) and Google (8.8.8.8) concurrently. The fastest response is used and cached. If both fail, Adsorb returns an RFC-compliant SERVFAIL (RCODE 2) rather than NXDOMAIN, preventing client OS caching of erroneous negative results.
+            In firmware v1.3.1, Adsorb features a Parallel Race UDP engine with Hardware TRNG randomization and an inbound RFC 8484 DNS-over-HTTPS (DoH) endpoint. When a query is not in the blocklist or the local PSRAM cache, Adsorb queries both Cloudflare (1.1.1.1) and Google (8.8.8.8) concurrently. The fastest response is used and cached. If both fail, Adsorb returns an RFC-compliant SERVFAIL (RCODE 2) rather than NXDOMAIN, preventing client OS caching of erroneous negative results.
           </div>
         </div>
 
@@ -2670,6 +2699,28 @@
             Adsorb harnesses the ESP32-S3's Xtensa LX7 Processor Instruction Extension (PIE) 128-bit SIMD vector engine to scan wildcard and ad-tracker patterns across dual 64-bit lanes at wire speed. Furthermore, every outbound DNS query is assigned a 16-bit cryptographic Transaction ID generated directly from physical RF receiver thermal noise (esp_random), completely defeating Kaminsky cache poisoning in hardware silicon.
           </div>
         </div>
+
+        <!-- Q9 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Can I bypass ad-blocking for specific smart TVs or streaming boxes (e.g. Jio STB, Apple TV, ZEE5)?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-answer">
+            Yes! Firmware v1.3.1 features Per-Client IP Ad-Blocking Bypass. You can add one or more device IP addresses directly through the live Web Dashboard (<code>http://adsorb.local/</code>) or via the REST API (<code>POST /api/bypass</code>). Bypassed devices receive 100% unfiltered upstream DNS, instantly resolving DRM and video playback errors on sensitive OTT apps (like ZEE5, Hotstar, or SonyLIV) while keeping all other phones, tablets, and computers on your network completely ad-blocked. Bypassed IPs are persisted across reboots in LittleFS and can be unbypassed at any time with a single click.
+          </div>
+        </div>
+
+        <!-- Q10 -->
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Does Adsorb provide a REST API for Home Assistant or automation scripts?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-answer">
+            Yes. Adsorb exposes asynchronous REST endpoints over HTTP on port 80: <code>GET /api/stats</code> returns live telemetry and cache metrics, <code>GET /api/bypass</code>, <code>POST /api/bypass</code>, and <code>DELETE /api/bypass</code> manage device exemptions, and <code>GET/POST/DELETE /api/whitelist</code> and <code>/api/blacklist</code> allow real-time domain rule management. An inbound RFC 8484 DNS-over-HTTPS endpoint (<code>/dns-query</code>) is also available.
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2704,7 +2755,7 @@
   <div id="install-modal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="font-size:1.8rem;">INSTALL ADSORB v1.3.0</h2>
+        <h2 style="font-size:1.8rem;">INSTALL ADSORB v1.3.1</h2>
         <button onclick="closeInstallModal()" style="background:var(--red); color:#FFF; border:2px solid var(--border); padding:4px 10px; font-family:'Archivo Black'; font-size:0.9rem; cursor:pointer;">X</button>
       </div>
       <p style="font-weight:700; color:var(--text-secondary); margin-bottom:14px; font-size:0.9rem;">
@@ -3053,6 +3104,8 @@
           if (cmd === 'help') {
             appendTermLine('Adsorb Kernel Diagnostic Commands:');
             appendTermLine('  status      - hardware registers, frequency, free PSRAM');
+            appendTermLine('  bypass      - per-client IP ad-blocking bypass status');
+            appendTermLine('  api         - asynchronous REST API endpoint catalog');
             appendTermLine('  simd        - Xtensa LX7 128-bit PIE SIMD vector accelerator');
             appendTermLine('  trng        - Hardware TRNG cryptographic transaction randomizer');
             appendTermLine('  mdns        - Zero-config mDNS & captive portal status');
@@ -3070,6 +3123,7 @@
             appendTermLine('SOC: ESP32-S3 (Dual-Core Xtensa LX7 @ 240MHz)', false, 'var(--yellow)');
             appendTermLine('SIMD: Xtensa LX7 128-bit PIE Vector Engine [ACTIVE]');
             appendTermLine('TRNG: Hardware RF Cryptographic Randomizer [ENABLED]');
+            appendTermLine('BYPASS: Per-Client IP OTT Whitelist [ARMED]');
             appendTermLine('mDNS: http://adsorb.local/ (Static IP: 192.168.1.101)');
             appendTermLine('PSRAM: 8MB Octal SPI @ 80MHz (4.88 MB free / 61%)');
             appendTermLine('RULES: 255,042 domain hashes in PSRAM vector (2.04 MB)');
@@ -3078,6 +3132,24 @@
             appendTermLine('DISPLAY: 1.3" OLED (GPIO 8/9, I2C 100kHz) [ARMED]');
             appendTermLine('POWER: 0.58 Watts (116mA @ 5.0V USB)');
             appendTermLine('UPTIME: 24 days, 14 hours, 32 minutes');
+          } else if (cmd === 'bypass') {
+            appendTermLine('[*] PER-CLIENT IP AD-BLOCKING BYPASS (v1.3.1):', false, 'var(--pink)');
+            appendTermLine('  Target Devices: Smart TVs, Jio STB, Apple TV, Fire TV, Game Consoles');
+            appendTermLine('  Behavior: Bypassed client IPs receive unfiltered upstream DNS');
+            appendTermLine('  OTT Compatibility: Seamless playback for ZEE5, Hotstar, SonyLIV');
+            appendTermLine('  Persistence: LittleFS /bypass_ips.txt (survives reboots)');
+            appendTermLine('  REST API: GET /api/bypass, POST /api/bypass, DELETE /api/bypass');
+            appendTermLine('  Dashboard: 1-Click bypass & unbypass controls at http://adsorb.local/');
+          } else if (cmd === 'api') {
+            appendTermLine('[*] ADSORB REST API SPECIFICATION (PORT 80):', false, 'var(--cyan)');
+            appendTermLine('  GET    /api/stats     - Real-time counters, cache & memory metrics');
+            appendTermLine('  GET    /api/bypass    - List exempted client IP addresses');
+            appendTermLine('  POST   /api/bypass    - Exempt client IP {"ip":"192.168.1.103"}');
+            appendTermLine('  DELETE /api/bypass    - Remove client IP exemption');
+            appendTermLine('  GET/POST/DELETE /api/whitelist - Manage custom domain whitelist');
+            appendTermLine('  GET/POST/DELETE /api/blacklist - Manage custom domain blacklist');
+            appendTermLine('  POST   /api/restart   - Graceful ESP32 reboot');
+            appendTermLine('  POST   /dns-query     - RFC 8484 DNS-over-HTTPS (DoH)');
           } else if (cmd === 'simd') {
             appendTermLine('[*] XTENSA LX7 128-BIT PIE SIMD ACCELERATOR:', false, 'var(--yellow)');
             appendTermLine('  Instruction Set: Xtensa PIE (Processor Instruction Extension)');
@@ -3101,7 +3173,7 @@
             appendTermLine('  Captive Endpoints: /generate_204, /hotspot-detect.html, /ncsi.txt');
             appendTermLine('  Redirect Target: http://adsorb.local/');
           } else if (cmd === 'cache') {
-            appendTermLine('[*] PSRAM LRU CACHE METRICS (v1.3.0):', false, 'var(--yellow)');
+            appendTermLine('[*] PSRAM LRU CACHE METRICS (v1.3.1):', false, 'var(--yellow)');
             appendTermLine('  Slots: 2,048 (2-Way Set-Associative)');
             appendTermLine('  Hit Latency: 138 µs (&lt; 0.20 ms)');
             appendTermLine('  Hits: 18,940 | Misses: 1,421 (93.0% hit ratio)');
@@ -3879,7 +3951,7 @@
         const stages = [
           { name: 'Writing Bootloader (0x0000)...', p: 15 },
           { name: 'Writing 16MB Partition Table (0x8000)...', p: 35 },
-          { name: 'Writing Adsorb Core Firmware v1.3.0 (0x10000)...', p: 65 },
+          { name: 'Writing Adsorb Core Firmware v1.3.1 (0x10000)...', p: 65 },
           { name: 'Writing 255,042 Rule LittleFS Vector (0x610000)...', p: 85 },
           { name: isApMode ? 'Setting NVS Config: Fallback AP Mode (192.168.4.1)...' : `Transmitting Wi-Fi Credentials for "${ssid}" to ESP32 NVS...`, p: 95 },
           { name: 'Hardware MD5 Verification OK. Rebooting ESP32-S3...', p: 100 }

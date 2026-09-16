@@ -76,6 +76,9 @@ No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. J
 * **🎨 Neo-Brutalist Live Web Dashboard**  
   Built with raw, asynchronous ESP32 HTTP handling. Features a high-contrast porcelain theme, live real-time query counters, free PSRAM/Heap monitors, instant query inspection, and zero cloud dependencies.
 
+* **📺 Per-Client IP Ad-Blocking Bypass (Zero OTT Disruption)**  
+  Eliminates anti-adblock streaming disruption on temperamental devices (e.g. Jio Set-Top Box, Apple TV, Android TV, Fire TV Sticks) running sensitive OTT apps like ZEE5. Whitelist client device IP addresses directly via the live Web Dashboard or REST API (`/api/bypass`). Bypassed devices receive 100% clean, unfiltered upstream DNS, while every other phone, PC, and smart device on the network remains rigorously protected. Rules persist across reboots in LittleFS (`/bypass_ips.txt`) and can be unbypassed at any time with a single click.
+
 * **🔌 Zero-Maintenance Hardware Footprint**  
   Consumes less than **120 mA (~0.58 Watts)** at 5V. Plug it into any dusty 5V phone charger brick next to your router and forget it exists. Boots and secures the network in under **1.5 seconds**.
 
@@ -123,8 +126,8 @@ Empirical benchmarks verified against live hardware (ESP32-S3 N16R8 @ 240MHz):
 ```text
 Adsorb/
 ├── include/
-│   ├── Blocklist.hpp      # FNV-1a 64-bit PSRAM hash vector & OS whitelist
-│   ├── Config.hpp         # System pins, static IP, network timeouts, upstream mode
+│   ├── Blocklist.hpp      # FNV-1a 64-bit PSRAM hash vector, OS whitelist & per-client IP bypass
+│   ├── Config.hpp         # System pins, static IP, bypass paths, network timeouts, upstream mode
 │   ├── DnsCache.hpp       # Sub-millisecond 2-way Octal PSRAM LRU Cache
 │   ├── DnsServer.hpp      # Dual-stack UDP DNS engine, TRNG randomizer & Parallel Race
 │   ├── EncryptedDns.hpp   # RFC 8484 DNS-over-HTTPS (DoH) engine
@@ -204,6 +207,37 @@ To protect every phone, smart TV, console, and computer in your home automatical
    http://adsorb.local/
    ```
    Enjoy your clean, arrogant, ad-free internet!
+
+### Step 3: Exempt Temperamental Devices (Smart TVs, Jio STB, Apple TV)
+Certain streaming platforms and smart TV applications (such as ZEE5, Hotstar, or SonyLIV on Android TV/Jio STB) enforce strict DRM checks and fail to load streams if ad-tracking or telemetry endpoints are sinkholed.
+
+Adsorb allows you to exempt specific devices from ad-blocking without turning off protection for the rest of your home:
+1. Identify your device's LAN IP address (e.g. `192.168.1.103`).
+2. Open `http://adsorb.local/` and scroll to **Bypass Client IP from Ad-Blocking**.
+3. Enter the IP and click **Bypass IP**.
+4. The device is immediately granted unfiltered upstream DNS resolution, while all other household devices remain completely ad-blocked.
+5. To re-enable ad-blocking on that device at any time, click the red **✕** button next to its IP under **Active Bypassed Devices**.
+
+---
+
+## 📡 REST API Specification
+
+Adsorb exposes a high-performance asynchronous JSON REST API on port 80 for home automation (Home Assistant), telemetry dashboards, and programmatic network control:
+
+| Method | Endpoint | Description | Payload / Response Example |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/stats` | Real-time query counts, cache metrics, free PSRAM/heap & active bypass count | `{"total_queries":1420,"blocked_queries":320,"cache_hits":812,"free_heap":182400,"free_psram":5310000,"uptime_s":3600,"bypass_count":1}` |
+| `GET` | `/api/bypass` | List all client device IP addresses currently exempted from ad-blocking | `["192.168.1.103"]` |
+| `POST` | `/api/bypass` | Exempt a specific client IP from sinkholing (persisted in LittleFS) | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP added to bypass"}` |
+| `DELETE` | `/api/bypass` | Re-enable ad-blocking for a previously bypassed client IP | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP removed from bypass"}` |
+| `GET` | `/api/whitelist` | List custom whitelisted domains | `["workvpn.company.com"]` |
+| `POST` | `/api/whitelist` | Add a domain to the custom whitelist | `{"domain":"workvpn.company.com"}` |
+| `DELETE` | `/api/whitelist` | Remove a domain from the custom whitelist | `{"domain":"workvpn.company.com"}` |
+| `GET` | `/api/blacklist` | List custom blacklisted domains | `["unwanted-tracker.net"]` |
+| `POST` | `/api/blacklist` | Add a domain to the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
+| `DELETE` | `/api/blacklist` | Remove a domain from the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
+| `POST` | `/api/restart` | Gracefully restart the ESP32-S3 hardware | `{"status":"ok","message":"Restarting..."}` |
+| `GET` / `POST` | `/dns-query` | Inbound RFC 8484 DNS-over-HTTPS (DoH) resolution endpoint | Binary wire format or Base64URL |
 
 ---
 
