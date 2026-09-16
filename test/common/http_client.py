@@ -104,3 +104,16 @@ class HttpClient:
         """Remove a domain from custom blacklist."""
         return self.request("DELETE", f"/api/blacklist?domain={urllib.parse.quote(domain)}",
                             body={"domain": domain})
+
+    def get_bypass(self) -> HttpResponse:
+        """Fetch current bypass IP entries."""
+        return self.request("GET", "/api/bypass")
+
+    def add_bypass(self, ip: str) -> HttpResponse:
+        """Add an IP to bypass list."""
+        return self.request("POST", "/api/bypass", body={"ip": ip})
+
+    def delete_bypass(self, ip: str) -> HttpResponse:
+        """Remove an IP from bypass list."""
+        return self.request("DELETE", f"/api/bypass?ip={urllib.parse.quote(ip)}",
+                            body={"ip": ip})

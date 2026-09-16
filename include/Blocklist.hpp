@@ -136,6 +136,7 @@ public:
             RuleLock lock(_ruleMutex);
             _loadSetFile(Config::PATH_CUSTOM_BLACKLIST, _customBlacklist, "custom blacklist");
             _loadSetFile(Config::PATH_CUSTOM_WHITELIST, _whitelist, "whitelist");
+            _loadBypassIpsFile();
 
             // 5. Initialize Dual 64-bit SWAR Parallel Bitwise Accelerator
             _simd.init();
@@ -153,6 +154,7 @@ public:
         Serial.printf("[Blocklist]   Blocked domain rules : %u\n", (unsigned)_blockedHashes.size());
         Serial.printf("[Blocklist]   Custom blacklist     : %u\n", (unsigned)_customBlacklist.size());
         Serial.printf("[Blocklist]   Whitelist domains    : %u\n", (unsigned)_whitelist.size());
+        Serial.printf("[Blocklist]   Bypass IPs           : %u\n", (unsigned)bypassIPCount());
         Serial.printf("[Blocklist]   Load time            : %u ms\n", elapsed);
         Serial.printf("[Blocklist]   PSRAM consumed       : %u bytes (%.2f MB)\n",
                       psramUsed, psramUsed / (1024.0f * 1024.0f));
@@ -346,10 +348,91 @@ public:
     const DomainSet& getCustomBlacklist() const { return _customBlacklist; }
     const VectorWildcardAccelerator& getSimdAccelerator() const { return _simd; }
 
+    bool isIPBypassed(const IPAddress& ip) const {
+        RuleLock lock(_ruleMutex);
+        if (_bypassIPs.empty()) return false;
+        uint32_t val = (uint32_t)ip;
+        for (uint32_t b : _bypassIPs) {
+            if (b == val) return true;
+        }
+        return false;
+    }
+
+    bool isIPBypassed(uint32_t val) const {
+        RuleLock lock(_ruleMutex);
+        if (_bypassIPs.empty()) return false;
+        for (uint32_t b : _bypassIPs) {
+            if (b == val) return true;
+        }
+        return false;
+    }
+
+    bool addBypassIP(const String& rawIp) {
+        String ipStr = rawIp;
+        ipStr.trim();
+        if (ipStr.length() == 0) return false;
+
+        IPAddress ip;
+        if (!ip.fromString(ipStr)) {
+            return false;
+        }
+
+        uint32_t val = (uint32_t)ip;
+        {
+            RuleLock lock(_ruleMutex);
+            for (uint32_t b : _bypassIPs) {
+                if (b == val) return true;
+            }
+            _bypassIPs.push_back(val);
+        }
+        return _appendToFile(Config::PATH_BYPASS_IPS, ip.toString());
+    }
+
+    bool removeBypassIP(const String& rawIp) {
+        String ipStr = rawIp;
+        ipStr.trim();
+        if (ipStr.length() == 0) return false;
+
+        IPAddress ip;
+        if (!ip.fromString(ipStr)) {
+            return false;
+        }
+
+        uint32_t val = (uint32_t)ip;
+        {
+            RuleLock lock(_ruleMutex);
+            auto it = std::find(_bypassIPs.begin(), _bypassIPs.end(), val);
+            if (it != _bypassIPs.end()) {
+                _bypassIPs.erase(it);
+            }
+        }
+        return _rewriteBypassIpsFile();
+    }
+
+    size_t bypassIPCount() const {
+        RuleLock lock(_ruleMutex);
+        return _bypassIPs.size();
+    }
+
+    void getBypassIPsAsJson(String& json) const {
+        RuleLock lock(_ruleMutex);
+        json = "[";
+        bool first = true;
+        for (uint32_t b : _bypassIPs) {
+            if (!first) json += ",";
+            first = false;
+            json += "\"";
+            json += IPAddress(b).toString();
+            json += "\"";
+        }
+        json += "]";
+    }
+
 private:
     HashVector _blockedHashes;
     DomainSet _customBlacklist;
     DomainSet _whitelist;
+    std::vector<uint32_t> _bypassIPs;
     VectorWildcardAccelerator _simd;
     mutable SemaphoreHandle_t _ruleMutex = nullptr;
 
@@ -702,6 +785,51 @@ private:
         }
         for (const auto& d : target) {
             f.println(d.c_str());
+        }
+        f.close();
+        return true;
+    }
+
+    void _loadBypassIpsFile() {
+        if (!LittleFS.exists(Config::PATH_BYPASS_IPS)) {
+            Serial.printf("[Blocklist] File '%s' not found, skipping bypass IPs.\n", Config::PATH_BYPASS_IPS);
+            return;
+        }
+
+        File f = LittleFS.open(Config::PATH_BYPASS_IPS, "r");
+        if (!f) {
+            Serial.printf("[Blocklist] Failed to open '%s'!\n", Config::PATH_BYPASS_IPS);
+            return;
+        }
+
+        size_t count = 0;
+        while (f.available()) {
+            String line = f.readStringUntil('\n');
+            line.trim();
+            if (line.length() == 0 || line.startsWith("#")) continue;
+
+            IPAddress ip;
+            if (ip.fromString(line)) {
+                uint32_t val = (uint32_t)ip;
+                if (std::find(_bypassIPs.begin(), _bypassIPs.end(), val) == _bypassIPs.end()) {
+                    _bypassIPs.push_back(val);
+                    count++;
+                }
+            }
+        }
+        f.close();
+        Serial.printf("[Blocklist] Loaded %u bypass IPs from '%s'.\n", (unsigned)count, Config::PATH_BYPASS_IPS);
+    }
+
+    bool _rewriteBypassIpsFile() {
+        File f = LittleFS.open(Config::PATH_BYPASS_IPS, "w");
+        if (!f) {
+            Serial.printf("[Blocklist] Failed to open '%s' for rewrite!\n", Config::PATH_BYPASS_IPS);
+            return false;
+        }
+        RuleLock lock(_ruleMutex);
+        for (uint32_t b : _bypassIPs) {
+            f.println(IPAddress(b).toString());
         }
         f.close();
         return true;

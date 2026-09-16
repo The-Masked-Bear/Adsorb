@@ -406,3 +406,56 @@ class TestTier1Features(BaseE2ETest):
         # Ensure server immediately serves normal query
         resp = self.dns_query("2mdn.net")
         self.assert_sinkholed(resp, "Server must remain functional after invalid packet")
+
+    # ==================== F16: Per-Client IP Ad-Blocking Bypass ====================
+    def test_t1_f16_01_add_bypass_ip(self):
+        resp = self.http_client.add_bypass("192.168.1.150")
+        self.assert_http_ok(resp)
+        self.assertEqual(resp.json.get("status"), "ok")
+        self.assertEqual(resp.json.get("ip"), "192.168.1.150")
+
+    def test_t1_f16_02_get_bypass_ips(self):
+        resp = self.http_client.get_bypass()
+        self.assert_http_ok(resp)
+        self.assertIsInstance(resp.json, list)
+        self.assertIn("192.168.1.150", resp.json)
+
+    def test_t1_f16_03_stats_reflects_bypass_count(self):
+        resp = self.http_client.get_stats()
+        self.assert_http_ok(resp)
+        self.assertIn("bypass_count", resp.json)
+        self.assertGreaterEqual(resp.json["bypass_count"], 1)
+
+    def test_t1_f16_04_delete_bypass_ip(self):
+        resp = self.http_client.delete_bypass("192.168.1.150")
+        self.assert_http_ok(resp)
+        self.assertEqual(resp.json.get("status"), "ok")
+
+        # Verify removal
+        resp = self.http_client.get_bypass()
+        self.assert_http_ok(resp)
+        self.assertNotIn("192.168.1.150", resp.json)
+
+    def test_t1_f16_05_invalid_ip_rejected(self):
+        resp = self.http_client.add_bypass("not_an_ip")
+        self.assertEqual(resp.status, 400)
+        self.assertIn("error", resp.json)
+
+    def test_t1_f16_06_bypassed_ip_ignores_ad_blocking(self):
+        # 1. 2mdn.net is normally blocked
+        resp1 = self.dns_query("2mdn.net")
+        self.assert_sinkholed(resp1)
+
+        # 2. Add 127.0.0.1 (our test client IP) to bypass list
+        self.http_client.add_bypass("127.0.0.1")
+
+        # 3. Query 2mdn.net again from bypassed IP -> must resolve, NOT sinkhole!
+        resp2 = self.dns_query("2mdn.net")
+        self.assert_resolved_public(resp2)
+
+        # 4. Remove 127.0.0.1 from bypass list
+        self.http_client.delete_bypass("127.0.0.1")
+
+        # 5. Query 2mdn.net again -> must be sinkholed to 0.0.0.0 again!
+        resp3 = self.dns_query("2mdn.net")
+        self.assert_sinkholed(resp3)

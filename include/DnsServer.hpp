@@ -125,8 +125,10 @@ public:
             return true;
         }
 
+        bool isBypassed = _blocklist && _blocklist->isIPBypassed(clientIP);
+
         // 1. Check for DoH canary domain (Mozilla RFC specification: return NXDOMAIN to auto-disable DoH)
-        if (_isDohCanary(domain)) {
+        if (!isBypassed && _isDohCanary(domain)) {
             blockedQueries++;
             totalQueries++;
             _sendNxDomainResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd);
@@ -135,7 +137,7 @@ public:
         }
 
         // 2. Check for DoH resolver bootstrap domains (return NXDOMAIN to force Chrome/Edge auto-fallback to UDP 53)
-        if (_isDohResolver(domain)) {
+        if (!isBypassed && _isDohResolver(domain)) {
             blockedQueries++;
             totalQueries++;
             _sendNxDomainResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd);
@@ -144,7 +146,7 @@ public:
         }
 
         totalQueries++;
-        bool blocked = _blocklist->isBlocked(domain);
+        bool blocked = !isBypassed && _blocklist->isBlocked(domain);
 
         if (blocked) {
             blockedQueries++;
@@ -213,7 +215,8 @@ public:
         }
 
         totalQueries++;
-        bool blocked = _blocklist->isBlocked(domain);
+        bool isBypassed = _blocklist && _blocklist->isIPBypassed(clientIP);
+        bool blocked = !isBypassed && _blocklist->isBlocked(domain);
 
         if (blocked) {
             blockedQueries++;

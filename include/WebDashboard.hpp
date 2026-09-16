@@ -39,6 +39,9 @@ public:
         _server.on("/api/blacklist", HTTP_GET, [this]() { _handleGetBlacklist(); });
         _server.on("/api/blacklist", HTTP_POST, [this]() { _handlePostBlacklist(); });
         _server.on("/api/blacklist", HTTP_DELETE, [this]() { _handleDeleteBlacklist(); });
+        _server.on("/api/bypass", HTTP_GET, [this]() { _handleGetBypass(); });
+        _server.on("/api/bypass", HTTP_POST, [this]() { _handlePostBypass(); });
+        _server.on("/api/bypass", HTTP_DELETE, [this]() { _handleDeleteBypass(); });
 
         // RFC 8484 DNS-over-HTTPS (DoH) Inbound Endpoints (POST & GET)
         _server.on(Config::PATH_DOH_ENDPOINT, HTTP_POST, [this]() { _handleDohPost(); }, [this]() { _handleDohRaw(); });
@@ -583,7 +586,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 /* Forms Grid */
 .forms-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -616,6 +619,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 .btn-action:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--shadow); }
 .btn-action.green { background: var(--c-mint); color: #121212; }
 .btn-action.red { background: var(--c-coral); color: #121212; }
+.btn-action.blue { background: var(--c-blue); color: #121212; }
 
 /* Modal */
 .modal-overlay {
@@ -817,11 +821,21 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         <button type="submit" class="btn-action red">BANISH FOREVER</button>
       </form>
     </div>
+
+    <div class="neo-card form-card" style="background: #eff6ff;">
+      <h3 style="color: #121212;"><span>&#x1F680;</span> BYPASS CLIENT IP (ZERO BLOCKING)</h3>
+      <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Completely bypass ad-blocking for specific device IPs (e.g. Jio STB, Smart TV).</p>
+      <form class="form-row" id="form-bypass" action="/api/bypass" method="POST">
+        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
+        <input type="text" name="ip" placeholder="e.g. 192.168.1.150" required>
+        <button type="submit" class="btn-action blue">BYPASS DEVICE</button>
+      </form>
+    </div>
   </section>
 
   <!-- FOOTER WITH HARDWARE SWAGGER -->
   <footer class="footer" id="footer-trigger" title="Double click to reveal hardware supremacy!">
-    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED &bull; API Key: <code style="user-select: all; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">%ADMIN_API_KEY%</code>
+    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED &bull; API Key: <code id="footer-api-key" style="user-select: all; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">%ADMIN_API_KEY%</code>
   </footer>
 
 </div>
@@ -855,6 +869,11 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 const ADMIN_API_KEY = ")rawhtml";
 
         static const char DASHBOARD_HTML_TAIL[] PROGMEM = R"rawhtml(";
+
+// Auto-populate active admin key in all forms and footer
+document.querySelectorAll('input[name="key"]').forEach(el => el.value = ADMIN_API_KEY);
+const elFooterKey = document.getElementById('footer-api-key');
+if (elFooterKey) elFooterKey.textContent = ADMIN_API_KEY;
 
 // --- Web Audio Synthesizer (8-bit sound fx) ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1241,22 +1260,22 @@ if (cryingCardEl) {
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
                  "\"uptime\":%u,"
                  "\"blocklist_count\":%u,\"blocklist_size\":%u,"
-                 "\"whitelist_count\":%u,\"whitelist_size\":%u,"
-                 "\"blacklist_count\":%u,"
-                 "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
-                 "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
-                 "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
-                 "\"encrypted\":true,\"tls_version\":\"TLS 1.3\","
-                 "\"http_dns_endpoint\":\"/dns-query\",\"doh_endpoint\":\"/dns-query\",\"doh_tls_verified\":true,"
-                 "\"malformed_queries\":%u,\"parse_failures\":%u,\"upstream_timeouts\":%u,\"upstream_validation_errors\":%u,"
-                 "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
-                 total, blocked, rate, rate,
-                 freeHeap, freeHeap, freePsram, freePsram,
-                 uptime,
-                 (unsigned)_blocklist->blockedCount(), (unsigned)_blocklist->blockedCount(),
-                 (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
-                 (unsigned)_blocklist->customBlacklistCount(),
-                 cacheHits, cacheMisses, cacheEntries, cacheRate,
+                  "\"whitelist_count\":%u,\"whitelist_size\":%u,"
+                  "\"blacklist_count\":%u,\"bypass_count\":%u,"
+                  "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
+                  "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
+                  "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
+                  "\"encrypted\":true,\"tls_version\":\"TLS 1.3\","
+                  "\"http_dns_endpoint\":\"/dns-query\",\"doh_endpoint\":\"/dns-query\",\"doh_tls_verified\":true,"
+                  "\"malformed_queries\":%u,\"parse_failures\":%u,\"upstream_timeouts\":%u,\"upstream_validation_errors\":%u,"
+                  "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
+                  total, blocked, rate, rate,
+                  freeHeap, freeHeap, freePsram, freePsram,
+                  uptime,
+                  (unsigned)_blocklist->blockedCount(), (unsigned)_blocklist->blockedCount(),
+                  (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
+                  (unsigned)_blocklist->customBlacklistCount(), (unsigned)_blocklist->bypassIPCount(),
+                  cacheHits, cacheMisses, cacheEntries, cacheRate,
                  (unsigned)_blocklist->simdPatternCount(),
                  _dns->getMalformedQueries(), _dns->getParseFailures(),
                  _dns->getUpstreamTimeouts(), _dns->getUpstreamValidationErrors(),
@@ -1477,6 +1496,120 @@ if (cryingCardEl) {
         _blocklist->removeFromBlacklist(domain);
         String resp = "{\"status\":\"ok\",\"domain\":\"" + domain + "\"}";
         _server.send(200, "application/json", resp);
+    }
+
+    // -----------------------------------------------------------------------
+    // GET /api/bypass
+    // -----------------------------------------------------------------------
+    void _handleGetBypass() {
+        _addSecurityHeaders();
+        String json;
+        _blocklist->getBypassIPsAsJson(json);
+        _server.send(200, "application/json", json);
+    }
+
+    // -----------------------------------------------------------------------
+    // POST /api/bypass
+    // -----------------------------------------------------------------------
+    void _handlePostBypass() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
+        if (_server.hasArg("ip") && !_server.hasArg("plain")) {
+            String ip = _server.arg("ip");
+            ip.trim();
+            if (ip.length() > 0) {
+                _blocklist->addBypassIP(ip);
+            }
+            _server.sendHeader("Location", "/");
+            _server.send(303, "text/plain", "Redirecting...");
+            return;
+        }
+
+        String body = _server.arg("plain");
+        String ip;
+        if (!_extractIpFromJson(body, ip)) {
+            _server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+            return;
+        }
+
+        ip.trim();
+        if (ip.length() == 0) {
+            _server.send(400, "application/json", "{\"error\":\"IP address required\"}");
+            return;
+        }
+
+        if (!_blocklist->addBypassIP(ip)) {
+            _server.send(400, "application/json", "{\"error\":\"Invalid IP address\"}");
+            return;
+        }
+        String resp = "{\"status\":\"ok\",\"ip\":\"" + ip + "\"}";
+        _server.send(200, "application/json", resp);
+    }
+
+    // -----------------------------------------------------------------------
+    // DELETE /api/bypass
+    // -----------------------------------------------------------------------
+    void _handleDeleteBypass() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+
+        String ip;
+        if (_server.hasArg("ip")) {
+            ip = _server.arg("ip");
+        } else if (_server.hasArg("plain")) {
+            _extractIpFromJson(_server.arg("plain"), ip);
+        }
+
+        ip.trim();
+        _blocklist->removeBypassIP(ip);
+        String resp = "{\"status\":\"ok\",\"ip\":\"" + ip + "\"}";
+        _server.send(200, "application/json", resp);
+    }
+
+    static bool _extractIpFromJson(const String& body, String& outIp) {
+        if (_extractJsonKeyValue(body, "\"ip\"", outIp)) return true;
+        if (_extractJsonKeyValue(body, "\"ip_address\"", outIp)) return true;
+        if (_extractJsonKeyValue(body, "\"client_ip\"", outIp)) return true;
+        return false;
+    }
+
+    static bool _extractJsonKeyValue(const String& body, const char* key, String& outVal) {
+        const char* p = body.c_str();
+        size_t len = body.length();
+        if (len < 6) return false;
+
+        const char* kpos = strstr(p, key);
+        while (kpos) {
+            const char* check = kpos - 1;
+            while (check >= p && ((unsigned char)*check <= ' ' || *check == 127)) check--;
+            if (check >= p && (*check == '{' || *check == ',')) break;
+            kpos = strstr(kpos + strlen(key), key);
+        }
+        if (!kpos) return false;
+
+        const char* cur = kpos + strlen(key);
+        while (*cur && ((unsigned char)*cur <= ' ' || *cur == 127)) cur++;
+        if (*cur != ':') return false;
+        cur++;
+        while (*cur && ((unsigned char)*cur <= ' ' || *cur == 127)) cur++;
+        if (*cur != '\"') return false;
+        cur++;
+
+        outVal = "";
+        outVal.reserve(32);
+        while (*cur && *cur != '\"') {
+            outVal += *cur;
+            cur++;
+        }
+        if (*cur != '\"') return false;
+        return true;
     }
 
     // -----------------------------------------------------------------------

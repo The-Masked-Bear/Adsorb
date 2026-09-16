@@ -63,6 +63,7 @@ constexpr const char* PATH_ADS_DOMAINS_2     = "/ad-domains2.0.txt";
 constexpr const char* PATH_ADS_DOMAINS_2_ALT = "/ad-domains2.0";
 constexpr const char* PATH_CUSTOM_WHITELIST  = "/custom_whitelist.txt";
 constexpr const char* PATH_CUSTOM_BLACKLIST  = "/custom_blacklist.txt";
+constexpr const char* PATH_BYPASS_IPS        = "/bypass_ips.txt";
 
 // Task & Multi-Core FreeRTOS Configuration
 constexpr BaseType_t  CORE_SYSTEM_WEB  = 0; // Core 0: Wi-Fi, Web Server, LittleFS, System

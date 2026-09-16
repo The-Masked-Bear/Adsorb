@@ -44,6 +44,7 @@ class MockFirmwareServer:
         self.blocklist: Set[str] = set()
         self.custom_whitelist: Set[str] = set()
         self.custom_blacklist: Set[str] = set()
+        self.bypass_ips: Set[str] = set()
 
         # 1,000 entry PSRAM Ring Buffer
         self.ring_buffer = deque(maxlen=1000)
@@ -132,10 +133,11 @@ class MockFirmwareServer:
                 return True
         return False
 
-    def is_domain_blocked(self, domain: str) -> bool:
+    def is_domain_blocked(self, domain: str, client_ip: Optional[str] = None) -> bool:
         """
         Progressive Subdomain Matcher:
-        0. Check essential system whitelist (OS connectivity, Zee5, Jio STB, etc.)
+        0. Check client IP bypass list (ignores all ad blocking for bypassed IPs)
+        0b. Check essential system whitelist (OS connectivity, Zee5, Jio STB, etc.)
         1. Check whitelist override (e.g. safe.2mdn.net or 2mdn.net).
         2. Check custom blacklist.
         3. Check system blocklist.
@@ -143,6 +145,11 @@ class MockFirmwareServer:
         domain = domain.lower().strip(".")
         if not domain:
             return False
+
+        if client_ip:
+            with self.lock:
+                if client_ip in self.bypass_ips:
+                    return False
 
         if self._is_essential_system_domain(domain):
             return False
@@ -261,7 +268,7 @@ class MockFirmwareServer:
         qtype, qclass = struct.unpack("!HH", data[offset:offset+4])
         question_section = data[12:offset+4]
 
-        blocked = self.is_domain_blocked(domain)
+        blocked = self.is_domain_blocked(domain, client_ip)
 
         if blocked and qtype == 1:  # Type A (IPv4)
             # Synthesize 0.0.0.0 A-record answer with TTL=300
@@ -398,7 +405,8 @@ class MockFirmwareServer:
                             "uptime": int(time.time() - server_instance.start_time),
                             "blocklist_count": len(server_instance.blocklist),
                             "whitelist_count": len(server_instance.custom_whitelist),
-                            "blacklist_count": len(server_instance.custom_blacklist)
+                            "blacklist_count": len(server_instance.custom_blacklist),
+                            "bypass_count": len(server_instance.bypass_ips)
                         }
                     self._send_json(200, data)
 
@@ -416,6 +424,11 @@ class MockFirmwareServer:
                     with server_instance.lock:
                         bl = sorted(list(server_instance.custom_blacklist))
                     self._send_json(200, bl)
+
+                elif path == "/api/bypass":
+                    with server_instance.lock:
+                        byp = sorted(list(server_instance.bypass_ips))
+                    self._send_json(200, byp)
 
                 else:
                     self.send_response(404)
@@ -448,6 +461,23 @@ class MockFirmwareServer:
                         server_instance.custom_blacklist.add(domain)
                     self._send_json(200, {"status": "ok", "domain": domain})
 
+                elif path == "/api/bypass":
+                    ip = data.get("ip", "") or data.get("ip_address", "") or data.get("client_ip", "")
+                    ip = ip.strip()
+                    if not ip:
+                        self._send_json(400, {"error": "IP address required"})
+                        return
+                    try:
+                        socket.inet_aton(ip)
+                        if len(ip.split(".")) != 4:
+                            raise ValueError()
+                    except Exception:
+                        self._send_json(400, {"error": "Invalid IP address"})
+                        return
+                    with server_instance.lock:
+                        server_instance.bypass_ips.add(ip)
+                    self._send_json(200, {"status": "ok", "ip": ip})
+
                 else:
                     self.send_response(404)
                     self.end_headers()
@@ -476,6 +506,22 @@ class MockFirmwareServer:
                     with server_instance.lock:
                         server_instance.custom_blacklist.discard(domain)
                     self._send_json(200, {"status": "ok", "domain": domain})
+
+                elif path == "/api/bypass":
+                    ip = ""
+                    if "ip" in query_params:
+                        ip = query_params["ip"][0].strip()
+                    elif "ip_address" in query_params:
+                        ip = query_params["ip_address"][0].strip()
+                    else:
+                        try:
+                            data = self._read_json()
+                            ip = (data.get("ip", "") or data.get("ip_address", "") or data.get("client_ip", "")).strip()
+                        except Exception:
+                            pass
+                    with server_instance.lock:
+                        server_instance.bypass_ips.discard(ip)
+                    self._send_json(200, {"status": "ok", "ip": ip})
 
                 else:
                     self.send_response(404)
