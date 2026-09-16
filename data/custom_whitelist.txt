@@ -1,1 +1,13 @@
 # Custom Whitelist - one domain per line
+zee5.com
+spott.tv
+z5.app.link
+conviva.com
+zee5vod.akamaized.net
+zee5vodhls.akamaized.net
+zee5vodenc.akamaized.net
+jio.com
+jiofiber.com
+jiocinema.com
+jiotv.com
+jio.co

@@ -923,7 +923,6 @@ cdn.luckyorange.com
 4761.api.swrve.com
 4768.api.swrve.com
 4768.content.swrve.com
-47e224be59415ec068b94bca857581bd7dde7fb6.cws.conviva.com
 480.zaloapp.ads.zdn.vn
 487213.lol
 488lm.fg6hfa.sbs
@@ -1303,7 +1302,6 @@ cdn.luckyorange.com
 8756352.lat
 8786452.icu
 879.stats.misstrends.com
-87a6b28bc7823e67a5bb2a0a6728c702afcae78d.cws.conviva.com
 87w.info
 883zy.com
 885815212.lat
@@ -1771,7 +1769,6 @@ a546.casalemedia.com
 a547.casalemedia.com
 a556.casalemedia.com
 a64lmglobal.112.2o7.net
-a6709203f34992a5095d2bc7ceaf2ec504f651a8.cws.conviva.com
 a7cab891c5.nxcli.io
 a7cleaner.com
 a8.net
@@ -15349,7 +15346,6 @@ convertingtraffic.com
 convertro.com
 convertwordtoexcel.com
 convhkmp.taboola.com
-conviva.com
 convlatbmp.taboola.com
 convnjmp.basebanner.com
 convnjmp.taboola.com
@@ -16220,15 +16216,6 @@ cwnetworkmparticle.112.2o7.net
 cwportal.112.2o7.net
 cwre1t0kenofficial.com
 cwre1token.net
-cws-eu.conviva.com
-cws-hotstar.conviva.com
-cws-hulu.conviva.com
-cws-iad1.conviva.com
-cws-iad4.conviva.com
-cws-sjc2.conviva.com
-cws-us-east.conviva.com
-cws-usw2.conviva.com
-cws.conviva.com
 cx.atdmt.com
 cx.foresee.com
 cx.ssacdn.com
@@ -18614,7 +18601,6 @@ eeude.comfortykive.xyz
 ef25c895.pinme.dev
 efanguide.us.intellitxt.com
 efashionsolutions.122.2o7.net
-efcad85fded269f462c434c4c5f84654a17d4a77.cws.conviva.com
 efcortterm.site
 efective.mom
 effectenria.net
@@ -27035,7 +27021,6 @@ ips-invite.iperceptions.com
 ipstack.com
 iptv-rocket.pro
 ipumu.earthgreen.com.co
-ipv4.cws.conviva.com
 ipv6-wildcard.applovin.com.edgekey.net
 ipv6.adrta.com
 ipvnewbillscurenewappaergiaerogvakrmob.cddo.cc
@@ -37564,7 +37549,6 @@ pingjs.qq.com
 pingma.qq.com
 pingomatic.com
 pings.blip.tv
-pings.conviva.com
 pingtcss.qq.com
 pingu.business
 pingu.ltd
@@ -52385,7 +52369,6 @@ vrenkapstead.live
 vrhulagmir.click
 vrijkapithof.net
 vrijvermoganova.com
-vrl.m.conviva.com
 vrochonfal.online
 vroku-bis-1.vidazoo.com
 vrs.cz

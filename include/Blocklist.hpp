@@ -187,7 +187,21 @@ public:
             "time.google.com",
             "time.android.com",
             "push.apple.com",
-            "identity.apple.com"
+            "identity.apple.com",
+            // Zee5 OTT Streaming & Media Players
+            "zee5.com",
+            "spott.tv",
+            "z5.app.link",
+            "conviva.com",
+            "zee5vod.akamaized.net",
+            "zee5vodhls.akamaized.net",
+            "zee5vodenc.akamaized.net",
+            // Jio Platform & Set-Top Box Services
+            "jio.com",
+            "jiofiber.com",
+            "jiocinema.com",
+            "jiotv.com",
+            "jio.co"
         };
         for (const char* sysDomain : SYSTEM_WHITELIST) {
             size_t sysLen = strlen(sysDomain);

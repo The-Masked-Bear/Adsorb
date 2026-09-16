@@ -79,7 +79,9 @@ class MockFirmwareServer:
             ])
 
         # Also load user-provided ad-domains2.0
-        v2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ad-domains2.0.txt")
+        v2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "ad-domains2.0.txt")
+        if not os.path.exists(v2_path):
+            v2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ad-domains2.0.txt")
         if os.path.exists(v2_path):
             with open(v2_path, "r", encoding="utf-8", errors="ignore") as f:
                 for line in f:
@@ -87,15 +89,62 @@ class MockFirmwareServer:
                     if line and not line.startswith("#"):
                         self.blocklist.add(line)
 
+    @staticmethod
+    def _is_essential_system_domain(domain: str) -> bool:
+        system_whitelist = [
+            "connectivitycheck.gstatic.com",
+            "connectivitycheck.android.com",
+            "clients3.google.com",
+            "clients1.google.com",
+            "captive.apple.com",
+            "msftconnecttest.com",
+            "msftncsi.com",
+            "ipv6.msftncsi.com",
+            "firebaseinstallations.googleapis.com",
+            "fcm.googleapis.com",
+            "fcmtoken.googleapis.com",
+            "android.clients.google.com",
+            "play.googleapis.com",
+            "gvt1.com",
+            "time.windows.com",
+            "time.apple.com",
+            "time.google.com",
+            "time.android.com",
+            "push.apple.com",
+            "identity.apple.com",
+            # Zee5 OTT Streaming & Media Players
+            "zee5.com",
+            "spott.tv",
+            "z5.app.link",
+            "conviva.com",
+            "zee5vod.akamaized.net",
+            "zee5vodhls.akamaized.net",
+            "zee5vodenc.akamaized.net",
+            # Jio Platform & Set-Top Box Services
+            "jio.com",
+            "jiofiber.com",
+            "jiocinema.com",
+            "jiotv.com",
+            "jio.co"
+        ]
+        for sys_domain in system_whitelist:
+            if domain == sys_domain or domain.endswith("." + sys_domain):
+                return True
+        return False
+
     def is_domain_blocked(self, domain: str) -> bool:
         """
         Progressive Subdomain Matcher:
+        0. Check essential system whitelist (OS connectivity, Zee5, Jio STB, etc.)
         1. Check whitelist override (e.g. safe.2mdn.net or 2mdn.net).
         2. Check custom blacklist.
         3. Check system blocklist.
         """
         domain = domain.lower().strip(".")
         if not domain:
+            return False
+
+        if self._is_essential_system_domain(domain):
             return False
 
         labels = domain.split(".")
