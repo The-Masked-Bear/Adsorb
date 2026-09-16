@@ -825,11 +825,15 @@ tr:hover td { background: rgba(0,0,0,0.02); }
     <div class="neo-card form-card" style="background: #eff6ff;">
       <h3 style="color: #121212;"><span>&#x1F680;</span> BYPASS CLIENT IP (ZERO BLOCKING)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Completely bypass ad-blocking for specific device IPs (e.g. Jio STB, Smart TV).</p>
-      <form class="form-row" id="form-bypass" action="/api/bypass" method="POST">
+      <form class="form-row" id="form-bypass" action="/api/bypass" method="POST" style="margin-bottom: 10px;">
         <input type="hidden" name="key" value="%ADMIN_API_KEY%">
         <input type="text" name="ip" placeholder="e.g. 192.168.1.150" required>
         <button type="submit" class="btn-action blue">BYPASS DEVICE</button>
       </form>
+      <div id="bypass-list-wrap" style="margin-top: 10px; border-top: 1px dashed rgba(0,0,0,0.15); padding-top: 8px;">
+        <div style="font-size: 0.72em; font-weight: 800; text-transform: uppercase; opacity: 0.7; margin-bottom: 6px;">Active Bypassed Devices:</div>
+        <div id="bypass-list" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+      </div>
     </div>
   </section>
 
@@ -977,7 +981,37 @@ async function updateTelemetry() {
       currentLog = await resQueries.json();
       renderTable();
     }
+
+    // 3. Fetch live bypass list
+    const resBypass = await fetch('/api/bypass');
+    if (resBypass.ok) {
+      const ips = await resBypass.json();
+      const listEl = document.getElementById('bypass-list');
+      if (listEl) {
+        if (!ips || ips.length === 0) {
+          listEl.innerHTML = '<span style="font-size: 0.78em; opacity: 0.6; font-style: italic;">No devices currently bypassed</span>';
+        } else {
+          listEl.innerHTML = ips.map(ip => `
+            <span style="background: #ffffff; border: 1.5px solid var(--border); border-radius: 6px; padding: 3px 8px; font-family: 'Space Mono', monospace; font-size: 0.78em; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; box-shadow: 1.5px 1.5px 0 var(--shadow);">
+              ${ip}
+              <button onclick="unbypassIp('${ip}')" style="background: #ef4444; color: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; cursor: pointer; font-weight: 900; font-size: 11px; line-height: 1.2;" title="Unbypass device">✕</button>
+            </span>
+          `).join('');
+        }
+      }
+    }
   } catch(e) {}
+}
+
+async function unbypassIp(ip) {
+  if (!confirm(`Remove ${ip} from bypass list and re-enable ad blocking?`)) return;
+  sfxClick();
+  await fetch('/api/bypass?ip=' + encodeURIComponent(ip), {
+    method: 'DELETE',
+    headers: {'X-API-Key': ADMIN_API_KEY}
+  });
+  sfxBlocked();
+  updateTelemetry();
 }
 
 function renderTable() {
