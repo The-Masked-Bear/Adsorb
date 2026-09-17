@@ -100,6 +100,8 @@ public:
         }
     }
 
+    // 64-bit FNV-1a non-cryptographic hash fingerprint.
+    // Provides ultra-compact, high-speed 64-bit indexing with negligible collision probability across ~255k domains.
     static inline uint64_t hash64(const char* s, size_t len) {
         uint64_t hash = 14695981039346656037ULL;
         for (size_t i = 0; i < len; ++i) {
@@ -246,13 +248,13 @@ public:
             return true;
         }
 
-        // 4. Xtensa LX7 128-bit Vector SIMD (PIE) Wildcard Rule Accelerator
+        // 4. Dual 64-bit SWAR Parallel Bitwise Wildcard Rule Accelerator
         if (_simd.matchesAny(domain.c_str(), domain.length())) {
             return true;
         }
 
-        // 5. Arrogant Heuristic & Keyword matching (annihilate unlisted ad/telemetry subdomains)
-        if (_matchHeuristics(domain)) {
+        // 5. Optional Heuristic Matching (disabled by default to protect first-party services)
+        if (Config::ENABLE_HEURISTIC_BLOCKING && _matchHeuristics(domain)) {
             return true;
         }
 
@@ -468,14 +470,16 @@ private:
     }
 
     bool _matchHeuristics(const PsramString& domain) const {
+        if (!Config::ENABLE_HEURISTIC_BLOCKING) {
+            return false;
+        }
+
         static const char* const AD_PREFIXES[] = {
             "pagead2.",
             "adservice.",
             "adservices.",
             "adserver.",
             "adservers.",
-            "telemetry.",
-            "analytics.",
             "criteo.",
             "taboola.",
             "outbrain.",
@@ -491,11 +495,7 @@ private:
             "casalemedia.",
             "scorecardresearch.",
             "quantserve.",
-            "app-measurement.",
             "mobile-analytics.",
-            "adsystem.",
-            "sentry-cdn.",
-            "bugsnag.",
             "freshmarketer.",
             "luckyorange.",
             "mouseflow.",

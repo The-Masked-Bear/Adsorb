@@ -42,6 +42,7 @@ public:
         _server.on("/api/bypass", HTTP_GET, [this]() { _handleGetBypass(); });
         _server.on("/api/bypass", HTTP_POST, [this]() { _handlePostBypass(); });
         _server.on("/api/bypass", HTTP_DELETE, [this]() { _handleDeleteBypass(); });
+        _server.on("/api/restart", HTTP_POST, [this]() { _handlePostRestart(); });
 
         // RFC 8484 DNS-over-HTTPS (DoH) Inbound Endpoints (POST & GET)
         _server.on(Config::PATH_DOH_ENDPOINT, HTTP_POST, [this]() { _handleDohPost(); }, [this]() { _handleDohRaw(); });
@@ -115,7 +116,7 @@ private:
                 f.close();
             }
         }
-        Serial.printf("[Security] Admin API Key active: %s\n", _adminApiKey.c_str());
+        Serial.println("[Security] Admin API Key active in /admin_key.txt.");
     }
 
     bool _isAuthorized() {
@@ -248,6 +249,34 @@ private:
         return String(buf);
     }
 
+    static String _escapeJsonString(const char* s) {
+        if (!s) return "";
+        String out;
+        out.reserve(strlen(s) + 8);
+        for (size_t i = 0; s[i] != '\0'; i++) {
+            char c = s[i];
+            switch (c) {
+                case '\"': out += "\\\""; break;
+                case '\\': out += "\\\\"; break;
+                case '\b': out += "\\b"; break;
+                case '\f': out += "\\f"; break;
+                case '\n': out += "\\n"; break;
+                case '\r': out += "\\r"; break;
+                case '\t': out += "\\t"; break;
+                default:
+                    if ((unsigned char)c < 0x20) {
+                        char buf[8];
+                        snprintf(buf, sizeof(buf), "\\u%04x", (unsigned char)c);
+                        out += buf;
+                    } else {
+                        out += c;
+                    }
+                    break;
+            }
+        }
+        return out;
+    }
+
     // -----------------------------------------------------------------------
     // GET /api/test?domain=... — Real-Time Interactive Test Tool
     // -----------------------------------------------------------------------
@@ -261,10 +290,8 @@ private:
         domain.trim();
         bool blocked = _blocklist->isBlocked(domain);
 
-        char json[256];
-        snprintf(json, sizeof(json),
-                 "{\"domain\":\"%s\",\"blocked\":%s,\"sinkhole_ip\":\"0.0.0.0\"}",
-                 domain.c_str(), blocked ? "true" : "false");
+        String escapedDomain = _escapeJsonString(domain.c_str());
+        String json = "{\"domain\":\"" + escapedDomain + "\",\"blocked\":" + (blocked ? "true" : "false") + ",\"sinkhole_ip\":\"0.0.0.0\"}";
         _server.send(200, "application/json", json);
     }
 
@@ -274,11 +301,11 @@ private:
     void _handleRoot() {
         _addSecurityHeaders();
         if (_server.method() == HTTP_HEAD) {
-            _server.sendHeader("Content-Length", "35000");
+            _server.setContentLength(CONTENT_LENGTH_UNKNOWN);
             _server.send(200, "text/html", "");
             return;
         }
-        static const char DASHBOARD_HTML_HEAD[] PROGMEM = R"rawhtml(<!DOCTYPE html>
+        static const char DASHBOARD_HTML[] PROGMEM = R"rawhtml(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -752,20 +779,20 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
     <div class="neo-card stat-card mint clickable" id="card-bandwidth" title="Megabytes of surveillance scripts prevented from clogging your pipes">
       <div class="stat-head">
-        <span class="stat-pill">BANDWIDTH SAVED</span>
+        <span class="stat-pill">BANDWIDTH SAVED (EST.)</span>
         <span>&#x1F680;</span>
       </div>
       <div class="stat-number" id="val-bandwidth">0.0 MB</div>
-      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Bloated ad bloatware evicted</div>
+      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Estimated (avg 148KB / ad blocked)</div>
     </div>
 
     <div class="neo-card stat-card lavender clickable" id="card-crying" title="Directly correlated with ad executive quarterly bonus deductions">
       <div class="stat-head">
-        <span class="stat-pill">CRYING AD EXECUTIVES</span>
+        <span class="stat-pill">CRYING AD EXECS (EST.)</span>
         <span>&#x1F62D;</span>
       </div>
       <div class="stat-number" id="val-crying">0</div>
-      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Tears collected: 100% pure organic sodium</div>
+      <div style="font-size: 0.72em; font-weight: 800; margin-top: 6px; opacity: 0.75;">Estimated fun metric: tears collected</div>
     </div>
   </section>
 
@@ -806,7 +833,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <h3 style="color: #121212;"><span>&#x1F54A;</span> PARDON DOMAIN (WHITELIST)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Grant mercy to a false positive if you truly trust it.</p>
       <form class="form-row" id="form-whitelist" action="/api/whitelist" method="POST">
-        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
+        <input type="hidden" name="key" value="">
         <input type="text" name="domain" placeholder="e.g. allowed-site.com" required>
         <button type="submit" class="btn-action green">GRANT MERCY</button>
       </form>
@@ -816,7 +843,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <h3 style="color: #121212;"><span>&#x26A1;</span> BANISH DOMAIN (CUSTOM BLACKLIST)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Target a specific rogue tracker for unconditional eradication.</p>
       <form class="form-row" id="form-blacklist" action="/api/blacklist" method="POST">
-        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
+        <input type="hidden" name="key" value="">
         <input type="text" name="domain" placeholder="e.g. annoying-tracker.com" required>
         <button type="submit" class="btn-action red">BANISH FOREVER</button>
       </form>
@@ -826,7 +853,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
       <h3 style="color: #121212;"><span>&#x1F680;</span> BYPASS CLIENT IP (ZERO BLOCKING)</h3>
       <p style="font-size: 0.75em; font-weight: 700; margin-bottom: 8px; opacity: 0.7;">Completely bypass ad-blocking for specific device IPs (e.g. Jio STB, Smart TV).</p>
       <form class="form-row" id="form-bypass" action="/api/bypass" method="POST" style="margin-bottom: 10px;">
-        <input type="hidden" name="key" value="%ADMIN_API_KEY%">
+        <input type="hidden" name="key" value="">
         <input type="text" name="ip" placeholder="e.g. 192.168.1.150" required>
         <button type="submit" class="btn-action blue">BYPASS DEVICE</button>
       </form>
@@ -839,7 +866,7 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
   <!-- FOOTER WITH HARDWARE SWAGGER -->
   <footer class="footer" id="footer-trigger" title="Double click to reveal hardware supremacy!">
-    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v2.0-ENCRYPTED &bull; API Key: <code id="footer-api-key" style="user-select: all; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;">%ADMIN_API_KEY%</code>
+    <strong>ESP32-S3 N16R8</strong> &bull; FreeRTOS Dual-Core &bull; "Zero Ads Allowed. Deal With It." &bull; RFC 8484 DoH TLS 1.3 &bull; Adsorb v1.3.1 &bull; API Key: <code id="footer-api-key" style="cursor: pointer; user-select: all; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: 700;" onclick="promptApiKey()" title="Click to authenticate or set API key">🔒 ADMIN LOCKED (Click to enter key)</code>
   </footer>
 
 </div>
@@ -870,14 +897,57 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 
 <!-- CLIENT JAVASCRIPT: SOUND FX, REAL-TIME POLLING, AND EASTER EGGS -->
 <script>
-const ADMIN_API_KEY = ")rawhtml";
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
-        static const char DASHBOARD_HTML_TAIL[] PROGMEM = R"rawhtml(";
+// Admin API Key Management (B-03)
+let adminApiKey = localStorage.getItem('adsorb_api_key') || '';
+function updateAuthUI() {
+  const elFooterKey = document.getElementById('footer-api-key');
+  if (elFooterKey) {
+    if (adminApiKey) {
+      elFooterKey.textContent = '🔓 ADMIN KEY SET (Click to change)';
+      elFooterKey.style.background = '#86efac';
+    } else {
+      elFooterKey.textContent = '🔒 ADMIN LOCKED (Click to enter key)';
+      elFooterKey.style.background = '#e5e7eb';
+    }
+  }
+  document.querySelectorAll('input[name="key"]').forEach(el => el.value = adminApiKey);
+}
+function promptApiKey() {
+  const entered = prompt('Enter Adsorb Admin API Key (found in /admin_key.txt on LittleFS):', adminApiKey);
+  if (entered !== null) {
+    adminApiKey = entered.trim();
+    localStorage.setItem('adsorb_api_key', adminApiKey);
+    updateAuthUI();
+  }
+}
+updateAuthUI();
 
-// Auto-populate active admin key in all forms and footer
-document.querySelectorAll('input[name="key"]').forEach(el => el.value = ADMIN_API_KEY);
-const elFooterKey = document.getElementById('footer-api-key');
-if (elFooterKey) elFooterKey.textContent = ADMIN_API_KEY;
+['form-whitelist', 'form-blacklist', 'form-bypass'].forEach(id => {
+  const form = document.getElementById(id);
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      if (!adminApiKey) {
+        e.preventDefault();
+        promptApiKey();
+        if (adminApiKey) {
+          const inputKey = form.querySelector('input[name="key"]');
+          if (inputKey) inputKey.value = adminApiKey;
+          form.submit();
+        }
+      }
+    });
+  }
+});
 
 // --- Web Audio Synthesizer (8-bit sound fx) ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -991,24 +1061,39 @@ async function updateTelemetry() {
         if (!ips || ips.length === 0) {
           listEl.innerHTML = '<span style="font-size: 0.78em; opacity: 0.6; font-style: italic;">No devices currently bypassed</span>';
         } else {
-          listEl.innerHTML = ips.map(ip => `
+          listEl.innerHTML = ips.map(ip => {
+            const sIp = escapeHtml(ip);
+            return `
             <span style="background: #ffffff; border: 1.5px solid var(--border); border-radius: 6px; padding: 3px 8px; font-family: 'Space Mono', monospace; font-size: 0.78em; display: inline-flex; align-items: center; gap: 6px; font-weight: 800; box-shadow: 1.5px 1.5px 0 var(--shadow);">
-              ${ip}
-              <button onclick="unbypassIp('${ip}')" style="background: #ef4444; color: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; cursor: pointer; font-weight: 900; font-size: 11px; line-height: 1.2;" title="Unbypass device">✕</button>
+              ${sIp}
+              <button data-ip="${sIp}" class="btn-unbypass" style="background: #ef4444; color: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; cursor: pointer; font-weight: 900; font-size: 11px; line-height: 1.2;" title="Unbypass device">✕</button>
             </span>
-          `).join('');
+          `;
+          }).join('');
         }
       }
     }
   } catch(e) {}
 }
 
+const bypassContainer = document.getElementById('bypass-list');
+if (bypassContainer) {
+  bypassContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-unbypass');
+    if (btn) {
+      const ip = btn.getAttribute('data-ip');
+      if (ip) unbypassIp(ip);
+    }
+  });
+}
+
 async function unbypassIp(ip) {
   if (!confirm(`Remove ${ip} from bypass list and re-enable ad blocking?`)) return;
+  if (!adminApiKey) { promptApiKey(); if (!adminApiKey) return; }
   sfxClick();
   await fetch('/api/bypass?ip=' + encodeURIComponent(ip), {
     method: 'DELETE',
-    headers: {'X-API-Key': ADMIN_API_KEY}
+    headers: {'X-API-Key': adminApiKey}
   });
   sfxBlocked();
   updateTelemetry();
@@ -1028,11 +1113,14 @@ function renderTable() {
     return;
   }
 
-  tbody.innerHTML = filtered.slice(0, 50).map((q, idx) => `
+  tbody.innerHTML = filtered.slice(0, 50).map((q, idx) => {
+    const sDomain = escapeHtml(q.domain);
+    const sIp = escapeHtml(q.client_ip);
+    return `
     <tr>
       <td>${idx + 1}</td>
-      <td class="domain-text" onclick="inspectDomain('${q.domain}')" title="Click to inspect or banish">${q.domain}</td>
-      <td style="font-family: 'Space Mono', monospace; font-size: 0.85em;">${q.client_ip}</td>
+      <td class="domain-text" data-domain="${sDomain}" title="Click to inspect or banish">${sDomain}</td>
+      <td style="font-family: 'Space Mono', monospace; font-size: 0.85em;">${sIp}</td>
       <td>
         <span class="badge-tag ${q.blocked ? 'blocked' : 'allowed'}">
           ${q.blocked ? '💀 VAPORIZED' : '🛡️ PERMITTED'}
@@ -1040,7 +1128,19 @@ function renderTable() {
       </td>
       <td style="font-family: 'Space Mono', monospace; font-size: 0.8em; opacity: 0.7;">${q.latency_ms || 1}ms</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
+}
+
+const tbodyEl = document.getElementById('query-tbody');
+if (tbodyEl) {
+  tbodyEl.addEventListener('click', (e) => {
+    const cell = e.target.closest('.domain-text');
+    if (cell) {
+      const d = cell.getAttribute('data-domain');
+      if (d) inspectDomain(d);
+    }
+  });
 }
 
 // Search & Filter
@@ -1081,14 +1181,16 @@ document.getElementById('modal-btn-close').addEventListener('click', () => {
 });
 
 document.getElementById('modal-btn-white').addEventListener('click', async () => {
-  await fetch('/api/whitelist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': ADMIN_API_KEY}, body: JSON.stringify({domain: selectedDomain}) });
+  if (!adminApiKey) { promptApiKey(); if (!adminApiKey) return; }
+  await fetch('/api/whitelist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': adminApiKey}, body: JSON.stringify({domain: selectedDomain}) });
   modal.classList.remove('open');
   sfxAllowed();
   updateTelemetry();
 });
 
 document.getElementById('modal-btn-black').addEventListener('click', async () => {
-  await fetch('/api/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': ADMIN_API_KEY}, body: JSON.stringify({domain: selectedDomain}) });
+  if (!adminApiKey) { promptApiKey(); if (!adminApiKey) return; }
+  await fetch('/api/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': adminApiKey}, body: JSON.stringify({domain: selectedDomain}) });
   modal.classList.remove('open');
   sfxBlocked();
   updateTelemetry();
@@ -1263,9 +1365,7 @@ if (cryingCardEl) {
 
         _server.setContentLength(CONTENT_LENGTH_UNKNOWN);
         _server.send(200, "text/html", "");
-        _server.sendContent_P(DASHBOARD_HTML_HEAD);
-        _server.sendContent(_adminApiKey);
-        _server.sendContent_P(DASHBOARD_HTML_TAIL);
+        _server.sendContent_P(DASHBOARD_HTML);
         _server.sendContent("");
     }
 
@@ -1285,65 +1385,47 @@ if (cryingCardEl) {
         uint32_t cacheMisses = _cache ? _cache->getTotalMisses() : 0;
         uint32_t cacheEntries = _cache ? _cache->getActiveCount() : 0;
         float cacheRate = _cache ? _cache->getHitRatePercent() : 0.0f;
-        const char* upstreamStr = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH) ? "DNS-over-HTTPS (RFC 8484 TLS 1.3)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8) [HW TRNG]";
+        bool isDohUpstream = (Config::UPSTREAM_MODE == Config::UPSTREAM_MODE_DOH);
+        const char* upstreamStr = isDohUpstream ? "DNS-over-HTTPS (RFC 8484 TLS 1.3)" : "Parallel Race UDP (1.1.1.1 + 8.8.8.8) [HW TRNG]";
         bool oledConnected = _oled ? _oled->isConnected() : false;
 
-        char json[1200];
+        char json[1536];
         snprintf(json, sizeof(json),
-                 "{\"total\":%u,\"blocked\":%u,\"percentage\":%.2f,\"rate\":%.2f,"
+                 "{\"total\":%u,\"total_queries\":%u,"
+                 "\"blocked\":%u,\"blocked_queries\":%u,"
+                 "\"percentage\":%.2f,\"rate\":%.2f,"
                  "\"free_heap\":%u,\"heap\":%u,\"free_psram\":%u,\"psram\":%u,"
-                 "\"uptime\":%u,"
+                 "\"uptime\":%u,\"uptime_s\":%u,"
                  "\"blocklist_count\":%u,\"blocklist_size\":%u,"
-                  "\"whitelist_count\":%u,\"whitelist_size\":%u,"
-                  "\"blacklist_count\":%u,\"bypass_count\":%u,"
-                  "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
-                  "\"simd_patterns\":%u,\"simd_engine\":\"Xtensa LX7 128-bit PIE\","
-                  "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
-                  "\"encrypted\":true,\"tls_version\":\"TLS 1.3\","
-                  "\"http_dns_endpoint\":\"/dns-query\",\"doh_endpoint\":\"/dns-query\",\"doh_tls_verified\":true,"
-                  "\"malformed_queries\":%u,\"parse_failures\":%u,\"upstream_timeouts\":%u,\"upstream_validation_errors\":%u,"
-                  "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
-                  total, blocked, rate, rate,
-                  freeHeap, freeHeap, freePsram, freePsram,
-                  uptime,
-                  (unsigned)_blocklist->blockedCount(), (unsigned)_blocklist->blockedCount(),
-                  (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
-                  (unsigned)_blocklist->customBlacklistCount(), (unsigned)_blocklist->bypassIPCount(),
-                  cacheHits, cacheMisses, cacheEntries, cacheRate,
+                 "\"whitelist_count\":%u,\"whitelist_size\":%u,"
+                 "\"blacklist_count\":%u,\"bypass_count\":%u,"
+                 "\"cache_hits\":%u,\"cache_misses\":%u,\"cache_entries\":%u,\"cache_hit_rate\":%.2f,"
+                 "\"simd_patterns\":%u,\"simd_engine\":\"Dual 64-bit SWAR Accelerator\","
+                 "\"trng_active\":true,\"mdns_url\":\"http://adsorb.local/\","
+                 "\"encrypted\":%s,\"tls_version\":\"TLS 1.3\","
+                 "\"http_dns_endpoint\":\"/dns-query\",\"doh_endpoint\":\"/dns-query\","
+                 "\"inbound_doh_transport\":\"HTTP (RFC 8484 LAN Wire Format)\","
+                 "\"upstream_tls_verified\":%s,\"doh_tls_verified\":%s,"
+                 "\"malformed_queries\":%u,\"parse_failures\":%u,\"upstream_timeouts\":%u,\"upstream_validation_errors\":%u,"
+                 "\"upstream_mode\":\"%s\",\"oled_connected\":%s}",
+                 total, total,
+                 blocked, blocked,
+                 rate, rate,
+                 freeHeap, freeHeap, freePsram, freePsram,
+                 uptime, uptime,
+                 (unsigned)_blocklist->blockedCount(), (unsigned)_blocklist->blockedCount(),
+                 (unsigned)_blocklist->whitelistCount(), (unsigned)_blocklist->whitelistCount(),
+                 (unsigned)_blocklist->customBlacklistCount(), (unsigned)_blocklist->bypassIPCount(),
+                 cacheHits, cacheMisses, cacheEntries, cacheRate,
                  (unsigned)_blocklist->simdPatternCount(),
+                 isDohUpstream ? "true" : "false",
+                 isDohUpstream ? "true" : "false",
+                 isDohUpstream ? "true" : "false",
                  _dns->getMalformedQueries(), _dns->getParseFailures(),
                  _dns->getUpstreamTimeouts(), _dns->getUpstreamValidationErrors(),
                  upstreamStr, oledConnected ? "true" : "false");
 
         _server.send(200, "application/json", json);
-    }
-
-    static String _escapeJsonString(const char* s) {
-        if (!s) return "";
-        String out;
-        out.reserve(strlen(s) + 8);
-        for (size_t i = 0; s[i] != '\0'; i++) {
-            char c = s[i];
-            switch (c) {
-                case '\"': out += "\\\""; break;
-                case '\\': out += "\\\\"; break;
-                case '\b': out += "\\b"; break;
-                case '\f': out += "\\f"; break;
-                case '\n': out += "\\n"; break;
-                case '\r': out += "\\r"; break;
-                case '\t': out += "\\t"; break;
-                default:
-                    if ((unsigned char)c < 0x20) {
-                        char buf[8];
-                        snprintf(buf, sizeof(buf), "\\u%04x", (unsigned char)c);
-                        out += buf;
-                    } else {
-                        out += c;
-                    }
-                    break;
-            }
-        }
-        return out;
     }
 
     // -----------------------------------------------------------------------
@@ -1605,6 +1687,21 @@ if (cryingCardEl) {
         _blocklist->removeBypassIP(ip);
         String resp = "{\"status\":\"ok\",\"ip\":\"" + ip + "\"}";
         _server.send(200, "application/json", resp);
+    }
+
+    // -----------------------------------------------------------------------
+    // POST /api/restart — Secure Device Reboot
+    // -----------------------------------------------------------------------
+    void _handlePostRestart() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            return;
+        }
+        _addSecurityHeaders();
+        _server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Restarting ESP32...\"}");
+        delay(200);
+        ESP.restart();
     }
 
     static bool _extractIpFromJson(const String& body, String& outIp) {

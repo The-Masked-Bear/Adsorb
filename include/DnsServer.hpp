@@ -33,6 +33,17 @@ public:
     volatile uint32_t upstreamTimeouts = 0;
     volatile uint32_t upstreamValidationErrors = 0;
 
+    DnsEngine() {
+        _fwdMutex = xSemaphoreCreateMutex();
+    }
+
+    ~DnsEngine() {
+        if (_fwdMutex) {
+            vSemaphoreDelete(_fwdMutex);
+            _fwdMutex = nullptr;
+        }
+    }
+
     bool begin(Blocklist& blocklist, DnsCache* cache = nullptr, EncryptedDns* doh = nullptr) {
         _blocklist = &blocklist;
         _cache = cache;
@@ -289,8 +300,19 @@ private:
     EncryptedDns* _doh = nullptr;
     WiFiUDP _udp;
     WiFiUDP _fwdUdp;   // Socket for upstream forwarding
+    SemaphoreHandle_t _fwdMutex = nullptr;
     uint8_t _packetBuf[512];
     uint8_t _fwdBuf[512];
+
+    struct FwdLock {
+        SemaphoreHandle_t m;
+        FwdLock(SemaphoreHandle_t sem) : m(sem) {
+            if (m) xSemaphoreTake(m, portMAX_DELAY);
+        }
+        ~FwdLock() {
+            if (m) xSemaphoreGive(m);
+        }
+    };
 
     QueryLogEntry* _queryLog = nullptr;
     size_t _logIndex = 0;
@@ -627,6 +649,7 @@ private:
     // -----------------------------------------------------------------------
     int _resolveUpstreamUdp(const uint8_t* query, int queryLen, uint16_t txnId,
                             uint8_t* outBuf, size_t maxOutLen) {
+        FwdLock lock(_fwdMutex);
         IPAddress primaryIP, secondaryIP;
         primaryIP.fromString(Config::UPSTREAM_DNS_PRIMARY);
         secondaryIP.fromString(Config::UPSTREAM_DNS_SECONDARY);

@@ -17,11 +17,18 @@ constexpr size_t   PSRAM_TEST_BYTES    = 512 * 1024; // 512 KB
 #if __has_include("credentials.h")
 #include "credentials.h"
 #else
-// Wi-Fi Station Configuration (Replace with your Wi-Fi credentials)
+// Wi-Fi Station Configuration
+// Note: You can create an 'include/credentials.h' file with your WIFI_SSID and WIFI_PASSWORD
+// to keep your private network credentials out of version control.
 constexpr const char* WIFI_SSID        = "YOUR_WIFI_SSID";
 constexpr const char* WIFI_PASSWORD    = "YOUR_WIFI_PASSWORD";
 #endif
 constexpr uint32_t    WIFI_CONNECT_TIMEOUT_MS = 10000; // 10s connection timeout before fallback
+
+// Ad-blocking heuristics toggle
+// By default, broad substring heuristic blocking (.analytics., .telemetry.) is disabled
+// to avoid false-positive breakage on legitimate business & first-party services.
+constexpr bool        ENABLE_HEURISTIC_BLOCKING = false;
 
 // Static IP Configuration
 // By default, USE_STATIC_IP is false (Dynamic DHCP) so Adsorb works out-of-the-box on

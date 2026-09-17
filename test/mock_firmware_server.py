@@ -396,19 +396,36 @@ class MockFirmwareServer:
                         tot = server_instance.total_queries
                         blk = server_instance.blocked_queries
                         pct = round((blk / tot * 100.0) if tot > 0 else 0.0, 2)
+                        uptime = int(time.time() - server_instance.start_time)
                         data = {
                             "total": tot,
+                            "total_queries": tot,
                             "blocked": blk,
+                            "blocked_queries": blk,
                             "percentage": pct,
+                            "rate": pct,
                             "free_heap": server_instance.simulated_free_heap,
+                            "heap": server_instance.simulated_free_heap,
                             "free_psram": server_instance.simulated_free_psram,
-                            "uptime": int(time.time() - server_instance.start_time),
+                            "psram": server_instance.simulated_free_psram,
+                            "uptime": uptime,
+                            "uptime_s": uptime,
                             "blocklist_count": len(server_instance.blocklist),
                             "whitelist_count": len(server_instance.custom_whitelist),
                             "blacklist_count": len(server_instance.custom_blacklist),
-                            "bypass_count": len(server_instance.bypass_ips)
+                            "bypass_count": len(server_instance.bypass_ips),
+                            "simd_engine": "Dual 64-bit SWAR Accelerator"
                         }
                     self._send_json(200, data)
+
+                elif path == "/api/test":
+                    query_params = urllib.parse.parse_qs(parsed.query)
+                    test_domain = query_params.get("domain", [""])[0].strip()
+                    if not test_domain:
+                        self._send_json(400, {"error": "Missing domain parameter"})
+                        return
+                    blocked = server_instance.is_domain_blocked(test_domain)
+                    self._send_json(200, {"domain": test_domain, "blocked": blocked, "sinkhole_ip": "0.0.0.0"})
 
                 elif path == "/api/queries":
                     with server_instance.lock:
@@ -437,6 +454,10 @@ class MockFirmwareServer:
             def do_POST(self):
                 parsed = urllib.parse.urlparse(self.path)
                 path = parsed.path
+                if path == "/api/restart":
+                    self._send_json(200, {"status": "ok", "message": "Restarting ESP32..."})
+                    return
+
                 try:
                     data = self._read_json()
                 except Exception:
@@ -477,6 +498,9 @@ class MockFirmwareServer:
                     with server_instance.lock:
                         server_instance.bypass_ips.add(ip)
                     self._send_json(200, {"status": "ok", "ip": ip})
+
+                elif path == "/api/restart":
+                    self._send_json(200, {"status": "ok", "message": "Restarting ESP32..."})
 
                 else:
                     self.send_response(404)

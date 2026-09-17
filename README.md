@@ -90,21 +90,24 @@ Empirical benchmarks verified against live hardware (ESP32-S3 N16R8 @ 240MHz):
 
 | Metric / Test Suite | Result | Mechanism |
 | :--- | :---: | :--- |
-| **Octal PSRAM LRU Cache Hit** | **< 0.2 ms** | 2-Way Set Associative (2,048 entries) |
-| **Ad / Tracker Sinkhole** | **< 0.2 ms** | 64-Bit FNV-1a Binary Search Index |
+| **In-Memory PSRAM LRU Cache Hit** | **< 0.2 ms** | 2-Way Set Associative (2,048 entries in PSRAM) |
+| **In-Memory Ad Sinkhole Check** | **< 0.2 ms** | 64-Bit FNV-1a Binary Search Index |
 | **SWAR Bitwise Wildcard Scan** | **< 0.05 ms** | Dual 64-bit SWAR Parallel Word Matcher |
+| **End-to-End LAN DNS Latency** | **1 – 3 ms** | Typical Wi-Fi 2.4GHz network round-trip |
 | **DNS Transaction ID Entropy** | **16-Bit Crypto** | Hardware TRNG RF Thermal Noise (`esp_random()`) |
 | **Zero-Config Local Portal** | **Instant** | mDNS Responder (`http://adsorb.local/`) |
 | **Uncached Query (Parallel Race)** | **12 – 40 ms** | Simultaneous Cloudflare & Google UDP 53 |
 | **[adblock.turtlecute.org](https://adblock.turtlecute.org/)** | **100.0%** | **131 / 131 Domains Blocked** |
-| **d3ward Ad Block Test** | **100.0%** | **Clean Pass** |
+| **d3ward Ad Block Test** | **100.0%** | **Clean Pass (DNS Scope)** |
 | **Annual Electricity Cost** | **~ $0.45** | **0.58W Continuous Draw** |
+
+> ℹ️ **Ad-Blocking Scope Note:** Network DNS sinkholes operate at the domain layer, intercepting ad servers, tracking scripts, and telemetry beacons across every device on your LAN (phones, smart TVs, IoT). Ads hosted on the exact same domain/CDN as the primary content (such as YouTube video ads) or cosmetic whitespace removal require companion browser-level content blockers (e.g. uBlock Origin).
 
 ---
 
 ## 🛠️ Hardware Requirements & OLED Pinout
 
-* **Board:** ESP32-S3 DevKit with **N16R8** (16MB Quad SPI Flash + 8MB Octal PSRAM). Supports ~255,000 rules with 2.2MB reserved for FreeRTOS, DNS cache, and network buffers.
+* **Board:** ESP32-S3 DevKit with **N16R8** (16MB Quad SPI Flash + 8MB Octal PSRAM). Ingests ~255,000 rules with 2.2MB reserved for FreeRTOS, DNS cache, and network buffers.
 * **Display (Optional):** 1.3" I2C OLED Display (SH1106 or SSD1306 128x64).
 * **Power:** Standard 5V USB-C cable and 5W USB wall adapter.
 * **Network:** 2.4GHz 802.11 b/g/n Wi-Fi network.
@@ -138,6 +141,8 @@ Adsorb/
 │   └── main.cpp           # System orchestrator, FreeRTOS core pinning & watchdog
 ├── data/
 │   └── ad-domains2.0.txt  # Curated blocklist of 200,000+ domain rules (LittleFS)
+├── docs/                  # Official documentation, web flasher & interactive dashboard demo
+├── test/                  # Automated verification test suite (183 test cases) & mock firmware
 ├── partitions_16MB.csv    # Custom flash partitioning (3MB app, SPIFFS/LittleFS)
 ├── platformio.ini         # PlatformIO build configuration with -O3 optimizations
 ├── LICENSE                # Apache License 2.0
@@ -152,11 +157,12 @@ Adsorb/
 Install [PlatformIO IDE](https://platformio.org/) (VS Code Extension or CLI).
 
 ### 2. Configure Wi-Fi Credentials
-Edit `src/main.cpp` with your Wi-Fi credentials:
+Configure your Wi-Fi network credentials in `include/Config.hpp`:
 ```cpp
-const char* WIFI_SSID     = "Your_WiFi_Name";
-const char* WIFI_PASSWORD = "Your_WiFi_Password";
+constexpr const char* WIFI_SSID     = "Your_WiFi_Name";
+constexpr const char* WIFI_PASSWORD = "Your_WiFi_Password";
 ```
+*(Tip: You can also create a private `include/credentials.h` file defining `WIFI_SSID` and `WIFI_PASSWORD` to keep your credentials out of version control).*
 
 ### 3. Build & Flash via PlatformIO
 Connect your ESP32-S3 via USB to your computer:
@@ -236,8 +242,10 @@ Adsorb exposes a high-performance asynchronous JSON REST API on port 80 for home
 | `GET` | `/api/blacklist` | List custom blacklisted domains | `["unwanted-tracker.net"]` |
 | `POST` | `/api/blacklist` | Add a domain to the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
 | `DELETE` | `/api/blacklist` | Remove a domain from the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
-| `POST` | `/api/restart` | Gracefully restart the ESP32-S3 hardware | `{"status":"ok","message":"Restarting..."}` |
-| `GET` / `POST` | `/dns-query` | Inbound RFC 8484 DNS-over-HTTPS (DoH) resolution endpoint | Binary wire format or Base64URL |
+| `POST` | `/api/restart` | Gracefully restart the ESP32-S3 hardware | `{"status":"ok","message":"Restarting ESP32..."}` |
+| `GET` | `/api/test` | Test domain blocking status and sinkhole verdict | `{"domain":"example.com","blocked":false,"sinkhole_ip":"0.0.0.0"}` |
+| `GET` / `POST` | `/dns-query` | Inbound RFC 8484 DNS wire format over HTTP (LAN port 80) | Binary wire format or Base64URL |
+
 
 ---
 

@@ -117,3 +117,12 @@ class HttpClient:
         """Remove an IP from bypass list."""
         return self.request("DELETE", f"/api/bypass?ip={urllib.parse.quote(ip)}",
                             body={"ip": ip})
+
+    def test_domain(self, domain: str) -> HttpResponse:
+        """Test domain blocking status via /api/test."""
+        return self.request("GET", f"/api/test?domain={urllib.parse.quote(domain)}")
+
+    def restart(self) -> HttpResponse:
+        """Request firmware restart via /api/restart."""
+        return self.request("POST", "/api/restart")
+

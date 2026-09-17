@@ -1746,6 +1746,16 @@
       .logo { font-size: 1.7rem; }
       .terminal-box { height: 380px; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      #trail-canvas { display: none !important; }
+    }
   </style>
 </head>
 <body class="custom-cursor-active">
@@ -1866,7 +1876,7 @@
       <div class="terminal-body" id="term-body">
         <div class="terminal-line" style="color:var(--yellow);">Adsorb Kernel v1.3.1 (ESP32-S3 Dual-Core @ 240MHz)</div>
         <div class="terminal-line">Octal PSRAM: 255,042 domain hashes loaded (2.04 MB)</div>
-        <div class="terminal-line">SIMD Engine: Xtensa LX7 128-bit PIE Wildcard Accelerator [ACTIVE]</div>
+        <div class="terminal-line">Wildcard Engine: Dual 64-bit SWAR Bitwise Wildcard Accelerator [ACTIVE]</div>
         <div class="terminal-line">TRNG Security: Hardware RF Cryptographic Randomizer [ENABLED]</div>
         <div class="terminal-line">Client IP Bypass: Zero-Disruption OTT Whitelist Engine [ARMED]</div>
         <div class="terminal-line">mDNS Responder: http://adsorb.local/ (Auto DHCP / Static Lease)</div>
@@ -2083,7 +2093,7 @@
   <section id="workbench" class="section-block workbench-section">
     <div class="container">
       <div class="section-header">
-        <span class="section-tag">RFC 1035 BENCH</span>
+        <span class="section-tag">RFC 1035 BENCH &bull; INTERACTIVE SIMULATION</span>
         <h2 style="text-shadow:3px 3px 0px var(--yellow);">WIRE PACKET DISSECTOR</h2>
         <p style="color:#222;">Interactive DNS resolver simulator. Evaluates domains against the 64-bit FNV-1a Octal PSRAM vector, LRU cache, OS whitelist, and parallel race resolver.</p>
       </div>
@@ -2131,8 +2141,8 @@
             <div class="hex-meta-val" id="meta-aaaa" style="color:var(--red);">:: (TTL 300)</div>
           </div>
           <div class="hex-meta-card">
-            <div class="hex-meta-label">Hardware Resolution Speed</div>
-            <div class="hex-meta-val" id="meta-cycles" style="color:var(--mint);">44 ns (18 Bus Cycles)</div>
+            <div class="hex-meta-label">In-Memory PSRAM Lookup</div>
+            <div class="hex-meta-val" id="meta-cycles" style="color:var(--mint);">&lt; 0.05 ms (In-Memory Search)</div>
           </div>
         </div>
       </div>
@@ -2246,12 +2256,12 @@
           <span class="feature-tag">SOLID STATE RELIABILITY</span>
         </div>
 
-        <!-- Feature 9: 128-bit SIMD -->
+        <!-- Feature 9: SWAR Bitwise Wildcard Accelerator -->
         <div class="brutal-card feature-card" style="background:var(--yellow);">
           <svg class="feature-icon-svg" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          <h3>128-BIT PIE SIMD ACCELERATOR</h3>
-          <p>Xtensa LX7 128-bit vector instructions scan wildcard ad patterns across dual 64-bit lanes. Wire-speed substring detection with zero CPU branching.</p>
-          <span class="feature-tag">LX7 PIE VECTOR LANES</span>
+          <h3>DUAL 64-BIT SWAR ACCELERATOR</h3>
+          <p>Dual 64-bit SWAR (SIMD-Within-A-Register) bitwise algorithms scan wildcard ad patterns across 64-bit lanes. Wire-speed substring detection with zero CPU branching.</p>
+          <span class="feature-tag">DUAL 64-BIT SWAR LANES</span>
         </div>
 
         <!-- Feature 10: Hardware TRNG -->
@@ -2372,8 +2382,8 @@
               <td>WAN Outage / Policy change</td>
             </tr>
             <tr>
-              <td>SIMD / TRNG Acceleration</td>
-              <td style="color:#008000; font-weight:900;">128-Bit PIE SIMD + HW TRNG</td>
+              <td>Wildcard / TRNG Acceleration</td>
+              <td style="color:#008000; font-weight:900;">Dual 64-Bit SWAR + HW TRNG</td>
               <td>Software Regex (High Overhead)</td>
               <td>AVX2 (High Power 35W)</td>
               <td>Remote Cloud CDN</td>
@@ -2692,11 +2702,11 @@
         <!-- Q8 -->
         <div class="faq-item">
           <div class="faq-question">
-            <span>What are the 128-bit Vector SIMD Accelerator and Hardware TRNG?</span>
+            <span>What are the Dual 64-bit SWAR Wildcard Accelerator and Hardware TRNG?</span>
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            Adsorb harnesses the ESP32-S3's Xtensa LX7 Processor Instruction Extension (PIE) 128-bit SIMD vector engine to scan wildcard and ad-tracker patterns across dual 64-bit lanes at wire speed. Furthermore, every outbound DNS query is assigned a 16-bit cryptographic Transaction ID generated directly from physical RF receiver thermal noise (esp_random), completely defeating Kaminsky cache poisoning in hardware silicon.
+            Adsorb harnesses a high-efficiency Dual 64-bit SWAR (SIMD-Within-A-Register) parallel bitwise accelerator to scan wildcard and ad-tracker patterns across dual 64-bit lanes at wire speed. Furthermore, every outbound DNS query is assigned a 16-bit cryptographic Transaction ID generated directly from physical RF receiver thermal noise (esp_random), completely defeating Kaminsky cache poisoning in hardware silicon.
           </div>
         </div>
 
@@ -2748,7 +2758,7 @@
       <a href="https://instagram.com/the_masked_bear_" target="_blank" class="brutal-btn color-pink btn-small">INSTAGRAM</a>
       <a href="https://github.com/The-Masked-Bear/Adsorb" target="_blank" class="brutal-btn color-white btn-small">ADSORB GITHUB REPO</a>
     </div>
-    <p class="footer-copyright">BUILT BY THE-MASKED-BEAR. MIT LICENSE. 2026.</p>
+    <p class="footer-copyright">BUILT BY THE-MASKED-BEAR. APACHE LICENSE 2.0. 2026.</p>
   </footer>
 
   <!-- Install Modal -->
@@ -3106,7 +3116,7 @@
             appendTermLine('  status      - hardware registers, frequency, free PSRAM');
             appendTermLine('  bypass      - per-client IP ad-blocking bypass status');
             appendTermLine('  api         - asynchronous REST API endpoint catalog');
-            appendTermLine('  simd        - Xtensa LX7 128-bit PIE SIMD vector accelerator');
+            appendTermLine('  simd        - Dual 64-bit SWAR bitwise wildcard accelerator');
             appendTermLine('  trng        - Hardware TRNG cryptographic transaction randomizer');
             appendTermLine('  mdns        - Zero-config mDNS & captive portal status');
             appendTermLine('  cache       - Octal PSRAM LRU DNS cache performance');
@@ -3121,7 +3131,7 @@
             appendTermLine('  fullscreen  - toggle fullscreen view');
           } else if (cmd === 'status') {
             appendTermLine('SOC: ESP32-S3 (Dual-Core Xtensa LX7 @ 240MHz)', false, 'var(--yellow)');
-            appendTermLine('SIMD: Xtensa LX7 128-bit PIE Vector Engine [ACTIVE]');
+            appendTermLine('WILDCARDS: Dual 64-bit SWAR Bitwise Wildcard Engine [ACTIVE]');
             appendTermLine('TRNG: Hardware RF Cryptographic Randomizer [ENABLED]');
             appendTermLine('BYPASS: Per-Client IP OTT Whitelist [ARMED]');
             appendTermLine('mDNS: http://adsorb.local/ (Static IP: 192.168.1.101)');
@@ -3149,14 +3159,14 @@
             appendTermLine('  GET/POST/DELETE /api/whitelist - Manage custom domain whitelist');
             appendTermLine('  GET/POST/DELETE /api/blacklist - Manage custom domain blacklist');
             appendTermLine('  POST   /api/restart   - Graceful ESP32 reboot');
-            appendTermLine('  POST   /dns-query     - RFC 8484 DNS-over-HTTPS (DoH)');
+            appendTermLine('  POST   /dns-query     - RFC 8484 DNS wire format over HTTP (Port 80)');
           } else if (cmd === 'simd') {
-            appendTermLine('[*] XTENSA LX7 128-BIT PIE SIMD ACCELERATOR:', false, 'var(--yellow)');
-            appendTermLine('  Instruction Set: Xtensa PIE (Processor Instruction Extension)');
-            appendTermLine('  Vector Register Width: 128 bits (16 bytes / cycle)');
-            appendTermLine('  Lanes: Dual 64-bit parallel execution pipelines');
-            appendTermLine('  Pattern Signatures: 20 built-in wildcard / tracker expressions');
-            appendTermLine('  Scan Latency: &lt; 0.05 ms per domain');
+            appendTermLine('[*] DUAL 64-BIT SWAR WILDCARD ACCELERATOR:', false, 'var(--yellow)');
+            appendTermLine('  Algorithm: SWAR (SIMD-Within-A-Register) Parallel Bitwise Search');
+            appendTermLine('  Word Width: Dual 64-bit parallel word operations');
+            appendTermLine('  Lanes: 64-bit word lanes with zero-detection bitmasks');
+            appendTermLine('  Pattern Signatures: Curated high-precision wildcard expressions');
+            appendTermLine('  Scan Latency: &lt; 0.05 ms in-memory PSRAM search');
             appendTermLine('  Status: FULLY ARMED');
           } else if (cmd === 'trng') {
             appendTermLine('[*] HARDWARE TRNG CRYPTOGRAPHIC RANDOMIZER:', false, 'var(--cyan)');
@@ -3645,7 +3655,7 @@
         vBadge.textContent = 'RCODE 3: NXDOMAIN';
         mA.textContent = 'None (NXDOMAIN)';
         mAAAA.textContent = 'None (NXDOMAIN)';
-        mCycles.textContent = '38 ns (DoH Intercept)';
+        mCycles.textContent = '< 0.05 ms (DoH Intercept)';
       } else if (isWhitelisted) {
         banner.className = 'verdict-banner whitelist';
         vTitle.textContent = '[OS CONNECTIVITY WHITELIST — PASSED]';
@@ -3661,7 +3671,7 @@
         vBadge.textContent = 'RCODE 0: 0.0.0.0 / ::';
         mA.textContent = '0.0.0.0 (TTL 300)';
         mAAAA.textContent = ':: (TTL 300)';
-        mCycles.textContent = '44 ns (18 Octal Bus Cycles)';
+        mCycles.textContent = '< 0.05 ms (In-Memory PSRAM Lookup)';
       } else {
         if (cachedDomains.has(domain)) {
           banner.className = 'verdict-banner cache';

@@ -459,3 +459,37 @@ class TestTier1Features(BaseE2ETest):
         # 5. Query 2mdn.net again -> must be sinkholed to 0.0.0.0 again!
         resp3 = self.dns_query("2mdn.net")
         self.assert_sinkholed(resp3)
+
+    # ==================== F17: Audit Remediation Endpoints & Security ====================
+    def test_t1_f17_01_stats_schema_aliases(self):
+        resp = self.http_client.get_stats()
+        self.assert_http_ok(resp)
+        data = resp.json
+        self.assertIn("total_queries", data)
+        self.assertIn("blocked_queries", data)
+        self.assertIn("uptime_s", data)
+        self.assertIn("simd_engine", data)
+        self.assertEqual(data["simd_engine"], "Dual 64-bit SWAR Accelerator")
+
+    def test_t1_f17_02_restart_endpoint(self):
+        resp = self.http_client.restart()
+        self.assert_http_ok(resp)
+        self.assertEqual(resp.json.get("status"), "ok")
+        self.assertIn("message", resp.json)
+
+    def test_t1_f17_03_test_domain_endpoint(self):
+        resp_blocked = self.http_client.test_domain("doubleclick.net")
+        self.assert_http_ok(resp_blocked)
+        self.assertTrue(resp_blocked.json.get("blocked"))
+
+        resp_allowed = self.http_client.test_domain("example.com")
+        self.assert_http_ok(resp_allowed)
+        self.assertFalse(resp_allowed.json.get("blocked"))
+
+    def test_t1_f17_04_test_domain_xss_sanitization(self):
+        malicious = '<script>alert("xss")</script>'
+        resp = self.http_client.test_domain(malicious)
+        self.assert_http_ok(resp)
+        self.assertIsInstance(resp.json, dict)
+        self.assertEqual(resp.json.get("domain"), malicious)
+

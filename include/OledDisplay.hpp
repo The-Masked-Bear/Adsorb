@@ -59,7 +59,7 @@ public:
 
         // 3. Status Line
         _u8g2.setFont(u8g2_font_6x12_tf);
-        _u8g2.drawStr(12, 51, "255K RULES LOADED");
+        _u8g2.drawStr(12, 51, "LOADING RULES...");
 
         // 4. Loading Bar Frame & Fill
         _u8g2.drawRFrame(12, 55, 104, 5, 1);
@@ -156,7 +156,7 @@ private:
         _u8g2.drawStr(4, 49, buf);
 
         // --- Current IP Address (Large 6x12 font) ---
-        String ipStr = WiFi.isConnected() ? WiFi.localIP().toString() : "192.168.1.101";
+        String ipStr = WiFi.isConnected() ? WiFi.localIP().toString() : ((WiFi.getMode() & WIFI_AP) ? "192.168.4.1 (AP)" : "OFFLINE");
         snprintf(buf, sizeof(buf), "IP: %s", ipStr.c_str());
         _u8g2.drawStr(4, 61, buf);
     }
@@ -184,7 +184,7 @@ private:
         char buf[32];
 
         // Line 1: Local IP Address
-        String ipStr = WiFi.isConnected() ? WiFi.localIP().toString() : "192.168.1.101";
+        String ipStr = WiFi.isConnected() ? WiFi.localIP().toString() : ((WiFi.getMode() & WIFI_AP) ? "192.168.4.1 (AP)" : "OFFLINE");
         snprintf(buf, sizeof(buf), "IP   : %s", ipStr.c_str());
         _u8g2.drawStr(4, 26, buf);
 
