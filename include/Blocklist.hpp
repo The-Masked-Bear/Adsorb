@@ -218,8 +218,8 @@ public:
         return false;
     }
 
-    bool isBlocked(const String& rawDomain) const {
-        PsramString domain = _cleanDomain(rawDomain, false);
+    bool isBlocked(const char* rawDomain, size_t len) const {
+        PsramString domain = _cleanDomain(rawDomain, len, false);
         if (domain.empty()) return false;
 
         // 0. Essential OS Connectivity & Push Notification Whitelist
@@ -259,6 +259,14 @@ public:
         }
 
         return false;
+    }
+
+    bool isBlocked(const String& rawDomain) const {
+        return isBlocked(rawDomain.c_str(), rawDomain.length());
+    }
+
+    bool isBlocked(const char* rawDomain) const {
+        return isBlocked(rawDomain, rawDomain ? strlen(rawDomain) : 0);
     }
 
     bool addToWhitelist(const String& rawDomain) {

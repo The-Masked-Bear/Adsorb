@@ -9,10 +9,10 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
   <!-- Open Graph / Meta -->
-  <meta name="description" content="Ultra-high performance, bare-metal hardware DNS sinkhole for ESP32-S3 N16R8. 255,000+ rules in Octal PSRAM, sub-millisecond wire latency, 1.3-inch OLED display, and zero cloud telemetry.">
+  <meta name="description" content="Ultra-high performance hardware DNS sinkhole for ESP32-S3 N16R8 running dual-core FreeRTOS. 255,000+ rules in Octal PSRAM, sub-millisecond wire latency, 1.3-inch OLED display, and zero cloud telemetry.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="ADSORB — Hardware DNS Sinkhole for ESP32-S3">
-  <meta property="og:description" content="Sinkhole 255,000+ ads in pure silicon. Sub-millisecond latency, 0.58W continuous power, physical 1.3-inch OLED display, and parallel race UDP.">
+  <meta property="og:description" content="Sinkhole 255,000+ ads in pure silicon. Sub-millisecond latency, 0.58W continuous power (~$1.02/yr), physical 1.3-inch OLED display, and parallel race UDP.">
   <meta property="og:url" content="https://the-masked-bear.github.io/Adsorb/">
   <meta property="og:site_name" content="Adsorb by The-Masked-Bear">
   <meta name="twitter:card" content="summary_large_image">
@@ -1844,9 +1844,9 @@
       <div class="hero-badge">⚡ FIRMWARE v1.3.1 — PER-CLIENT IP BYPASS &amp; RFC 8484 DoH ARMED</div>
       <h1 id="hero-title"></h1>
       <p class="hero-subtitle">
-        Ultra-high performance, bare-metal DNS sinkhole for ESP32-S3 N16R8. 
-        255,000+ domain rules in Octal PSRAM. 128-bit Xtensa SIMD wildcard acceleration, 
-        hardware TRNG cryptographic transaction ID randomizer, per-client IP bypass for OTT/Smart TVs, and zero-config mDNS at 
+        Ultra-high performance hardware DNS sinkhole for ESP32-S3 N16R8 running dual-core FreeRTOS. 
+        255,000+ domain rules in Octal PSRAM. Dual 64-bit SWAR parallel bitwise wildcard acceleration, 
+        hardware TRNG transaction ID randomizer, per-client IP bypass for OTT/Smart TVs, and zero-config mDNS at 
         <code style="color:var(--yellow); font-weight:700;">http://adsorb.local/</code>. 
         Zero Linux. Zero SD cards. Zero cloud.
       </p>
@@ -2268,7 +2268,7 @@
         <div class="brutal-card feature-card" style="background:var(--cyan);">
           <svg class="feature-icon-svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <h3>HARDWARE TRNG RANDOMIZER</h3>
-          <p>Cryptographic 16-bit DNS Transaction IDs derived from physical RF receiver thermal noise (esp_random). Defeats Kaminsky cache poisoning in silicon.</p>
+          <p>Cryptographic 16-bit DNS Transaction IDs derived from physical RF receiver thermal noise (esp_random). Mitigates Kaminsky cache poisoning in silicon (RFC 5452).</p>
           <span class="feature-tag">RF THERMAL ENTROPY</span>
         </div>
 
@@ -2629,7 +2629,7 @@
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            A Raspberry Pi runs a full Linux OS with hundreds of background processes, uses 5–15W of power ($12–$30/yr), and relies on a MicroSD card that will eventually corrupt under continuous DNS log writes. The ESP32-S3 is a bare-metal microcontroller drawing only 0.58W ($0.46/yr), boots in 800ms, and keeps all data in solid-state Flash and volatile PSRAM with zero storage degradation.
+            A Raspberry Pi runs a full Linux OS with hundreds of background processes, uses 5–15W of power ($12–$30/yr), and relies on a MicroSD card that will eventually corrupt under continuous DNS log writes. The ESP32-S3 is a dedicated microcontroller running dual-core FreeRTOS drawing only 0.58W (~$1.02/yr @ $0.20/kWh), boots and ingests 255,000+ rules in 3–5 seconds, and keeps all data in solid-state Flash and volatile PSRAM with zero storage degradation.
           </div>
         </div>
 
@@ -2640,7 +2640,7 @@
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            Adsorb compiles domain strings into 64-bit FNV-1a cryptographic hashes during build time. 255,042 64-bit integers take only 2.04 MB of memory, which easily fits in the ESP32-S3 N16R8's 8MB Octal PSRAM. Binary search over this sorted array takes only 18 bus cycles (36 nanoseconds) with zero heap fragmentation.
+            Adsorb compiles domain strings into 64-bit FNV-1a non-cryptographic fast hash fingerprints during build time. 255,042 64-bit integers take only ~1.95 MB of memory, which easily fits in the ESP32-S3 N16R8's 8MB Octal PSRAM. Binary search over this sorted array takes only ~18 iterations (tens of microseconds) with zero heap fragmentation.
           </div>
         </div>
 
@@ -2706,7 +2706,7 @@
             <span class="faq-icon">+</span>
           </div>
           <div class="faq-answer">
-            Adsorb harnesses a high-efficiency Dual 64-bit SWAR (SIMD-Within-A-Register) parallel bitwise accelerator to scan wildcard and ad-tracker patterns across dual 64-bit lanes at wire speed. Furthermore, every outbound DNS query is assigned a 16-bit cryptographic Transaction ID generated directly from physical RF receiver thermal noise (esp_random), completely defeating Kaminsky cache poisoning in hardware silicon.
+            Adsorb harnesses a high-efficiency Dual 64-bit SWAR (SIMD-Within-A-Register) parallel bitwise accelerator to scan wildcard and ad-tracker patterns across dual 64-bit lanes at wire speed. Furthermore, every outbound DNS query is assigned a 16-bit cryptographic Transaction ID generated directly from physical RF receiver thermal noise (esp_random), mitigating Kaminsky cache poisoning and blind spoofing in hardware silicon (RFC 5452).
           </div>
         </div>
 
@@ -3173,7 +3173,7 @@
             appendTermLine('  Entropy Source: ESP32-S3 RF Transceiver Thermal Noise');
             appendTermLine('  API: esp_random() 32-bit hardware entropy generation');
             appendTermLine('  Target: 16-bit DNS Transaction IDs (UDP Upstream)');
-            appendTermLine('  Protection: Kaminsky DNS Cache Poisoning Defeated');
+            appendTermLine('  Protection: Kaminsky DNS Cache Poisoning Mitigated (RFC 5452)');
             appendTermLine('  State: ACTIVE & VERIFYING ALL UPSTREAM REPLIES');
           } else if (cmd === 'mdns') {
             appendTermLine('[*] ZERO-CONFIG mDNS & CAPTIVE PORTAL WIZARD:', false, 'var(--mint)');
@@ -3321,7 +3321,7 @@
       trng: {
         title: "HARDWARE TRNG CRYPTOGRAPHIC RANDOMIZER",
         badge: "RF Thermal Noise",
-        desc: "Physical Wi-Fi/Bluetooth RF receiver thermal noise generates 16-bit cryptographic DNS Transaction IDs (esp_random), defeating Kaminsky poisoning attacks and off-path cache spoofing.",
+        desc: "Physical Wi-Fi/Bluetooth RF receiver thermal noise generates 16-bit cryptographic DNS Transaction IDs (esp_random), mitigating Kaminsky poisoning attacks and off-path cache spoofing (RFC 5452).",
         reg: "WIFI_RNG_DATA (0x6002_60B0)",
         util: "100% HARDWARE ENTROPY"
       },

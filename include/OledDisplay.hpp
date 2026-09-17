@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <U8g2lib.h>
 #include <WiFi.h>
 
@@ -20,21 +21,13 @@ public:
     }
 
     bool begin() {
-        // Physical detection: OLED breakout modules feature 4.7k - 10k pullup resistors to VCC (3.3V).
-        // By setting internal weak pulldowns (~45k), a connected OLED will pull the lines HIGH.
-        pinMode(Config::OLED_SDA_PIN, INPUT_PULLDOWN);
-        pinMode(Config::OLED_SCL_PIN, INPUT_PULLDOWN);
-        delay(10);
+        Wire.begin(Config::OLED_SDA_PIN, Config::OLED_SCL_PIN);
+        Wire.beginTransmission(Config::OLED_I2C_ADDR);
+        byte err = Wire.endTransmission();
 
-        bool hasOledPullup = (digitalRead(Config::OLED_SDA_PIN) == HIGH && digitalRead(Config::OLED_SCL_PIN) == HIGH);
-
-        // Restore pins to high-impedance input
-        pinMode(Config::OLED_SDA_PIN, INPUT);
-        pinMode(Config::OLED_SCL_PIN, INPUT);
-
-        if (!hasOledPullup) {
-            Serial.printf("[OLED] Notice: No physical I2C display detected on SDA:%d SCL:%d (Gracefully idling)\n",
-                          Config::OLED_SDA_PIN, Config::OLED_SCL_PIN);
+        if (err != 0) {
+            Serial.printf("[OLED] Notice: No physical I2C display acknowledged on 0x%02X SDA:%d SCL:%d (Gracefully idling)\n",
+                          Config::OLED_I2C_ADDR, Config::OLED_SDA_PIN, Config::OLED_SCL_PIN);
             _connected = false;
             return false;
         }

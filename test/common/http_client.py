@@ -36,16 +36,20 @@ class HttpResponse:
 
 class HttpClient:
     """HTTP client communicating with ESP32-S3 Web server."""
-    def __init__(self, host: str = "127.0.0.1", port: int = 80, timeout: float = 3.0):
+    def __init__(self, host: str = "127.0.0.1", port: int = 80, timeout: float = 3.0,
+                 api_key: Optional[str] = None):
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.api_key = api_key
 
     def request(self, method: str, path: str, body: Optional[Union[str, bytes, dict]] = None,
                 headers: Optional[Dict[str, str]] = None) -> HttpResponse:
         """Send an HTTP request and return HttpResponse."""
         if headers is None:
             headers = {}
+        if self.api_key and "X-API-Key" not in headers:
+            headers["X-API-Key"] = self.api_key
 
         payload: Optional[bytes] = None
         if isinstance(body, dict):

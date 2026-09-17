@@ -17,8 +17,9 @@ struct QueryLogEntry {
     char clientIP[32];
     uint16_t clientPort;
     bool blocked;
-    uint32_t timestamp; // uptime seconds
-    uint16_t latency_ms;
+    uint32_t timestamp; // unix timestamp or monotonic uptime seconds
+    uint32_t latency_us; // microsecond precision
+    uint16_t latency_ms; // millisecond precision (backward compatible)
 };
 
 // ============================================================================
@@ -84,7 +85,7 @@ public:
         _udp.flush(); // Crucial: clear UDP socket rx buffer so subsequent packets are never blocked
         if (len < 12) return true;
 
-        uint32_t t0 = millis();
+        uint32_t t0 = micros();
         IPAddress clientIP = _udp.remoteIP();
         uint16_t clientPort = _udp.remotePort();
 
@@ -124,7 +125,8 @@ public:
             totalQueries++;
             IPAddress myIP = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
             _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, qtype, myIP);
-            _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, clientPort, false, lat ? lat : 1);
             return true;
         }
 
@@ -132,7 +134,8 @@ public:
         if (clientIP[0] == 192 && clientIP[1] == 168 && clientIP[2] == 4 && _isCaptiveProbe(domain)) {
             totalQueries++;
             _sendAuthoritativeIpResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, qtype, WiFi.softAPIP());
-            _logQuery(domain.c_str(), clientIP, clientPort, false, 1);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, clientPort, false, lat ? lat : 1);
             return true;
         }
 
@@ -143,7 +146,8 @@ public:
             blockedQueries++;
             totalQueries++;
             _sendNxDomainResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd);
-            _logQuery(domain.c_str(), clientIP, clientPort, true, 1);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, clientPort, true, lat ? lat : 1);
             return true;
         }
 
@@ -152,22 +156,22 @@ public:
             blockedQueries++;
             totalQueries++;
             _sendNxDomainResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd);
-            _logQuery(domain.c_str(), clientIP, clientPort, true, 1);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, clientPort, true, lat ? lat : 1);
             return true;
         }
 
         totalQueries++;
-        bool blocked = !isBypassed && _blocklist->isBlocked(domain);
+        bool blocked = !isBypassed && _blocklist->isBlocked(domain.c_str(), domain.length());
 
         if (blocked) {
             blockedQueries++;
             _sendSinkholeResponse(clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, qtype);
-            uint32_t latency = millis() - t0;
-            if (latency == 0) latency = 1;
-            _logQuery(domain.c_str(), clientIP, clientPort, true, (uint16_t)latency);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, clientPort, true, lat ? lat : 1);
         } else {
             bool isWhitelisted = _blocklist->isWhitelisted(domain);
-            uint32_t fwdStart = millis();
+            uint32_t fwdStart = micros();
 
             // 1. FAST PATH: Check Sub-Millisecond PSRAM LRU Cache (<0.2ms)
             int cachedLen = 0;
@@ -176,17 +180,15 @@ public:
                 _udp.write(_fwdBuf, cachedLen);
                 _udp.endPacket();
 
-                uint32_t latency = millis() - fwdStart;
-                if (latency == 0) latency = 1;
-                _logQuery(domain.c_str(), clientIP, clientPort, false, (uint16_t)latency);
+                uint32_t lat = micros() - fwdStart;
+                _logQuery(domain.c_str(), clientIP, clientPort, false, lat ? lat : 1);
                 return true;
             }
 
             // 2. CACHE MISS: Forward to Upstream (DoH or Fallback UDP)
             _forwardAndRelay(domain, qtype, clientIP, clientPort, _packetBuf, len, txnId, qnameEnd, isWhitelisted);
-            uint32_t latency = millis() - fwdStart;
-            if (latency == 0) latency = 1;
-            _logQuery(domain.c_str(), clientIP, clientPort, false, (uint16_t)latency);
+            uint32_t lat = micros() - fwdStart;
+            _logQuery(domain.c_str(), clientIP, clientPort, false, lat ? lat : 1);
         }
         return true;
     }
@@ -199,7 +201,7 @@ public:
                          uint8_t* outBuf, size_t maxOutLen) {
         if (!queryPacket || queryLen < 12 || !outBuf || maxOutLen < 12) return -1;
 
-        uint32_t t0 = millis();
+        uint32_t t0 = micros();
         uint16_t txnId   = (queryPacket[0] << 8) | queryPacket[1];
         uint16_t flags   = (queryPacket[2] << 8) | queryPacket[3];
         uint16_t qdCount = (queryPacket[4] << 8) | queryPacket[5];
@@ -221,20 +223,20 @@ public:
             totalQueries++;
             IPAddress myIP = (WiFi.status() == WL_CONNECTED) ? WiFi.localIP() : WiFi.softAPIP();
             int respLen = _buildAuthoritativeIpResponse(queryPacket, queryLen, txnId, qnameEnd, qtype, myIP, outBuf, maxOutLen);
-            _logQuery(domain.c_str(), clientIP, 443, false, 1);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, 443, false, lat ? lat : 1);
             return respLen;
         }
 
         totalQueries++;
         bool isBypassed = _blocklist && _blocklist->isIPBypassed(clientIP);
-        bool blocked = !isBypassed && _blocklist->isBlocked(domain);
+        bool blocked = !isBypassed && _blocklist->isBlocked(domain.c_str(), domain.length());
 
         if (blocked) {
             blockedQueries++;
             int respLen = _buildSinkholeResponse(queryPacket, queryLen, txnId, qnameEnd, qtype, outBuf, maxOutLen);
-            uint32_t latency = millis() - t0;
-            if (latency == 0) latency = 1;
-            _logQuery(domain.c_str(), clientIP, 443, true, (uint16_t)latency);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, 443, true, lat ? lat : 1);
             return respLen;
         }
 
@@ -243,9 +245,8 @@ public:
         // 1. FAST PATH: Check Sub-Millisecond PSRAM LRU Cache (<0.2ms)
         int cachedLen = 0;
         if (_cache && _cache->lookup(domain, qtype, txnId, outBuf, cachedLen)) {
-            uint32_t latency = millis() - t0;
-            if (latency == 0) latency = 1;
-            _logQuery(domain.c_str(), clientIP, 443, false, (uint16_t)latency);
+            uint32_t lat = micros() - t0;
+            _logQuery(domain.c_str(), clientIP, 443, false, lat ? lat : 1);
             return cachedLen;
         }
 
@@ -280,9 +281,8 @@ public:
             }
         }
 
-        uint32_t latency = millis() - t0;
-        if (latency == 0) latency = 1;
-        _logQuery(domain.c_str(), clientIP, 443, false, (uint16_t)latency);
+        uint32_t lat = micros() - t0;
+        _logQuery(domain.c_str(), clientIP, 443, false, lat ? lat : 1);
         return respLen;
     }
 
@@ -301,8 +301,8 @@ private:
     WiFiUDP _udp;
     WiFiUDP _fwdUdp;   // Socket for upstream forwarding
     SemaphoreHandle_t _fwdMutex = nullptr;
-    uint8_t _packetBuf[512];
-    uint8_t _fwdBuf[512];
+    uint8_t _packetBuf[Config::DNS_MAX_PACKET_SIZE];
+    uint8_t _fwdBuf[Config::DNS_MAX_PACKET_SIZE];
 
     struct FwdLock {
         SemaphoreHandle_t m;
@@ -486,8 +486,23 @@ private:
             outBuf[respLen++] = ip[1];
             outBuf[respLen++] = ip[2];
             outBuf[respLen++] = ip[3];
+        } else if (qtype == 28) { // Type AAAA (IPv6 - RFC 4291 IPv4-mapped IPv6 address)
+            outBuf[6] = 0x00; outBuf[7] = 0x01; // ANCOUNT = 1
+            outBuf[respLen++] = 0xC0; outBuf[respLen++] = 0x0C; // Pointer to QNAME
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x1C; // TYPE AAAA (28)
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x01; // CLASS IN
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x00;
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x3C; // TTL 60s
+            outBuf[respLen++] = 0x00; outBuf[respLen++] = 0x10; // RDLENGTH = 16
+            for (int i = 0; i < 10; ++i) outBuf[respLen++] = 0x00;
+            outBuf[respLen++] = 0xFF;
+            outBuf[respLen++] = 0xFF;
+            outBuf[respLen++] = ip[0];
+            outBuf[respLen++] = ip[1];
+            outBuf[respLen++] = ip[2];
+            outBuf[respLen++] = ip[3];
         } else {
-            // Type AAAA or other: RFC authoritative NODATA response (NOERROR, ANCOUNT = 0)
+            // Other types: RFC authoritative NODATA response (NOERROR, ANCOUNT = 0)
             outBuf[6] = 0x00; outBuf[7] = 0x00; // ANCOUNT = 0
         }
         return respLen;
@@ -506,7 +521,7 @@ private:
     void _sendNxDomainResponse(IPAddress clientIP, uint16_t clientPort,
                                const uint8_t* query, int queryLen,
                                uint16_t txnId, int qnameEnd) {
-        uint8_t resp[512];
+        uint8_t resp[Config::DNS_MAX_PACKET_SIZE];
         int len = _buildNxDomainResponse(query, queryLen, txnId, qnameEnd, resp, sizeof(resp));
         if (len > 0) {
             _udp.beginPacket(clientIP, clientPort);
@@ -661,7 +676,7 @@ private:
         uint16_t cryptoTxnId = (uint16_t)(esp_random() & 0xFFFF);
         if (cryptoTxnId == 0) cryptoTxnId = 1;
 
-        uint8_t trngQuery[512];
+        uint8_t trngQuery[Config::DNS_MAX_PACKET_SIZE];
         int trngLen = (queryLen <= (int)sizeof(trngQuery)) ? queryLen : sizeof(trngQuery);
         memcpy(trngQuery, query, trngLen);
         trngQuery[0] = (uint8_t)(cryptoTxnId >> 8);
@@ -726,6 +741,22 @@ private:
                         continue;
                     }
 
+                    // 5. Validate Question Section: QNAME and QTYPE must match original query (RFC 5452 §4.1)
+                    int respQnameEnd = _findQNameEnd(outBuf, replyLen, 12);
+                    int queryQnameEnd = _findQNameEnd(query, queryLen, 12);
+                    if (respQnameEnd < 12 || queryQnameEnd < 12 || respQnameEnd + 4 > replyLen || queryQnameEnd + 4 > queryLen) {
+                        upstreamValidationErrors++;
+                        continue;
+                    }
+
+                    uint16_t queryQtype = (query[queryQnameEnd] << 8) | query[queryQnameEnd + 1];
+                    uint16_t respQtype  = (outBuf[respQnameEnd] << 8) | outBuf[respQnameEnd + 1];
+                    if (queryQtype != respQtype || respQnameEnd != queryQnameEnd ||
+                        memcmp(outBuf + 12, query + 12, queryQnameEnd - 12) != 0) {
+                        upstreamValidationErrors++;
+                        continue;
+                    }
+
                     // Rewrite Transaction ID to match client's query
                     outBuf[0] = (uint8_t)(txnId >> 8);
                     outBuf[1] = (uint8_t)(txnId & 0xFF);
@@ -736,6 +767,15 @@ private:
         }
         upstreamTimeouts++;
         return -1;
+    }
+
+    static inline void _applyTruncationIfNeeded(uint8_t* buf, int& len, const uint8_t* query, int queryLen) {
+        uint16_t arcount = (queryLen >= 12) ? ((query[10] << 8) | query[11]) : 0;
+        int maxLen = (arcount > 0) ? (int)Config::DNS_MAX_PACKET_SIZE : 512;
+        if (len > maxLen && maxLen >= 12) {
+            buf[2] |= 0x02; // Set TC (Truncation) bit flag (RFC 1035 §4.1.1)
+            len = maxLen;
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -754,6 +794,8 @@ private:
                 _fwdBuf[0] = (uint8_t)(txnId >> 8);
                 _fwdBuf[1] = (uint8_t)(txnId & 0xFF);
 
+                _applyTruncationIfNeeded(_fwdBuf, dohLen, query, queryLen);
+
                 _udp.beginPacket(clientIP, clientPort);
                 _udp.write(_fwdBuf, dohLen);
                 _udp.endPacket();
@@ -770,6 +812,8 @@ private:
         if (!resolved) {
             int replyLen = _resolveUpstreamUdp(query, queryLen, txnId, _fwdBuf, sizeof(_fwdBuf));
             if (replyLen >= 12) {
+                _applyTruncationIfNeeded(_fwdBuf, replyLen, query, queryLen);
+
                 _udp.beginPacket(clientIP, clientPort);
                 _udp.write(_fwdBuf, replyLen);
                 _udp.endPacket();
@@ -794,12 +838,13 @@ private:
     // -----------------------------------------------------------------------
     // Log query to PSRAM ring buffer
     // -----------------------------------------------------------------------
-    void _logQuery(const char* domain, IPAddress clientIP, uint16_t port, bool blocked, uint16_t latency_ms) {
+    void _logQuery(const char* domain, IPAddress clientIP, uint16_t port, bool blocked, uint32_t latency_us) {
         if (!_queryLog) return;
 
         time_t now = time(nullptr);
+        // If NTP has not yet synchronized, use monotonic uptime seconds instead of fake future epoch
         if (now < 1700000000) {
-            now = 1788613700 + (millis() / 1000);
+            now = millis() / 1000;
         }
 
         QueryLogEntry& entry = _queryLog[_logIndex % Config::RING_BUFFER_CAPACITY];
@@ -809,7 +854,8 @@ private:
         entry.clientPort = port;
         entry.blocked = blocked;
         entry.timestamp = (uint32_t)now;
-        entry.latency_ms = latency_ms;
+        entry.latency_us = latency_us;
+        entry.latency_ms = (uint16_t)((latency_us + 999) / 1000);
 
         _logIndex = (_logIndex + 1) % Config::RING_BUFFER_CAPACITY;
         _logCount++;

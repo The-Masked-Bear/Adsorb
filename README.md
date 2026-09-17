@@ -4,7 +4,7 @@
 
 # Adsorb
 
-### **The Arrogant, Bare-Metal DNS Sinkhole for ESP32-S3**
+### **The Arrogant, Ultra-Low-Power Dual-Core DNS Sinkhole for ESP32-S3**
 
 *Why burn 15 Watts on a Raspberry Pi or babysit a noisy homelab Docker container just to drop UDP packets?*
 
@@ -37,7 +37,7 @@ In surface chemistry, **adsorption** is the phenomenon where molecules adhere to
 
 **Adsorb** does the exact same thing to the internet: it catches ad telemetry, tracking scripts, and surveillance beacons at the network boundary and swallows them whole into a silent blackhole before they ever reach your browser, smart TV, or phone.
 
-No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. Just pure, bare-metal C++ executing directly on dual Xtensa LX7 cores.
+No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. Just an ultra-lean FreeRTOS C++ application executing directly across dual Xtensa LX7 cores at 240MHz.
 
 ---
 
@@ -47,19 +47,19 @@ No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. J
   Leverages SIMD Within A Register (SWAR) parallel algorithms to scan wildcard and ad-tracker patterns across dual 64-bit word lanes. Byte-broadcast masks, label boundary validation, and zero-detection bitwise parallelism match malicious subdomains at wire speed with zero CPU branch overhead.
 
 * **🎲 Hardware TRNG Cryptographic DNS Transaction ID Randomizer**  
-  Upstream DNS queries are assigned cryptographically unpredictable 16-bit Transaction IDs seeded directly from on-chip physical RF receiver thermal noise (`esp_random()`). Completely neutralizes Dan Kaminsky DNS cache poisoning and blind transaction spoofing attacks.
+  Upstream DNS queries are assigned cryptographically unpredictable 16-bit Transaction IDs seeded directly from on-chip physical RF receiver thermal noise (`esp_random()`). Mitigates Dan Kaminsky DNS cache poisoning and blind transaction spoofing attacks (RFC 5452).
 
 * **🌐 Zero-Config mDNS & Captive Portal Wizard (`http://adsorb.local/`)**  
   Full multicast DNS responder (`http://adsorb.local/`) enables instant access from any smartphone, tablet, or PC without memorizing IP addresses. RFC captive portal endpoints (`/generate_204`, `/hotspot-detect.html`, `/ncsi.txt`) automatically pop up the setup wizard on connection.
 
-* **⚡ Sub-Millisecond PSRAM LRU DNS Cache (< 0.2 ms)**  
-  High-speed **2-way set-associative cache** (2,048 entries, ~1.05 MB) residing entirely in Octal PSRAM. Repeat queries are answered in under **200 microseconds** directly from memory without touching the network. Dynamically recalculates remaining TTL and rewrites DNS Transaction IDs on every hit.
+* **⚡ Sub-Millisecond PSRAM LRU DNS Cache (< 0.5 ms)**  
+  High-speed **2-way set-associative cache** (2,048 entries, ~1.05 MB) residing entirely in Octal PSRAM. Repeat queries are answered in under **500 microseconds** directly from memory without touching the network (with in-memory lookup completing in tens of microseconds). Dynamically recalculates remaining TTL and rewrites DNS Transaction IDs on every hit.
 
 * **🏎️ Ultra-Fast Parallel Race Upstream UDP & Inbound DoH (RFC 8484)**  
   When an uncached domain is queried over standard UDP 53, Adsorb queries **both Cloudflare (`1.1.1.1`) and Google (`8.8.8.8`) concurrently** with Hardware TRNG transaction IDs. The fastest response (10–25ms) wins and is cached in PSRAM. Also hosts an inbound RFC 8484 DNS-over-HTTPS endpoint (`/dns-query`) supporting both binary wire format `POST` and Base64URL `GET` queries.
 
 * **📟 Physical 1.3" I2C OLED Telemetry Display (SH1106 / SSD1306)**  
-  Real-time 128x64 physical status display running a high-contrast 2-page diagnostic carousel on Core 0 with safe 4px margins (Ad Protection hero metrics and Network & System telemetry). Features non-blocking software I2C and safe weak-pulldown bus detection.
+  Real-time 128x64 physical status display running a high-contrast 2-page diagnostic carousel on Core 0 with safe 4px margins (Ad Protection hero metrics and Network & System telemetry). Features non-blocking software I2C and standard I2C address ACK bus detection.
 
 * **🛡️ Built-in OS Connectivity & Push Whitelist**  
   Hardened against false positives for Android captive portal checks, Google Play Services / Firebase Cloud Messaging (`firebaseinstallations.googleapis.com`), Apple APNs, and Windows NCSI, ensuring zero "Connected, no internet" warnings across household devices.
@@ -74,13 +74,13 @@ No Linux kernel overhead. No SD-card corruption. No multi-gigabyte OS updates. J
   Browsers love to bypass your router's DNS settings by silently tunneling queries through encrypted Cloudflare or Google DoH resolvers. Adsorb returns authoritative `NXDOMAIN` (RCODE 3) on Firefox/Chrome Canary domains (`use-application-dns.net`) and bootstrap endpoints (`chrome.cloudflare-dns.com`, `dns.google`), forcing clients to respect your local DNS sovereignty.
 
 * **🎨 Neo-Brutalist Live Web Dashboard**  
-  Built with raw, asynchronous ESP32 HTTP handling. Features a high-contrast porcelain theme, live real-time query counters, free PSRAM/Heap monitors, instant query inspection, and zero cloud dependencies.
+  Built with raw, asynchronous ESP32 HTTP handling. Features a high-contrast porcelain theme, live real-time query counters, free PSRAM/Heap monitors, instant query inspection, and zero cloud dependencies (100% offline native font stack).
 
 * **📺 Per-Client IP Ad-Blocking Bypass (Zero OTT Disruption)**  
   Eliminates anti-adblock streaming disruption on temperamental devices (e.g. Jio Set-Top Box, Apple TV, Android TV, Fire TV Sticks) running sensitive OTT apps like ZEE5. Whitelist client device IP addresses directly via the live Web Dashboard or REST API (`/api/bypass`). Bypassed devices receive 100% clean, unfiltered upstream DNS, while every other phone, PC, and smart device on the network remains rigorously protected. Rules persist across reboots in LittleFS (`/bypass_ips.txt`) and can be unbypassed at any time with a single click.
 
-* **🔌 Zero-Maintenance Hardware Footprint**  
-  Consumes less than **120 mA (~0.58 Watts)** at 5V. Plug it into any dusty 5V phone charger brick next to your router and forget it exists. Boots and secures the network in under **1.5 seconds**.
+* **🔌 Ultra-Low Power & Instant Boot**  
+  Consumes less than **120 mA (~0.58 Watts)** at 5V (~$1.02/year at $0.20/kWh). Plug it into any dusty 5V phone charger brick next to your router and forget it exists. Ingests ~255,000 rules into Octal PSRAM and secures the network in **3–5 seconds**.
 
 ---
 
@@ -90,16 +90,16 @@ Empirical benchmarks verified against live hardware (ESP32-S3 N16R8 @ 240MHz):
 
 | Metric / Test Suite | Result | Mechanism |
 | :--- | :---: | :--- |
-| **In-Memory PSRAM LRU Cache Hit** | **< 0.2 ms** | 2-Way Set Associative (2,048 entries in PSRAM) |
-| **In-Memory Ad Sinkhole Check** | **< 0.2 ms** | 64-Bit FNV-1a Binary Search Index |
-| **SWAR Bitwise Wildcard Scan** | **< 0.05 ms** | Dual 64-bit SWAR Parallel Word Matcher |
+| **In-Memory PSRAM LRU Cache Hit** | **< 0.5 ms** | 2-Way Set Associative (2,048 entries in PSRAM, tens of µs in-memory) |
+| **In-Memory Ad Sinkhole Check** | **< 50 µs** | 64-Bit FNV-1a Non-Cryptographic Fast Hash Binary Index |
+| **SWAR Bitwise Wildcard Scan** | **< 50 µs** | Dual 64-bit SWAR Parallel Word Matcher |
 | **End-to-End LAN DNS Latency** | **1 – 3 ms** | Typical Wi-Fi 2.4GHz network round-trip |
 | **DNS Transaction ID Entropy** | **16-Bit Crypto** | Hardware TRNG RF Thermal Noise (`esp_random()`) |
 | **Zero-Config Local Portal** | **Instant** | mDNS Responder (`http://adsorb.local/`) |
 | **Uncached Query (Parallel Race)** | **12 – 40 ms** | Simultaneous Cloudflare & Google UDP 53 |
 | **[adblock.turtlecute.org](https://adblock.turtlecute.org/)** | **100.0%** | **131 / 131 Domains Blocked** |
 | **d3ward Ad Block Test** | **100.0%** | **Clean Pass (DNS Scope)** |
-| **Annual Electricity Cost** | **~ $0.45** | **0.58W Continuous Draw** |
+| **Annual Electricity Cost** | **~ $1.02** | **0.58W Continuous Draw (@ $0.20/kWh)** |
 
 > ℹ️ **Ad-Blocking Scope Note:** Network DNS sinkholes operate at the domain layer, intercepting ad servers, tracking scripts, and telemetry beacons across every device on your LAN (phones, smart TVs, IoT). Ads hosted on the exact same domain/CDN as the primary content (such as YouTube video ads) or cosmetic whitespace removal require companion browser-level content blockers (e.g. uBlock Origin).
 
@@ -228,23 +228,30 @@ Adsorb allows you to exempt specific devices from ad-blocking without turning of
 
 ## 📡 REST API Specification
 
-Adsorb exposes a high-performance asynchronous JSON REST API on port 80 for home automation (Home Assistant), telemetry dashboards, and programmatic network control:
+Adsorb exposes a high-performance asynchronous JSON REST API on port 80 for home automation (Home Assistant), telemetry dashboards, and programmatic network control.
 
-| Method | Endpoint | Description | Payload / Response Example |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/stats` | Real-time query counts, cache metrics, free PSRAM/heap & active bypass count | `{"total_queries":1420,"blocked_queries":320,"cache_hits":812,"free_heap":182400,"free_psram":5310000,"uptime_s":3600,"bypass_count":1}` |
-| `GET` | `/api/bypass` | List all client device IP addresses currently exempted from ad-blocking | `["192.168.1.103"]` |
-| `POST` | `/api/bypass` | Exempt a specific client IP from sinkholing (persisted in LittleFS) | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP added to bypass"}` |
-| `DELETE` | `/api/bypass` | Re-enable ad-blocking for a previously bypassed client IP | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP removed from bypass"}` |
-| `GET` | `/api/whitelist` | List custom whitelisted domains | `["workvpn.company.com"]` |
-| `POST` | `/api/whitelist` | Add a domain to the custom whitelist | `{"domain":"workvpn.company.com"}` |
-| `DELETE` | `/api/whitelist` | Remove a domain from the custom whitelist | `{"domain":"workvpn.company.com"}` |
-| `GET` | `/api/blacklist` | List custom blacklisted domains | `["unwanted-tracker.net"]` |
-| `POST` | `/api/blacklist` | Add a domain to the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
-| `DELETE` | `/api/blacklist` | Remove a domain from the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
-| `POST` | `/api/restart` | Gracefully restart the ESP32-S3 hardware | `{"status":"ok","message":"Restarting ESP32..."}` |
-| `GET` | `/api/test` | Test domain blocking status and sinkhole verdict | `{"domain":"example.com","blocked":false,"sinkhole_ip":"0.0.0.0"}` |
-| `GET` / `POST` | `/dns-query` | Inbound RFC 8484 DNS wire format over HTTP (LAN port 80) | Binary wire format or Base64URL |
+### 🔐 Authentication Header
+To prevent credential leakage through browser history, proxies, or HTTP Referer headers, authentication is enforced strictly via HTTP headers (`X-API-Key: <key>` or `Authorization: Bearer <key>`). Query parameters (such as `?key=`) are strictly rejected.
+- **Default Master Key:** `AdsorbShield#2026` (or the persistent token generated in `/admin_key.txt`).
+- Sensitive operations (`POST`, `DELETE`, `/api/queries`, `/api/restart`) require valid authentication.
+- Public read endpoints (`/api/stats`, `/api/test`, `/`, `/generate_204`) are unauthenticated to enable lightweight network telemetry and standard captive portal detection.
+
+| Method | Endpoint | Auth Required | Description | Payload / Response Example |
+| :--- | :--- | :---: | :--- | :--- |
+| `GET` | `/api/stats` | No | Real-time query counts, cache metrics, free PSRAM/heap & active bypass count | `{"total":1420,"total_queries":1420,"blocked":320,"blocked_queries":320,"cache_hits":812,"free_heap":248000,"free_psram":3570000,"uptime":3600,"uptime_s":3600,"bypass_count":1}` |
+| `GET` | `/api/queries` | **Yes** | Real-time recent DNS query ring buffer with microsecond latency | `[{"domain":"example.com","client_ip":"192.168.1.100","blocked":false,"latency_us":320,"latency_ms":0.32}]` |
+| `GET` | `/api/bypass` | **Yes** | List all client device IP addresses currently exempted from ad-blocking | `["192.168.1.103"]` |
+| `POST` | `/api/bypass` | **Yes** | Exempt a specific client IP from sinkholing (persisted in LittleFS) | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP added to bypass"}` |
+| `DELETE` | `/api/bypass` | **Yes** | Re-enable ad-blocking for a previously bypassed client IP | `{"ip":"192.168.1.103"}` &rarr; `{"status":"ok","message":"IP removed from bypass"}` |
+| `GET` | `/api/whitelist` | **Yes** | List custom whitelisted domains | `["workvpn.company.com"]` |
+| `POST` | `/api/whitelist` | **Yes** | Add a domain to the custom whitelist | `{"domain":"workvpn.company.com"}` |
+| `DELETE` | `/api/whitelist` | **Yes** | Remove a domain from the custom whitelist | `{"domain":"workvpn.company.com"}` |
+| `GET` | `/api/blacklist` | **Yes** | List custom blacklisted domains | `["unwanted-tracker.net"]` |
+| `POST` | `/api/blacklist` | **Yes** | Add a domain to the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
+| `DELETE` | `/api/blacklist` | **Yes** | Remove a domain from the custom blacklist | `{"domain":"unwanted-tracker.net"}` |
+| `POST` | `/api/restart` | **Yes** | Gracefully restart the ESP32-S3 hardware (10s cooldown rate-limit) | `{"status":"ok","message":"Restarting ESP32..."}` |
+| `GET` | `/api/test` | No | Test domain blocking status and sinkhole verdict | `{"domain":"example.com","blocked":false,"sinkhole_ip":"0.0.0.0"}` |
+| `GET` / `POST` | `/dns-query` | No | Inbound RFC 8484 DNS wire format over HTTP (LAN port 80) | Binary wire format or Base64URL |
 
 
 ---

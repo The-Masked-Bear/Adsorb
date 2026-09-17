@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <vector>
 #include <esp_heap_caps.h>
+#include "Config.hpp"
 
 // ============================================================================
 // Dual 64-bit SWAR (SIMD Within A Register) Parallel Bitwise Pattern Matcher
@@ -22,11 +23,10 @@ public:
         PatternType type;
     };
 
-    bool init() {
+    bool init(bool enableHeuristics = Config::ENABLE_HEURISTIC_BLOCKING) {
         Serial.println("[SWAR] Initializing Dual 64-bit SWAR Parallel Bitwise Accelerator...");
         _rules.clear();
-        static const char* const defaultSignatures[] = {
-            "telemetry",
+        static const char* const verifiedAdSignatures[] = {
             "doubleclick",
             "adservice",
             "adservices",
@@ -35,12 +35,10 @@ public:
             "adnxs",
             "pagead",
             "pagead2",
-            "analytics",
             "app-measurement",
             "googleads",
             "googletagservices",
             "google-analytics",
-            "advertising",
             "trafficjunky",
             "quantserve",
             "scorecardresearch",
@@ -53,15 +51,31 @@ public:
             "pubmatic",
             "rubiconproject",
             "casalemedia",
-            "mobile-analytics",
             "adsystem"
         };
-        const size_t numSignatures = sizeof(defaultSignatures) / sizeof(defaultSignatures[0]);
-        _rules.reserve(numSignatures + 32);
-        for (size_t i = 0; i < numSignatures; ++i) {
-            addPattern(defaultSignatures[i]);
+        const size_t numVerified = sizeof(verifiedAdSignatures) / sizeof(verifiedAdSignatures[0]);
+        _rules.reserve(numVerified + 32);
+        for (size_t i = 0; i < numVerified; ++i) {
+            addPattern(verifiedAdSignatures[i]);
         }
-        Serial.printf("[SWAR] Loaded %u dual 64-bit SWAR pattern signatures into accelerator.\n", (unsigned)_rules.size());
+
+        if (enableHeuristics) {
+            static const char* const heuristicSignatures[] = {
+                "telemetry",
+                "analytics",
+                "advertising",
+                "mobile-analytics"
+            };
+            const size_t numHeuristics = sizeof(heuristicSignatures) / sizeof(heuristicSignatures[0]);
+            for (size_t i = 0; i < numHeuristics; ++i) {
+                addPattern(heuristicSignatures[i]);
+            }
+            Serial.printf("[SWAR] Loaded %u verified ad signatures + %u heuristic signatures.\n",
+                          (unsigned)numVerified, (unsigned)numHeuristics);
+        } else {
+            Serial.printf("[SWAR] Loaded %u verified dual 64-bit SWAR ad signatures (heuristics gated).\n",
+                          (unsigned)_rules.size());
+        }
         return true;
     }
 

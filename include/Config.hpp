@@ -51,14 +51,14 @@ constexpr const char* MDNS_HOSTNAME          = "adsorb"; // http://adsorb.local/
 
 // Wi-Fi Access Point (Fallback) Configuration
 constexpr const char* AP_SSID          = "ESP32-DNS-AdBlocker";
-constexpr const char* AP_PASSWORD      = "admin1234";
+constexpr const char* AP_PASSWORD      = "AdsorbShield#2026";
 constexpr uint8_t     AP_CHANNEL       = 1;
 constexpr uint8_t     AP_MAX_CLIENTS   = 4;
 
 // Network Services
 constexpr uint16_t    DNS_PORT         = 53;
 constexpr uint16_t    WEB_PORT         = 80;
-constexpr size_t      DNS_MAX_PACKET_SIZE = 512;
+constexpr size_t      DNS_MAX_PACKET_SIZE = 1232; // RFC 6891 standard EDNS0 MTU-safe buffer size
 constexpr const char* UPSTREAM_DNS_PRIMARY   = "1.1.1.1";
 constexpr const char* UPSTREAM_DNS_SECONDARY = "8.8.8.8";
 
@@ -92,7 +92,7 @@ enum UpstreamMode {
     UPSTREAM_MODE_DOH           // Encrypted DNS-over-HTTPS (RFC 8484 TLS 1.3)
 };
 constexpr UpstreamMode UPSTREAM_MODE          = UPSTREAM_MODE_PARALLEL_UDP;
-constexpr uint32_t     UPSTREAM_UDP_TIMEOUT_MS = 800;  // 800ms parallel race timeout fallback
+constexpr uint32_t     UPSTREAM_UDP_TIMEOUT_MS = 250;  // 250ms parallel race timeout (prevents Core 1 thread stalls)
 constexpr const char*  DOH_PRIMARY_URL         = "https://1.1.1.1/dns-query";
 constexpr const char*  DOH_SECONDARY_URL       = "https://8.8.8.8/dns-query";
 constexpr uint32_t     DOH_TIMEOUT_MS          = 1200; // 1200ms TLS 1.3 handshake & query timeout

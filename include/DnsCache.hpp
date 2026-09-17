@@ -14,7 +14,7 @@ struct CacheEntry {
     uint32_t expiresAt;     // Expiration timestamp in uptime seconds
     uint32_t lastAccess;    // Last access timestamp in uptime seconds for LRU eviction
     uint32_t hits;          // Number of times this cached entry was served
-    uint8_t  packet[512];   // Cached RFC 1035 response payload
+    uint8_t  packet[Config::DNS_MAX_PACKET_SIZE];   // Cached RFC 1035/EDNS0 response payload
 };
 
 // ============================================================================
@@ -57,26 +57,27 @@ public:
         uint32_t now = millis() / 1000;
 
         if (_mutex) xSemaphoreTake(_mutex, portMAX_DELAY);
-        for (uint32_t way = 0; way < 2; ++way) {
+        for (int way = 0; way < 2; ++way) {
             CacheEntry& entry = _entries[baseIdx + way];
             if (entry.hash == h && entry.qtype == qtype) {
                 if (now < entry.expiresAt) {
-                    // Cache HIT!
-                    entry.hits++;
+                    // Cache Hit!
                     entry.lastAccess = now;
+                    entry.hits++;
                     _totalHits++;
-                    uint32_t remainingTtl = entry.expiresAt - now;
 
                     outLen = entry.packetLen;
                     memcpy(outBuf, entry.packet, outLen);
-                    if (_mutex) xSemaphoreGive(_mutex);
 
-                    // Rewrite Transaction ID to match client's query
+                    // Rewrite Transaction ID to match current query
                     outBuf[0] = (uint8_t)(txnId >> 8);
                     outBuf[1] = (uint8_t)(txnId & 0xFF);
 
-                    // Update TTLs in the answer section so client gets remaining TTL
+                    // Decrement TTL dynamically based on elapsed time
+                    uint32_t remainingTtl = entry.expiresAt - now;
                     _updateRemainingTtl(outBuf, outLen, remainingTtl);
+
+                    if (_mutex) xSemaphoreGive(_mutex);
                     return true;
                 } else {
                     // Entry has expired
@@ -95,16 +96,24 @@ public:
     // Cache Insertion with LRU Eviction Policy
     // -----------------------------------------------------------------------
     void insert(const String& domain, uint16_t qtype, const uint8_t* packet, int packetLen, uint32_t ttl) {
-        // RFC 1035 §3.2.1 / RFC 2181 §8: TTL == 0 MUST NOT be cached
-        if (ttl == 0) return;
-        if (!_entries || packetLen < 12 || packetLen > 512) return;
+        if (!_entries || packetLen < 12 || packetLen > (int)Config::DNS_MAX_PACKET_SIZE) return;
 
         // Verify response is valid (QR=1, RCODE=0 NoError or RCODE=3 NXDomain)
         if ((packet[2] & 0x80) == 0) return; // Must be a response
         uint8_t rcode = packet[3] & 0x0F;
         if (rcode != 0 && rcode != 3) return; // Only cache NoError and NXDomain
 
-        // Respect authoritative TTL; only enforce upper boundary
+        // Handle TTL and negative caching
+        if (ttl == 0) {
+            if (rcode == 3) {
+                ttl = Config::DNS_CACHE_MIN_TTL; // Negative caching with min TTL
+            } else {
+                return; // RFC 1035: NoError with TTL 0 must not be cached
+            }
+        }
+
+        // Enforce both minimum and maximum TTL boundaries (B-10)
+        if (ttl < Config::DNS_CACHE_MIN_TTL) ttl = Config::DNS_CACHE_MIN_TTL;
         if (ttl > Config::DNS_CACHE_MAX_TTL) ttl = Config::DNS_CACHE_MAX_TTL;
 
         uint64_t h = _computeHash(domain, qtype);

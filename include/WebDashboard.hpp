@@ -120,25 +120,27 @@ private:
     }
 
     bool _isAuthorized() {
-        if (_adminApiKey.isEmpty()) return true;
-        if (_server.hasHeader("X-API-Key") && _server.header("X-API-Key") == _adminApiKey) {
-            return true;
-        }
-        if (_server.hasHeader("Authorization")) {
+        if (_adminApiKey.isEmpty() && String(Config::AP_PASSWORD).isEmpty()) return true;
+
+        String key;
+        if (_server.hasHeader("X-API-Key")) {
+            key = _server.header("X-API-Key");
+        } else if (_server.hasHeader("Authorization")) {
             String auth = _server.header("Authorization");
-            if (auth.startsWith("Bearer ") && auth.substring(7) == _adminApiKey) {
-                return true;
+            if (auth.startsWith("Bearer ")) {
+                key = auth.substring(7);
+            } else {
+                key = auth;
             }
-            if (auth == _adminApiKey) {
-                return true;
-            }
         }
-        if (_server.hasArg("key") && _server.arg("key") == _adminApiKey) {
-            return true;
+        key.trim();
+        if (key.length() > 0) {
+            if (!_adminApiKey.isEmpty() && key == _adminApiKey) return true;
+            if (key == Config::AP_PASSWORD) return true;
         }
-        if (_server.hasArg("api_key") && _server.arg("api_key") == _adminApiKey) {
-            return true;
-        }
+
+        // Note: URL query parameter keys (?key=, ?api_key=) are explicitly rejected (B-03)
+        // to prevent API key leakage via browser history, proxy access logs, and HTTP Referer headers.
         return false;
     }
 
@@ -311,9 +313,6 @@ private:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adsorb &bull; The Untouchable Ad Obliterator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #f6f3ee;
@@ -339,9 +338,12 @@ body {
   background-image: radial-gradient(rgba(18, 18, 18, 0.12) 1.2px, transparent 1.2px);
   background-size: 20px 20px;
   color: var(--text);
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   padding: 30px 18px;
   min-height: 100vh;
+}
+code, pre, .mono, [style*="Space Mono"], [style*="monospace"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 }
 
 .container { max-width: 1080px; margin: 0 auto; }
@@ -1046,14 +1048,20 @@ async function updateTelemetry() {
     }
 
     // 2. Fetch live query log
-    const resQueries = await fetch('/api/queries');
+    const authHeaders = adminApiKey ? {'X-API-Key': adminApiKey} : {};
+    const resQueries = await fetch('/api/queries', { headers: authHeaders });
     if (resQueries.ok) {
       currentLog = await resQueries.json();
       renderTable();
+    } else if (resQueries.status === 401) {
+      const tbody = document.getElementById('query-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: #555; font-weight: 700;">🔒 Query log is protected. Click the Admin Key button below to unlock real-time queries.</td></tr>';
+      }
     }
 
     // 3. Fetch live bypass list
-    const resBypass = await fetch('/api/bypass');
+    const resBypass = await fetch('/api/bypass', { headers: authHeaders });
     if (resBypass.ok) {
       const ips = await resBypass.json();
       const listEl = document.getElementById('bypass-list');
@@ -1072,6 +1080,9 @@ async function updateTelemetry() {
           }).join('');
         }
       }
+    } else if (resBypass.status === 401) {
+      const listEl = document.getElementById('bypass-list');
+      if (listEl) listEl.innerHTML = '<span style="font-size: 0.78em; opacity: 0.6; font-style: italic;">🔒 Admin Key required to view bypassed devices</span>';
     }
   } catch(e) {}
 }
@@ -1432,6 +1443,11 @@ if (cryingCardEl) {
     // GET /api/queries — Query Log JSON Endpoint
     // -----------------------------------------------------------------------
     void _handleApiQueries() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
+            return;
+        }
         _addSecurityHeaders();
         size_t count = 0;
         const QueryLogEntry* log = _dns->getQueryLog(count);
@@ -1458,6 +1474,8 @@ if (cryingCardEl) {
             json += String(e.timestamp);
             json += ",\"latency_ms\":";
             json += String(e.latency_ms);
+            json += ",\"latency_us\":";
+            json += String(e.latency_us);
             json += "}";
         }
         json += "]";
@@ -1468,6 +1486,11 @@ if (cryingCardEl) {
     // GET /api/whitelist
     // -----------------------------------------------------------------------
     void _handleGetWhitelist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
+            return;
+        }
         _addSecurityHeaders();
         String json;
         _blocklist->getWhitelistAsJson(json);
@@ -1480,7 +1503,7 @@ if (cryingCardEl) {
     void _handlePostWhitelist() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1522,7 +1545,7 @@ if (cryingCardEl) {
     void _handleDeleteWhitelist() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1543,6 +1566,11 @@ if (cryingCardEl) {
     // GET /api/blacklist
     // -----------------------------------------------------------------------
     void _handleGetBlacklist() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
+            return;
+        }
         _addSecurityHeaders();
         String json;
         _blocklist->getCustomBlacklistAsJson(json);
@@ -1555,7 +1583,7 @@ if (cryingCardEl) {
     void _handlePostBlacklist() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1597,7 +1625,7 @@ if (cryingCardEl) {
     void _handleDeleteBlacklist() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1618,6 +1646,11 @@ if (cryingCardEl) {
     // GET /api/bypass
     // -----------------------------------------------------------------------
     void _handleGetBypass() {
+        if (!_isAuthorized()) {
+            _addSecurityHeaders();
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
+            return;
+        }
         _addSecurityHeaders();
         String json;
         _blocklist->getBypassIPsAsJson(json);
@@ -1630,7 +1663,7 @@ if (cryingCardEl) {
     void _handlePostBypass() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1672,7 +1705,7 @@ if (cryingCardEl) {
     void _handleDeleteBypass() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
 
@@ -1690,14 +1723,23 @@ if (cryingCardEl) {
     }
 
     // -----------------------------------------------------------------------
-    // POST /api/restart — Secure Device Reboot
+    // POST /api/restart — Secure Device Reboot with Throttle Rate-Limiting
     // -----------------------------------------------------------------------
+    uint32_t _lastRestartMs = 0;
+
     void _handlePostRestart() {
         if (!_isAuthorized()) {
             _addSecurityHeaders();
-            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header or ?key=\"}");
+            _server.send(401, "application/json", "{\"error\":\"Unauthorized: valid API key required via X-API-Key or Authorization header\"}");
             return;
         }
+        uint32_t now = millis();
+        if (_lastRestartMs != 0 && (now - _lastRestartMs) < 10000) {
+            _addSecurityHeaders();
+            _server.send(429, "application/json", "{\"error\":\"Too many requests. Please wait 10 seconds between restarts.\"}");
+            return;
+        }
+        _lastRestartMs = now;
         _addSecurityHeaders();
         _server.send(200, "application/json", "{\"status\":\"ok\",\"message\":\"Restarting ESP32...\"}");
         delay(200);
